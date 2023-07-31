@@ -36,6 +36,16 @@ class _ImPreviewState extends State<ImPreview> {
     currentIndex = messages.indexWhere((v) => v.clientMsgID == widget.currentMessage.clientMsgID);
     pageController = PageController(initialPage: currentIndex);
     super.initState();
+
+    /// 隐藏状态栏
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+  }
+
+  @override
+  dispose() {
+    /// 显示状态栏
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    super.dispose();
   }
 
   (double w, double h) getSize(Message message) {
@@ -60,15 +70,6 @@ class _ImPreviewState extends State<ImPreview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
-        leading: IconButton(
-          icon: const Icon(Icons.close_outlined, color: Colors.white),
-          onPressed: Get.back,
-        ),
-      ),
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
@@ -95,6 +96,20 @@ class _ImPreviewState extends State<ImPreview> {
             loadingBuilder: loadingBuilder,
             pageController: pageController,
             onPageChanged: onPageChanged,
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: kToolbarHeight,
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
+              leading: IconButton(
+                icon: const Icon(Icons.close_outlined, color: Colors.white),
+                onPressed: Get.back,
+              ),
+            ),
           ),
           Positioned(
             bottom: 20,

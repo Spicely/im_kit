@@ -55,7 +55,7 @@ class ImFile extends ImBase {
               Container(
                 decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
                 padding: theme.padding,
-                width: 230,
+                width: 240,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
