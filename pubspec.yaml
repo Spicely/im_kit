@@ -1,7 +1,7 @@
 name: im_kit
 description: A new Flutter package project.
 version: 0.0.1
-homepage:
+homepage: https://github.com/Spicely/im_kit
 
 environment:
   sdk: '>=3.0.6 <4.0.0'
@@ -17,17 +17,21 @@ dependencies:
   path:
   get:
   url_launcher: 
-  just_audio:
+  audioplayers:
   record: ^5.0.0-beta.2
+  image_gallery_saver:
   file_picker: 
+  card_swiper: 
+  photo_view: 
   media_kit: 
   media_kit_video:
   media_kit_native_event_loop:
-  media_kit_libs_android_video: 
+  media_kit_libs_android_video: 1.2.0
   media_kit_libs_ios_video: 
   media_kit_libs_macos_video: 
   media_kit_libs_windows_video: 
   media_kit_libs_linux:
+  lottie:
 
 dev_dependencies:
   flutter_test:
@@ -35,3 +39,5 @@ dev_dependencies:
   flutter_lints: ^2.0.0
 
 flutter:
+  assets:
+    - assets/json/

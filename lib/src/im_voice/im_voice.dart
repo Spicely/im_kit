@@ -10,7 +10,7 @@ class ImVoice extends ImBase {
     this.onTapDownFile,
   }) : super(key: key, isMe: isMe, message: message);
 
-  ImExtModel? get ext => message.ext;
+  ImExtModel? get ext => message.extModel;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class ImVoice extends ImBase {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Lottie.asset('assets/images/voice_record.json', height: 30, animate: ext?.isPlaying ?? false),
+                Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext?.isPlaying ?? false, package: 'im_kit'),
                 const SizedBox(width: 8),
                 Text('${message.soundElem?.duration}"'),
               ],

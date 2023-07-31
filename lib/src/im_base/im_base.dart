@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-07-30 20:56:00
+ * Last Modified: 2023-07-31 18:16:16
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -31,6 +31,16 @@ class ImBase extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox();
+  }
+}
+
+extension ExtensionMessage on Message {
+  ImExtModel get extModel {
+    if (ext is! ImExtModel) {
+      ext = ImExtModel();
+      if (contentType == MessageType.voice) {}
+    }
+    return ext;
   }
 }
 
@@ -61,8 +71,23 @@ class ImCore {
   /// 文件路径
   static String dirPath = '';
 
+  static String _playID = '';
+
   /// 文件保存文件夹
   static String get saveDir => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
+
+  /// 播放回调
+  static void onPlayerStateChanged(void Function(PlayerState state, String id) listener) {
+    _player.onPlayerStateChanged.listen((PlayerState state) => listener(state, _playID));
+  }
+
+  /// 文件保存地址
+  static String getSavePath(Message msg) {
+    String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl ?? msg.pictureElem?.sourcePicture?.url;
+    if (url == null) return '';
+    String fileName = url.split('/').last;
+    return join(saveDir, fileName);
+  }
 
   /// 检测文件是否存在
   static Future<(bool, ImExtModel?)> checkFileExist(Message msg, bool isMe, {int? fileSize}) async {
@@ -70,7 +95,7 @@ class ImCore {
 
     /// 本地文件
     if (locPath != null && isMe) {
-      File file = File(msg.fileElem!.filePath!);
+      File file = File(locPath);
       bool status = file.existsSync();
       if (!status) return (false, null);
       if (fileSize != null) {
@@ -98,14 +123,35 @@ class ImCore {
   }
 
   /// 播放音频
-  static Future<void> play(String url, String id) async {
-    await _player.setFilePath(url);
-    _player.play();
+  static Future<void> play(String url, String id, {void Function(String)? onPlayerBeforePlay}) async {
+    onPlayerBeforePlay?.call(_playID);
+    await _player.play(DeviceFileSource(url));
+    _playID = id;
   }
 
   /// 暂停音频
-  static Future<void> pause() async {
-    await _player.pause();
+  static Future<void> stop() async {
+    await _player.stop();
+  }
+
+  /// 跳转到图片预览页面
+  static void pushPreview(
+    BuildContext context,
+    List<Message> messages,
+    Message currentMessage, {
+    void Function()? onSaveSuccess,
+    void Function()? onSaveFailure,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImPreview(
+          messages: messages,
+          currentMessage: currentMessage,
+          onSaveSuccess: onSaveSuccess,
+          onSaveFailure: onSaveFailure,
+        ),
+      ),
+    );
   }
 }
 

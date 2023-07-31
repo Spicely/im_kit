@@ -10,7 +10,7 @@ class ImFile extends ImBase {
     this.onTapDownFile,
   }) : super(key: key, isMe: isMe, message: message);
 
-  ImExtModel? get ext => message.ext;
+  ImExtModel get ext => message.extModel;
 
   /// 检测文件是否存在
   Future<(bool, ImExtModel?)> checkFileExist(Message msg, {int? fileSize}) async {
@@ -101,7 +101,7 @@ class ImFile extends ImBase {
                                         ImButton(
                                           label: '打开',
                                           onPressed: () async {
-                                            String? path = Utils.getValue(snapshot.data?.$2?.path, ext?.path);
+                                            String? path = Utils.getValue(snapshot.data?.$2?.path, ext.path);
                                             if (path != null) {
                                               Uri url = Uri.parse('file:$path');
                                               launchUrl(url);
@@ -111,7 +111,7 @@ class ImFile extends ImBase {
                                         ImButton(
                                             label: '另存为',
                                             onPressed: () async {
-                                              String? path = Utils.getValue(snapshot.data?.$2?.path, ext?.path);
+                                              String? path = Utils.getValue(snapshot.data?.$2?.path, ext.path);
                                               if (path != null) {
                                                 String? dirPath = await FilePicker.platform.getDirectoryPath(dialogTitle: '另存为');
                                                 if (dirPath != null) {
@@ -123,7 +123,7 @@ class ImFile extends ImBase {
                                         ImButton(
                                             label: '打开文件夹',
                                             onPressed: () {
-                                              String? path = Utils.getValue(snapshot.data?.$2?.path, ext?.path);
+                                              String? path = Utils.getValue(snapshot.data?.$2?.path, ext.path);
                                               if (path != null) {
                                                 int index = path.lastIndexOf('/');
                                                 path = path.substring(0, index);
@@ -136,22 +136,22 @@ class ImFile extends ImBase {
                                   : Wrap(
                                       spacing: 5,
                                       children: [
-                                        ImButton(
-                                          label: '下载',
-                                          onPressed: ext == null
-                                              ? () => onTapDownFile?.call(message)
-                                              : ext!.isDownloading
-                                                  ? null
-                                                  : () => onTapDownFile?.call(message),
-                                        ),
-                                        ImButton(
-                                          label: '另存为',
-                                          onPressed: ext == null
-                                              ? () {}
-                                              : ext!.isDownloading
-                                                  ? null
-                                                  : () {},
-                                        ),
+                                        // ImButton(
+                                        //   label: '下载',
+                                        //   onPressed: ext == null
+                                        //       ? () => onTapDownFile?.call(message)
+                                        //       : ext.isDownloading
+                                        //           ? null
+                                        //           : () => onTapDownFile?.call(message),
+                                        // ),
+                                        // ImButton(
+                                        //   label: '另存为',
+                                        //   onPressed: ext == null
+                                        //       ? () {}
+                                        //       : ext!.isDownloading
+                                        //           ? null
+                                        //           : () {},
+                                        // ),
                                         ImButton(label: '转发', onPressed: () {}),
                                       ],
                                     ),
@@ -168,11 +168,7 @@ class ImFile extends ImBase {
                 right: 0,
                 bottom: 0,
                 child: LinearProgressIndicator(
-                  value: snapshot.data?.$1 == true
-                      ? 1
-                      : ext == null
-                          ? 0
-                          : ext?.progress,
+                  value: snapshot.data?.$1 == true ? 1 : ext.progress,
                   minHeight: 2,
                   backgroundColor: Colors.transparent,
                   valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),

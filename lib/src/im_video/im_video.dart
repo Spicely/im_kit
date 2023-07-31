@@ -10,7 +10,7 @@ class ImVideo extends ImBase {
     this.onTapDownFile,
   }) : super(key: key, isMe: isMe, message: message);
 
-  ImExtModel? get ext => message.ext;
+  ImExtModel? get ext => message.extModel;
 
   (double w, double h) get size {
     double width = message.videoElem?.snapshotWidth?.toDouble() ?? 240.0;

@@ -27,11 +27,19 @@ class ImImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (w, h) = size;
-    return CachedImage(
-      imageUrl: message.pictureElem?.snapshotPicture?.url,
-      width: w,
-      height: h,
-      circular: 5,
+
+    /// 获取像素密度
+    final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
+    String? url = message.pictureElem?.sourcePicture?.url;
+    return Hero(
+      tag: ValueKey(message.clientMsgID),
+      child: CachedImage(
+        imageUrl: url != null ? '$url$crop' : null,
+        width: w,
+        height: h,
+        circular: 5,
+      ),
     );
   }
 }
