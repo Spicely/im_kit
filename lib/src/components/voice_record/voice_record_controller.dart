@@ -16,7 +16,7 @@ class VoiceRecordController extends GetxController {
   final AudioRecorder record = AudioRecorder();
 
   /// 保存文件路径
-  final String _path = join(ImCore.dirPath, 'FileRecv', OpenIM.iMManager.uid, 'voice');
+  final String _path = join(ImCore.dirPath, 'FileRecv', OpenIM.iMManager.uid);
 
   String _filePath = '';
 
