@@ -16,17 +16,16 @@ dependencies:
     path: ../flutter_muka
   path:
   get:
-  url_launcher: 
   audioplayers:
+  loading_indicator: 
   record: ^5.0.0-beta.2
   image_gallery_saver:
-  file_picker: 
   card_swiper: 
   photo_view: 
   media_kit: 
   media_kit_video:
   media_kit_native_event_loop:
-  media_kit_libs_android_video: 1.2.0
+  media_kit_libs_android_video: 
   media_kit_libs_ios_video: 
   media_kit_libs_macos_video: 
   media_kit_libs_windows_video: 

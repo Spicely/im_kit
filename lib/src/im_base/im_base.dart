@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-07-31 18:16:16
+ * Last Modified: 2023-08-01 17:57:48
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -18,9 +18,13 @@ part of im_kit;
 class ImBase extends StatelessWidget {
   final bool isMe;
 
-  final Message message;
+  final MessageExt message;
 
   ImTheme get theme => ImCore.theme;
+
+  ImExtModel get ext => message.ext;
+
+  Message get msg => message.m;
 
   const ImBase({
     super.key,
@@ -34,20 +38,43 @@ class ImBase extends StatelessWidget {
   }
 }
 
+class MessageExt {
+  final ImExtModel ext;
+
+  final Message m;
+
+  MessageExt({
+    required this.ext,
+    required this.m,
+  });
+}
+
 extension ExtensionMessage on Message {
-  ImExtModel get extModel {
-    if (ext is! ImExtModel) {
-      ext = ImExtModel();
-      if (contentType == MessageType.voice) {}
+  MessageExt toExt() {
+    final ext = ImExtModel();
+    switch (contentType) {
+      case MessageType.voice:
+      case MessageType.video:
+      case MessageType.file:
+        String filePath = ImCore.getSavePath(this);
+        if (File(filePath).existsSync()) {
+          ext.path = filePath;
+        }
+        break;
+      default:
     }
-    return ext;
+
+    return MessageExt(
+      ext: ext,
+      m: this,
+    );
   }
 }
 
 class ImExtModel {
-  final double? progress;
+  double? progress;
 
-  final String? path;
+  String? path;
 
   /// 语音播放
   bool isPlaying;
@@ -137,8 +164,8 @@ class ImCore {
   /// 跳转到图片预览页面
   static void pushPreview(
     BuildContext context,
-    List<Message> messages,
-    Message currentMessage, {
+    List<MessageExt> messages,
+    MessageExt currentMessage, {
     void Function()? onSaveSuccess,
     void Function()? onSaveFailure,
   }) {
@@ -147,6 +174,24 @@ class ImCore {
         builder: (context) => ImPreview(
           messages: messages,
           currentMessage: currentMessage,
+          onSaveSuccess: onSaveSuccess,
+          onSaveFailure: onSaveFailure,
+        ),
+      ),
+    );
+  }
+
+  /// 跳转到视屏播放页面
+  static void pushVideoPlayer(
+    BuildContext context,
+    MessageExt message, {
+    void Function()? onSaveSuccess,
+    void Function()? onSaveFailure,
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ImPlayer(
+          message: message,
           onSaveSuccess: onSaveSuccess,
           onSaveFailure: onSaveFailure,
         ),
@@ -174,4 +219,15 @@ class ImTheme {
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     this.subtitleColor = const Color(0xff999999),
   });
+}
+
+mixin ImDownloadListen {
+  /// 下载进度
+  void onDownloadProgress(String id, double progress);
+
+  /// 下载成功
+  void onDownloadSuccess(String id, String path);
+
+  /// 下载失败
+  void onDownloadFailure(String id, String error);
 }

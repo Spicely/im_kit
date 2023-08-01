@@ -1,13 +1,15 @@
 part of im_kit;
 
-class ImImage extends StatelessWidget {
-  final Message message;
-
-  const ImImage({super.key, required this.message});
+class ImImage extends ImBase {
+  const ImImage({
+    Key? key,
+    required bool isMe,
+    required MessageExt message,
+  }) : super(key: key, isMe: isMe, message: message);
 
   (double w, double h) get size {
-    double width = message.pictureElem?.sourcePicture?.width?.toDouble() ?? 240.0;
-    double height = message.pictureElem?.sourcePicture?.height?.toDouble() ?? 240.0;
+    double width = msg.pictureElem?.sourcePicture?.width?.toDouble() ?? 240.0;
+    double height = msg.pictureElem?.sourcePicture?.height?.toDouble() ?? 240.0;
 
     /// 获取宽高比
     double ratio = width / height;
@@ -31,9 +33,9 @@ class ImImage extends StatelessWidget {
     /// 获取像素密度
     final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
     String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
-    String? url = message.pictureElem?.sourcePicture?.url;
+    String? url = msg.pictureElem?.sourcePicture?.url;
     return Hero(
-      tag: ValueKey(message.clientMsgID),
+      tag: ValueKey(msg.clientMsgID),
       child: CachedImage(
         imageUrl: url != null ? '$url$crop' : null,
         width: w,

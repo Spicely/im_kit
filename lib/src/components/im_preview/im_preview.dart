@@ -1,10 +1,10 @@
 part of im_kit;
 
 class ImPreview extends StatefulWidget {
-  final List<Message> messages;
+  final List<MessageExt> messages;
 
   /// 当前显示的消息
-  final Message currentMessage;
+  final MessageExt currentMessage;
 
   /// 保存成功
   final void Function()? onSaveSuccess;
@@ -25,32 +25,22 @@ class ImPreview extends StatefulWidget {
 }
 
 class _ImPreviewState extends State<ImPreview> {
-  late List<Message> messages;
+  late List<MessageExt> messages;
   late PageController pageController;
   int currentIndex = 0;
 
   @override
   initState() {
     /// 排除掉非图片消息
-    messages = widget.messages.where((v) => v.contentType == MessageType.picture).toList();
-    currentIndex = messages.indexWhere((v) => v.clientMsgID == widget.currentMessage.clientMsgID);
+    messages = widget.messages.where((v) => v.m.contentType == MessageType.picture).toList();
+    currentIndex = messages.indexWhere((v) => v.m.clientMsgID == widget.currentMessage.m.clientMsgID);
     pageController = PageController(initialPage: currentIndex);
     super.initState();
-
-    /// 隐藏状态栏
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
   }
 
-  @override
-  dispose() {
-    /// 显示状态栏
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
-    super.dispose();
-  }
-
-  (double w, double h) getSize(Message message) {
-    double width = message.pictureElem?.sourcePicture?.width?.toDouble() ?? 240.0;
-    double height = message.pictureElem?.sourcePicture?.height?.toDouble() ?? 240.0;
+  (double w, double h) getSize(MessageExt message) {
+    double width = message.m.pictureElem?.sourcePicture?.width?.toDouble() ?? 240.0;
+    double height = message.m.pictureElem?.sourcePicture?.height?.toDouble() ?? 240.0;
 
     /// 获取宽高比
     double ratio = width / height;
@@ -76,17 +66,17 @@ class _ImPreviewState extends State<ImPreview> {
           PhotoViewGallery.builder(
             scrollPhysics: const BouncingScrollPhysics(),
             builder: (BuildContext context, int index) {
-              Message message = messages[index];
+              MessageExt message = messages[index];
               final (w, h) = getSize(message);
 
               /// 获取像素密度
               final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
               String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
-              String? url = message.pictureElem?.sourcePicture?.url;
+              String? url = message.m.pictureElem?.sourcePicture?.url;
               return PhotoViewGalleryPageOptions(
                 imageProvider: CachedNetworkImageProvider('$url$crop'),
                 initialScale: PhotoViewComputedScale.contained,
-                heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.clientMsgID)),
+                heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
                   return CachedImage(imageUrl: url, width: w, height: h, circular: 5, fit: BoxFit.cover);
                 },
@@ -101,10 +91,13 @@ class _ImPreviewState extends State<ImPreview> {
             top: 0,
             left: 0,
             right: 0,
-            height: kToolbarHeight,
             child: AppBar(
               backgroundColor: Colors.transparent,
               iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                systemStatusBarContrastEnforced: false,
+              ),
               leading: IconButton(
                 icon: const Icon(Icons.close_outlined, color: Colors.white),
                 onPressed: Get.back,
@@ -171,17 +164,17 @@ class _ImPreviewState extends State<ImPreview> {
   /// 保存图片到相册
   Future<void> saveImage() async {
     try {
-      Message message = messages[currentIndex];
-      String url = message.pictureElem!.sourcePicture!.url!;
+      MessageExt message = messages[currentIndex];
+      String url = message.m.pictureElem!.sourcePicture!.url!;
 
       /// 检测文件是否存在
-      final result = await ImCore.checkFileExist(message, false);
+      final result = await ImCore.checkFileExist(message.m, false);
       if (result.$1) {
         String suffix = url.substring(url.lastIndexOf('.'));
         String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
         await ImageGallerySaver.saveFile(result.$2!.path!, isReturnPathOfIOS: true, name: fileName);
       } else {
-        String savePath = ImCore.getSavePath(message);
+        String savePath = ImCore.getSavePath(message.m);
         await Dio().download(url, savePath);
 
         String suffix = url.substring(url.lastIndexOf('.'));

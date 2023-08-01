@@ -6,15 +6,13 @@ class ImVideo extends ImBase {
   const ImVideo({
     Key? key,
     required bool isMe,
-    required Message message,
+    required MessageExt message,
     this.onTapDownFile,
   }) : super(key: key, isMe: isMe, message: message);
 
-  ImExtModel? get ext => message.extModel;
-
   (double w, double h) get size {
-    double width = message.videoElem?.snapshotWidth?.toDouble() ?? 240.0;
-    double height = message.videoElem?.snapshotHeight?.toDouble() ?? 240.0;
+    double width = msg.videoElem?.snapshotWidth?.toDouble() ?? 240.0;
+    double height = msg.videoElem?.snapshotHeight?.toDouble() ?? 240.0;
 
     /// 获取宽高比
     double ratio = width / height;
@@ -34,31 +32,63 @@ class ImVideo extends ImBase {
   @override
   Widget build(BuildContext context) {
     final (w, h) = size;
-    return FutureBuilder(
-      future: ImCore.checkFileExist(message, isMe, fileSize: message.fileElem?.fileSize),
-      builder: (BuildContext context, AsyncSnapshot<(bool, ImExtModel?)> snapshot) {
-        return Directionality(
-          textDirection: TextDirection.ltr,
-          child: Stack(
-            children: [
-              CachedImage(
-                imageUrl: message.videoElem?.snapshotUrl,
-                width: w,
-                height: h,
-                circular: 5,
-              ),
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                top: 0,
-                child: Text('111'),
-                // child: Icon(Icons.play_circle_outline, size: 50, color: Colors.white),
-              ),
-            ],
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Stack(
+        children: [
+          CachedImage(
+            imageUrl: msg.videoElem?.snapshotUrl,
+            width: w,
+            height: h,
+            circular: 5,
           ),
-        );
-      },
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            top: 0,
+            child: Center(
+              child: Stack(
+                children: [
+                  const SizedBox(width: 50, height: 50),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    top: 0,
+                    child: Center(
+                        child: ext.isDownloading
+                            ? Text(
+                                '${(ext.progress ?? 0) * 100}%',
+                                style: const TextStyle(color: Colors.white),
+                              )
+                            : ext.path == null
+                                ? Transform.rotate(
+                                    angle: -pi / 2,
+                                    child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.white),
+                                  )
+                                : const Icon(Icons.play_arrow_rounded, size: 20, color: Colors.white)),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    top: 0,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).primaryColor,
+                        strokeWidth: 3,
+                        backgroundColor: Colors.white,
+                        value: ext.isDownloading ? ext.progress : 0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
