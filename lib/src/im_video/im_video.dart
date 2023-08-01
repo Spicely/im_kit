@@ -59,7 +59,7 @@ class ImVideo extends ImBase {
                     child: Center(
                         child: ext.isDownloading
                             ? Text(
-                                '${(ext.progress ?? 0) * 100}%',
+                                '${((ext.progress ?? 0) * 100).toStringAsFixed(1)}%',
                                 style: const TextStyle(color: Colors.white),
                               )
                             : ext.path == null
