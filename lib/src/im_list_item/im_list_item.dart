@@ -7,11 +7,23 @@ class ImListItem extends StatelessWidget {
 
   final void Function(MessageExt message)? onTap;
 
+  /// 发送消息等待Widget
+  final Widget? sendLoadingWidget;
+
+  /// 发送消息失败Widget
+  final Widget? sendErrorWidget;
+
+  /// 发送消息成功Widget
+  final Widget? sendSuccessWidget;
+
   const ImListItem({
     super.key,
     required this.message,
     this.onTapDownFile,
     this.onTap,
+    this.sendLoadingWidget,
+    this.sendErrorWidget,
+    this.sendSuccessWidget,
   });
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
@@ -33,16 +45,31 @@ class ImListItem extends StatelessWidget {
             //   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             //   child:
             // ),
-            GestureDetector(
-              onTap: () {
-                onTap?.call(message);
-              },
-              child: getTypeWidget(),
+            Expanded(
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      onTap?.call(message);
+                    },
+                    child: getTypeWidget(),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(child: getStatusWidget()),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget? getStatusWidget() {
+    if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
+    if (message.m.status == MessageStatus.failed) return sendErrorWidget;
+    if (message.m.status == MessageStatus.succeeded) return sendSuccessWidget;
+    return null;
   }
 
   Widget getTypeWidget() {
