@@ -40,4 +40,3 @@ dev_dependencies:
 flutter:
   assets:
     - assets/json/
-    - assets/rive/
