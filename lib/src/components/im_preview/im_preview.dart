@@ -172,14 +172,14 @@ class _ImPreviewState extends State<ImPreview> {
       if (result.$1) {
         String suffix = url.substring(url.lastIndexOf('.'));
         String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-        await ImageGallerySaver.saveFile(result.$2!.path!, isReturnPathOfIOS: true, name: fileName);
+        // await ImageGallerySaver.saveFile(result.$2!.path!, isReturnPathOfIOS: true, name: fileName);
       } else {
         String savePath = ImCore.getSavePath(message.m);
         await Dio().download(url, savePath);
 
         String suffix = url.substring(url.lastIndexOf('.'));
         String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-        await ImageGallerySaver.saveFile(savePath, isReturnPathOfIOS: true, name: fileName);
+        // await ImageGallerySaver.saveFile(savePath, isReturnPathOfIOS: true, name: fileName);
       }
       widget.onSaveSuccess?.call();
     } catch (e) {

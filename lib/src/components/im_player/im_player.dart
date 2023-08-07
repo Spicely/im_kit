@@ -22,14 +22,14 @@ class ImPlayer extends StatefulWidget {
 }
 
 class _ImPlayerState extends State<ImPlayer> {
-  late final player = Player();
-  late final controller = VideoController(player);
+  // late final player = Player();
+  // late final controller = VideoController(player);
 
   @override
   void initState() {
     super.initState();
     // Play a [Media] or [Playlist].
-    player.open(Media('file:///${widget.message.ext.path}'));
+    // player.open(Media('file:///${widget.message.ext.path}'));
   }
 
   @override
@@ -38,7 +38,7 @@ class _ImPlayerState extends State<ImPlayer> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          Video(controller: controller),
+          // Video(controller: controller),
           Positioned(
             top: 0,
             left: 0,
@@ -117,7 +117,7 @@ class _ImPlayerState extends State<ImPlayer> {
 
       String suffix = url.substring(url.lastIndexOf('.'));
       String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-      await ImageGallerySaver.saveFile(message.ext.path!, isReturnPathOfIOS: true, name: fileName);
+      // await ImageGallerySaver.saveFile(message.ext.path!, isReturnPathOfIOS: true, name: fileName);
       widget.onSaveSuccess?.call();
     } catch (e) {
       debugPrint('保存图片失败: $e');
