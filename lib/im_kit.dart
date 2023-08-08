@@ -9,21 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:chewie/chewie.dart';
 import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart';
-// import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 import 'package:lottie/lottie.dart';
-// import 'package:media_kit/media_kit.dart' hide PlayerState;
-// import 'package:media_kit_video/media_kit_video.dart';
 import 'package:path/path.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:record/record.dart';
+import 'package:video_player/video_player.dart';
 
 export 'package:audioplayers/audioplayers.dart';
-// export 'package:media_kit/media_kit.dart' hide PlayerState;
 
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';

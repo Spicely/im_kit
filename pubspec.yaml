@@ -22,14 +22,8 @@ dependencies:
   image_gallery_saver:
   card_swiper: 
   photo_view: 
-  # media_kit: ^1.1.2+1
-  # media_kit_video:
-  # media_kit_native_event_loop: 1.0.6
-  # media_kit_libs_android_video: 
-  # media_kit_libs_ios_video: 
-  # media_kit_libs_macos_video: 
-  # media_kit_libs_windows_video: 
-  # media_kit_libs_linux:
+  chewie: 
+  video_player:
   lottie:
 
 dev_dependencies:

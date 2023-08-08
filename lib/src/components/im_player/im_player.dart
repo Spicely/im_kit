@@ -22,14 +22,27 @@ class ImPlayer extends StatefulWidget {
 }
 
 class _ImPlayerState extends State<ImPlayer> {
-  // late final player = Player();
-  // late final controller = VideoController(player);
+  late VideoPlayerController videoPlayerController;
+  ChewieController? chewieController;
 
   @override
   void initState() {
     super.initState();
-    // Play a [Media] or [Playlist].
-    // player.open(Media('file:///${widget.message.ext.path}'));
+    init();
+  }
+
+  Future<void> init() async {
+    videoPlayerController = VideoPlayerController.file(File(widget.message.ext.path!));
+    await videoPlayerController.initialize();
+    chewieController = ChewieController(videoPlayerController: videoPlayerController, autoPlay: true);
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    videoPlayerController.dispose();
+    chewieController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,7 +51,7 @@ class _ImPlayerState extends State<ImPlayer> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          // Video(controller: controller),
+          if (chewieController != null) Chewie(controller: chewieController!),
           Positioned(
             top: 0,
             left: 0,
@@ -117,7 +130,7 @@ class _ImPlayerState extends State<ImPlayer> {
 
       String suffix = url.substring(url.lastIndexOf('.'));
       String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-      // await ImageGallerySaver.saveFile(message.ext.path!, isReturnPathOfIOS: true, name: fileName);
+      await ImageGallerySaver.saveFile(message.ext.path!, isReturnPathOfIOS: true, name: fileName);
       widget.onSaveSuccess?.call();
     } catch (e) {
       debugPrint('保存图片失败: $e');
