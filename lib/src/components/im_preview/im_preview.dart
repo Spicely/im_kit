@@ -74,7 +74,7 @@ class _ImPreviewState extends State<ImPreview> {
               String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
               String? url = message.m.pictureElem?.sourcePicture?.url;
               return PhotoViewGalleryPageOptions(
-                imageProvider: CachedNetworkImageProvider('$url$crop'),
+                imageProvider: NetworkImage('$url$crop'),
                 initialScale: PhotoViewComputedScale.contained,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
