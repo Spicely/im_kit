@@ -7,6 +7,9 @@ class ImListItem extends StatelessWidget {
 
   final void Function(MessageExt message)? onTap;
 
+  /// 失败重发
+  final void Function(MessageExt message)? onTapResend;
+
   /// 发送消息等待Widget
   final Widget? sendLoadingWidget;
 
@@ -24,6 +27,7 @@ class ImListItem extends StatelessWidget {
     this.sendLoadingWidget,
     this.sendErrorWidget,
     this.sendSuccessWidget,
+    this.onTapResend,
   });
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
@@ -67,7 +71,13 @@ class ImListItem extends StatelessWidget {
 
   Widget? getStatusWidget() {
     if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
-    if (message.m.status == MessageStatus.failed) return sendErrorWidget;
+    if (message.m.status == MessageStatus.failed)
+      return GestureDetector(
+        child: sendErrorWidget,
+        onTap: () {
+          onTapResend?.call(message);
+        },
+      );
     if (message.m.status == MessageStatus.succeeded) return sendSuccessWidget;
     return null;
   }

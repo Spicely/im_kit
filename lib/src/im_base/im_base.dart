@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-08-01 18:30:04
+ * Last Modified: 2023-08-28 18:01:10
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -58,7 +58,7 @@ extension ExtensionMessage on Message {
       case MessageType.file:
 
         /// 优先判断本地文件
-        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath;
+        String? filePath = pictureElem?.sourcePath ?? soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath;
         if (filePath != null && File(filePath).existsSync()) {
           ext.path = filePath;
           break;

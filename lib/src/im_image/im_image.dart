@@ -38,9 +38,11 @@ class ImImage extends ImBase {
       tag: ValueKey(msg.clientMsgID),
       child: CachedImage(
         imageUrl: url != null ? '$url$crop' : null,
+        file: msg.pictureElem?.sourcePath != null ? File(msg.pictureElem?.sourcePath ?? '') : null,
         width: w,
         height: h,
         circular: 5,
+        fit: BoxFit.cover,
       ),
     );
   }
