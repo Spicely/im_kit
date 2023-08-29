@@ -22,7 +22,10 @@ class ImVoice extends ImBase {
             : Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
+                  Transform.rotate(
+                    angle: isMe ? -pi : 0,
+                    child: Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
+                  ),
                   const SizedBox(width: 8),
                   Text('${message.m.soundElem?.duration}"'),
                 ],

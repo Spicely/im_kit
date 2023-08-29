@@ -71,14 +71,15 @@ class ImListItem extends StatelessWidget {
 
   Widget? getStatusWidget() {
     if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
-    if (message.m.status == MessageStatus.failed)
+    if (message.m.status == MessageStatus.failed) {
       return GestureDetector(
         child: sendErrorWidget,
         onTap: () {
           onTapResend?.call(message);
         },
       );
-    if (message.m.status == MessageStatus.succeeded) return sendSuccessWidget;
+    }
+    if (message.m.status == MessageStatus.succeeded && OpenIM.iMManager.uid == message.m.sendID) return sendSuccessWidget;
     return null;
   }
 
