@@ -13,10 +13,9 @@ class ImAtText extends ImBase {
       decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
       padding: theme.padding,
-      // child: Text(message.m.textElem?.content ?? ''),
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: Text(message.m.content ?? ''),
+        child: Text(message.m.textElem?.content ?? ''),
       ),
     );
   }
