@@ -10,7 +10,7 @@ class ImAtText extends ImBase {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
+      decoration: BoxDecoration(color: theme.primaryColor, borderRadius: theme.borderRadius),
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
       padding: theme.padding,
       child: Directionality(

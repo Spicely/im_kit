@@ -15,7 +15,7 @@ class ImVoice extends ImBase {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
-        decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
+        decoration: BoxDecoration(color: theme.primaryColor, borderRadius: theme.borderRadius),
         padding: theme.padding,
         child: ext.path == null
             ? const ImLoading()

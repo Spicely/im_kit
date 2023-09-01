@@ -5,6 +5,7 @@ import 'dart:isolate';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -32,6 +33,7 @@ part 'src/components/voice_record/voice_record.dart';
 part 'src/components/voice_record/voice_record_controller.dart';
 part 'src/im_at_text/im_at_text.dart';
 part 'src/im_base/im_base.dart';
+part 'src/im_card/im_card.dart';
 part 'src/im_base/isolate_manager.dart';
 part 'src/im_base/isolate_method.dart';
 part 'src/im_file/im_file.dart';

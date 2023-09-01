@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-08-28 18:01:10
+ * Last Modified: 2023-09-01 17:31:47
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -51,14 +51,14 @@ class MessageExt {
 
 extension ExtensionMessage on Message {
   MessageExt toExt() {
-    final ext = ImExtModel();
+    final ext = ImExtModel(createTime: DateTime.now());
     switch (contentType) {
       case MessageType.voice:
       case MessageType.video:
       case MessageType.file:
 
         /// 优先判断本地文件
-        String? filePath = pictureElem?.sourcePath ?? soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath;
+        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath;
         if (filePath != null && File(filePath).existsSync()) {
           ext.path = filePath;
           break;
@@ -79,6 +79,9 @@ extension ExtensionMessage on Message {
 }
 
 class ImExtModel {
+  /// 创建时间
+  final DateTime createTime;
+
   double? progress;
 
   String? path;
@@ -89,11 +92,16 @@ class ImExtModel {
   /// 正在下载
   bool isDownloading;
 
+  /// 是否可以删除
+  bool canDelete;
+
   ImExtModel({
     this.progress,
     this.path,
     this.isPlaying = false,
     this.isDownloading = false,
+    this.canDelete = true,
+    required this.createTime,
   });
 }
 
@@ -138,7 +146,7 @@ class ImCore {
           return (false, null);
         }
       }
-      return (true, ImExtModel(path: msg.fileElem!.filePath!));
+      return (true, ImExtModel(path: msg.fileElem!.filePath!, createTime: DateTime.now()));
     }
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl;
     if (url == null) return (false, null);
@@ -153,7 +161,7 @@ class ImCore {
         return (false, null);
       }
     }
-    return (true, ImExtModel(path: filePath));
+    return (true, ImExtModel(path: filePath, createTime: DateTime.now()));
   }
 
   /// 播放音频
@@ -209,7 +217,7 @@ class ImCore {
 
 class ImTheme {
   /// 主题颜色
-  final Color themeColor;
+  final Color primaryColor;
 
   /// 圆角
   final BorderRadiusGeometry borderRadius;
@@ -220,11 +228,15 @@ class ImTheme {
   /// 副标题颜色
   final Color subtitleColor;
 
+  /// 字体颜色
+  final Color fontColor;
+
   ImTheme({
-    this.themeColor = const Color(0xffffffff),
+    this.primaryColor = const Color(0xffffffff),
     this.borderRadius = const BorderRadius.all(Radius.circular(5)),
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     this.subtitleColor = const Color(0xff999999),
+    this.fontColor = const Color(0xFF272D2C),
   });
 }
 

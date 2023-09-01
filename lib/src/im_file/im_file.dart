@@ -19,7 +19,7 @@ class ImFile extends ImBase {
       child: Stack(
         children: [
           Container(
-            decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
+            decoration: BoxDecoration(color: theme.primaryColor, borderRadius: theme.borderRadius),
             padding: theme.padding,
             width: 240,
             child: Column(
