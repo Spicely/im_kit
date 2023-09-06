@@ -23,8 +23,11 @@ dependencies:
   card_swiper: 
   photo_view: 
   chewie: 
+  image: 
   video_player:
   lottie:
+  encrypt: 
+  pointycastle:
 
 dev_dependencies:
   flutter_test:

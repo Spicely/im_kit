@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-08-28 18:01:10
+ * Last Modified: 2023-09-06 16:54:15
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -41,7 +41,7 @@ class ImBase extends StatelessWidget {
 class MessageExt {
   final ImExtModel ext;
 
-  final Message m;
+  Message m;
 
   MessageExt({
     required this.ext,
@@ -120,6 +120,12 @@ class ImCore {
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl ?? msg.pictureElem?.sourcePicture?.url;
     if (url == null) return '';
     String fileName = url.split('/').last;
+    return join(saveDir, fileName);
+  }
+
+  /// 文件保存地址
+  static String getSavePathForFilePath(String path) {
+    String fileName = path.split('/').last;
     return join(saveDir, fileName);
   }
 
@@ -228,7 +234,7 @@ class ImTheme {
   });
 }
 
-mixin ImDownloadListen {
+mixin ImKitListen {
   /// 下载进度
   void onDownloadProgress(String id, double progress);
 

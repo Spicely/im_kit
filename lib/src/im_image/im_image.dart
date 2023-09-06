@@ -29,16 +29,10 @@ class ImImage extends ImBase {
   @override
   Widget build(BuildContext context) {
     final (w, h) = size;
-
-    /// 获取像素密度
-    final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
-    String? url = msg.pictureElem?.sourcePicture?.url;
     return Hero(
       tag: ValueKey(msg.clientMsgID),
       child: CachedImage(
-        imageUrl: url != null ? '$url$crop' : null,
-        file: msg.pictureElem?.sourcePath != null ? File(msg.pictureElem?.sourcePath ?? '') : null,
+        file: ext.path != null ? File(ext.path!) : null,
         width: w,
         height: h,
         circular: 5,
