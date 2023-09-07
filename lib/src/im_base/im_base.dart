@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-09-06 16:54:15
+ * Last Modified: 2023-09-07 17:56:27
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -89,11 +89,19 @@ class ImExtModel {
   /// 正在下载
   bool isDownloading;
 
+  /// 预览图
+  Uint8List? preview;
+
+  /// 预览地址
+  String? previewPath;
+
   ImExtModel({
     this.progress,
     this.path,
     this.isPlaying = false,
     this.isDownloading = false,
+    this.preview,
+    this.previewPath,
   });
 }
 

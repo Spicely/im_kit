@@ -20,22 +20,22 @@ class IsolateMethod {
     }
   }
 
-  /// 加密图片
-  static Future<void> encryptImage(_PortModel params) async {
+  /// 加密文件
+  static Future<void> encryptFile(_PortModel params) async {
     try {
       String key = params.data['key'];
-      String iv = params.data['iv'];
-      String filePath = params.data['filePath'];
-      String savePath = params.data['savePath'];
+      final iv = enc.IV.fromUtf8(params.data['iv']);
+      String path = params.data['path'];
 
-      /// 检查文件是否存在
-      File file = File(savePath);
+      final fileByte = File(path).readAsBytesSync();
 
-      if (await file.exists()) {
-        params.sendPort?.send(PortResult(data: ''));
-        return;
-      }
-      _encryptFile(key, iv, filePath, savePath);
+      DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: iv);
+      if (res2.isEncData != 0) return;
+      Uint8List encdata = res2.encData;
+
+      /// 写入加密后的文件
+      File file = File(path);
+      file.writeAsBytesSync(encdata, flush: true);
       params.sendPort?.send(PortResult(data: ''));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
@@ -49,7 +49,15 @@ class IsolateMethod {
       String iv = params.data['iv'];
       String filePath = params.data['filePath'];
 
-      _decryptFile(key, iv, filePath);
+      final fileByte = File(filePath).readAsBytesSync();
+      DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: enc.IV.fromUtf8(iv));
+      if (res2.isEncData == 0) {
+        params.sendPort?.send(PortResult(data: filePath));
+        return;
+      }
+      Uint8List decData = res2.decFile;
+      File file = File(filePath);
+      file.writeAsBytesSync(decData, flush: true);
       params.sendPort?.send(PortResult(data: filePath));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
@@ -76,29 +84,16 @@ class IsolateMethod {
     }
   }
 
-  /// 加密文件
-  static void _encryptFile(String k, String v, String filePath, String savePath) {
-    final iv = enc.IV.fromUtf8(v);
-
-    final fileByte = File(filePath).readAsBytesSync();
-
-    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, k, decIV: iv);
-    if (res2.isEncData != 0) return;
-    Uint8List encdata = res2.encData;
-
-    /// 写入加密后的文件
-    File file = File(savePath);
-    file.writeAsBytesSync(encdata, flush: true);
-  }
-
-  /// 解密文件
-  static void _decryptFile(String k, String v, String filePath) {
-    final fileByte = File(filePath).readAsBytesSync();
-    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, k, decIV: enc.IV.fromUtf8(v));
-    if (res2.isEncData == 0) return;
-    Uint8List decData = res2.decFile;
-    File file = File(filePath);
-    file.writeAsBytesSync(decData, flush: true);
+  /// 复制文件
+  static void copyFile(_PortModel params) async {
+    String path = params.data['path'];
+    String savePath = params.data['savePath'];
+    try {
+      await File(path).copy(savePath);
+      params.sendPort?.send(PortResult(data: savePath));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
   }
 }
 

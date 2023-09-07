@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-06-21 14:44:02
  * Author: Spicely
  * -----
- * Last Modified: 2023-09-06 18:31:28
+ * Last Modified: 2023-09-07 18:23:13
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -20,13 +20,16 @@ enum _PortMethod {
   downloadFile,
 
   /// 对文件加密
-  encryptImage,
+  encryptFile,
 
   /// 解密文件
   decryptFile,
 
   /// 获取图片信息
   getImageInfo,
+
+  /// 复制文件
+  copyFile,
 }
 
 /// 下载进度
@@ -148,6 +151,14 @@ class ImKitIsolateManager {
       data: {'url': url, 'savePath': savePath},
       sendPort: port.sendPort,
     ));
+    if (message.contentType == MessageType.video) {
+      String prePath = ImCore.getSavePathForFilePath(message.videoElem?.snapshotUrl ?? '');
+      _isolateSendPort.send(_PortModel(
+        method: _PortMethod.downloadFile,
+        data: {'url': url, 'savePath': prePath},
+        sendPort: port.sendPort,
+      ));
+    }
     port.listen((msg) {
       if (msg is PortProgress) {
         for (ImKitListen listener in _listeners) {
@@ -191,17 +202,39 @@ class ImKitIsolateManager {
     return completer.future;
   }
 
-  /// 加密文件
-  ///
-  /// 返回值 (路径,类型,宽,高)
-  static Future<void> encryptImage(String key, String iv, String path) async {
-    var completer = Completer();
+  /// 复制文件
+  static Future<String> copyFile(String path) {
+    var completer = Completer<String>();
     String savePath = ImCore.getSavePathForFilePath(path);
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
-      method: _PortMethod.encryptImage,
-      data: {'key': key, 'iv': iv, 'filePath': path, 'savePath': savePath},
+      method: _PortMethod.copyFile,
+      data: {'path': path, 'savePath': savePath},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult<String>) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
+  }
+
+  /// 加密文件
+  static Future<void> encryptFile(String key, String iv, String path) async {
+    var completer = Completer();
+
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.encryptFile,
+      data: {'key': key, 'iv': iv, 'path': path},
       sendPort: port.sendPort,
     ));
 
@@ -256,12 +289,14 @@ class ImKitIsolateManager {
             case _PortMethod.downloadFile:
               IsolateMethod.downloadFile(msg);
               break;
-            case _PortMethod.encryptImage:
-              IsolateMethod.encryptImage(msg);
+            case _PortMethod.encryptFile:
+              IsolateMethod.encryptFile(msg);
             case _PortMethod.decryptFile:
               IsolateMethod.decryptFile(msg);
             case _PortMethod.getImageInfo:
               IsolateMethod.getImageInfo(msg);
+            case _PortMethod.copyFile:
+              IsolateMethod.copyFile(msg);
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
