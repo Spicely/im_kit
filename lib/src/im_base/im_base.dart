@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-09-07 17:56:27
+ * Last Modified: 2023-09-08 10:39:59
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -247,7 +247,7 @@ mixin ImKitListen {
   void onDownloadProgress(String id, double progress);
 
   /// 下载成功
-  void onDownloadSuccess(String id, String path);
+  void onDownloadSuccess(String id, List<String> paths);
 
   /// 下载失败
   void onDownloadFailure(String id, String error);

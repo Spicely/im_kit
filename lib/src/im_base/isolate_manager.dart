@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-06-21 14:44:02
  * Author: Spicely
  * -----
- * Last Modified: 2023-09-07 18:23:13
+ * Last Modified: 2023-09-08 11:15:43
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -16,8 +16,8 @@ part of im_kit;
  */
 
 enum _PortMethod {
-  /// 下载文件
-  downloadFile,
+  /// 下载多文件
+  downloadFiles,
 
   /// 对文件加密
   encryptFile,
@@ -109,71 +109,38 @@ class ImKitIsolateManager {
     );
 
     task.receivePort.listen((msg) {
-      if (msg is _PortModel) {
-        switch (msg.method) {
-          case _PortMethod.downloadFile:
-            // IsolateMethod.downloadFile(msg);
-            break;
-          default:
-        }
-      }
       if (msg is SendPort) {
         _isolateSendPort = msg;
       }
     });
   }
 
-  /// 下载压缩包
-  ///
-  /// [url] 下载地址
-  static void downloadFile(Message message) {
-    if (_downloadIds.contains(message.clientMsgID!)) return;
-    _downloadIds.add(message.clientMsgID!);
-    String url = message.fileElem?.sourceUrl ??
-        message.soundElem?.sourceUrl ??
-        message.pictureElem?.sourcePicture?.url ??
-        message.videoElem?.videoUrl ??
-        '';
-    String savePath = ImCore.getSavePath(message);
+  /// 下载多文件
+  static void downloadFiles(String id, List<String> urls) {
+    if (_downloadIds.contains(id)) return;
 
-    /// 检查文件是否存在
-    File file = File(savePath);
-    if (file.existsSync()) {
-      _downloadIds.remove(message.clientMsgID!);
-      for (ImKitListen listener in _listeners) {
-        listener.onDownloadSuccess(message.clientMsgID!, savePath);
-      }
-      return;
+    /// 获取保存路径
+    List<Map<String, String>> list = [];
+    for (var v in urls) {
+      list.add({'url': v, 'savePath': ImCore.getSavePathForFilePath(v)});
     }
     ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.downloadFile,
-      data: {'url': url, 'savePath': savePath},
-      sendPort: port.sendPort,
-    ));
-    if (message.contentType == MessageType.video) {
-      String prePath = ImCore.getSavePathForFilePath(message.videoElem?.snapshotUrl ?? '');
-      _isolateSendPort.send(_PortModel(
-        method: _PortMethod.downloadFile,
-        data: {'url': url, 'savePath': prePath},
-        sendPort: port.sendPort,
-      ));
-    }
+    _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: list, sendPort: port.sendPort));
     port.listen((msg) {
       if (msg is PortProgress) {
         for (ImKitListen listener in _listeners) {
-          listener.onDownloadProgress(message.clientMsgID!, msg.progress);
+          listener.onDownloadProgress(id, msg.progress);
         }
       }
-      if (msg is PortResult) {
-        _downloadIds.remove(message.clientMsgID!);
+      if (msg is PortResult<List<String>>) {
+        _downloadIds.remove(id);
         if (msg.data != null) {
           for (ImKitListen listener in _listeners) {
-            listener.onDownloadSuccess(message.clientMsgID!, msg.data);
+            listener.onDownloadSuccess(id, msg.data!);
           }
         } else {
           for (ImKitListen listener in _listeners) {
-            listener.onDownloadFailure(message.clientMsgID!, msg.error!);
+            listener.onDownloadFailure(id, msg.error!);
           }
         }
         port.close();
@@ -286,8 +253,8 @@ class ImKitIsolateManager {
       if (msg is _PortModel) {
         try {
           switch (msg.method) {
-            case _PortMethod.downloadFile:
-              IsolateMethod.downloadFile(msg);
+            case _PortMethod.downloadFiles:
+              IsolateMethod.downloadFiles(msg);
               break;
             case _PortMethod.encryptFile:
               IsolateMethod.encryptFile(msg);

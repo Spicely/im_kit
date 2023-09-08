@@ -7,7 +7,10 @@ class VoiceRecordController extends GetxController {
   /// 录音时间不足
   final Function()? onRecordTimeShort;
 
-  VoiceRecordController({this.onStopRecord, this.onRecordTimeShort});
+  /// 取消发送
+  final Function()? onCancelRecord;
+
+  VoiceRecordController({this.onStopRecord, this.onRecordTimeShort, this.onCancelRecord});
 
   /// 显示录制
   RxBool isShowing = false.obs;
@@ -25,6 +28,9 @@ class VoiceRecordController extends GetxController {
 
   String fileName = '';
 
+  /// 滑动距离
+  double panY = 0;
+
   @override
   void dispose() {
     record.dispose();
@@ -39,7 +45,8 @@ class VoiceRecordController extends GetxController {
   }
 
   /// 开始录音
-  void startVoiceRecord() async {
+  void startVoiceRecord(TapDownDetails details) async {
+    panY = 0;
     isShowing.value = true;
     startTime = DateTime.now();
     fileName = startTime.millisecondsSinceEpoch.toString();
@@ -47,14 +54,28 @@ class VoiceRecordController extends GetxController {
     await record.start(path: _filePath);
   }
 
-  void onPanEnd(DragEndDetails details) {
+  void onPanUpdate(DragUpdateDetails details) {
+    panY = Get.height - details.globalPosition.dy;
+  }
+
+  void onPanEnd(DragEndDetails details) async {
     if (!isShowing.value) return;
     isShowing.value = false;
-    _stopRecord();
+    // double fingerPositionY = details;
+    // print(fingerPositionY);
+
+    /// 判断手指距离
+    if (panY > 200) {
+      await record.stop();
+      File(_filePath).delete();
+      onCancelRecord?.call();
+    } else {
+      _stopRecord();
+    }
   }
 
   /// 结束录音
-  void stopVoiceRecord() {
+  void stopVoiceRecord(TapUpDetails details) {
     if (!isShowing.value) return;
     isShowing.value = false;
     _stopRecord();

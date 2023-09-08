@@ -5,16 +5,38 @@ part of im_kit;
 const ROADOM_STR = "bwGO8X5gdaM5dsV@";
 
 class IsolateMethod {
-  /// 下载文件
-  static Future<void> downloadFile(_PortModel params) async {
+  /// 下载多文件
+  static Future<void> downloadFiles(_PortModel params) async {
     try {
-      String url = params.data['url'];
-      String savePath = params.data['savePath'];
-
-      await Dio().download(url, savePath, onReceiveProgress: (count, total) {
-        params.sendPort?.send(PortProgress(count / total));
+      Map<String, dynamic> progressMap = {};
+      List<Map<String, String>> urls = params.data;
+      bool status = urls.every((v) {
+        File file = File(v['savePath']!);
+        if (file.existsSync()) {
+          return true;
+        } else {
+          return false;
+        }
       });
-      params.sendPort?.send(PortResult(data: savePath));
+
+      if (status) {
+        params.sendPort?.send(PortResult(data: urls.map((e) => e['savePath']!).toList()));
+        return;
+      }
+      await Future.wait(urls.map((e) {
+        progressMap[e['url']!] = {'count': 0, 'total': 0};
+        return Dio().download(e['url']!, e['savePath'], onReceiveProgress: (count, total) {
+          progressMap[e['url']!] = {'count': count, 'total': total};
+          double progress = 0;
+          progressMap.forEach((key, value) {
+            if (value['total'] == 0) return;
+            progress += value['count'] / value['total'];
+          });
+          params.sendPort?.send(PortProgress(progress / progressMap.length));
+        });
+      }).toList());
+
+      params.sendPort?.send(PortResult(data: urls.map((e) => e['savePath']!).toList()));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
