@@ -4,7 +4,7 @@ part of im_kit;
  * Created Date: 2023-07-13 21:11:28
  * Author: Spicely
  * -----
- * Last Modified: 2023-09-01 17:31:47
+ * Last Modified: 2023-09-11 09:38:52
  * Modified By: Spicely
  * -----
  * Copyright (c) 2023 Spicely Inc.
@@ -41,7 +41,7 @@ class ImBase extends StatelessWidget {
 class MessageExt {
   final ImExtModel ext;
 
-  final Message m;
+  Message m;
 
   MessageExt({
     required this.ext,
@@ -95,6 +95,12 @@ class ImExtModel {
   /// 是否可以删除
   bool canDelete;
 
+  /// 预览图
+  Uint8List? preview;
+
+  /// 预览地址
+  String? previewPath;
+
   ImExtModel({
     this.progress,
     this.path,
@@ -102,6 +108,8 @@ class ImExtModel {
     this.isDownloading = false,
     this.canDelete = true,
     required this.createTime,
+    this.preview,
+    this.previewPath,
   });
 }
 
@@ -128,6 +136,12 @@ class ImCore {
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl ?? msg.pictureElem?.sourcePicture?.url;
     if (url == null) return '';
     String fileName = url.split('/').last;
+    return join(saveDir, fileName);
+  }
+
+  /// 文件保存地址
+  static String getSavePathForFilePath(String path) {
+    String fileName = path.split('/').last;
     return join(saveDir, fileName);
   }
 
@@ -240,12 +254,12 @@ class ImTheme {
   });
 }
 
-mixin ImDownloadListen {
+mixin ImKitListen {
   /// 下载进度
   void onDownloadProgress(String id, double progress);
 
   /// 下载成功
-  void onDownloadSuccess(String id, String path);
+  void onDownloadSuccess(String id, List<String> paths);
 
   /// 下载失败
   void onDownloadFailure(String id, String error);

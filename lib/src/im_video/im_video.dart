@@ -37,7 +37,8 @@ class ImVideo extends ImBase {
       child: Stack(
         children: [
           CachedImage(
-            imageUrl: msg.videoElem?.snapshotUrl,
+            memory: ext.preview,
+            file: ext.previewPath != null ? File(ext.previewPath!) : null,
             width: w,
             height: h,
             circular: 5,

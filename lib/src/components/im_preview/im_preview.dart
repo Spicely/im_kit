@@ -69,16 +69,12 @@ class _ImPreviewState extends State<ImPreview> {
               MessageExt message = messages[index];
               final (w, h) = getSize(message);
 
-              /// 获取像素密度
-              final double pixelRatio = MediaQuery.of(context).devicePixelRatio;
-              String crop = '?x-oss-process=image/resize,m_fill,h_${(h * pixelRatio).toInt()},w_${(w * pixelRatio).toInt()}';
-              String? url = message.m.pictureElem?.sourcePicture?.url;
               return PhotoViewGalleryPageOptions(
-                imageProvider: NetworkImage('$url$crop'),
+                imageProvider: FileImage(File(message.ext.path!)),
                 initialScale: PhotoViewComputedScale.contained,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
-                  return CachedImage(imageUrl: url, width: w, height: h, circular: 5, fit: BoxFit.cover);
+                  return CachedImage(file: File(message.ext.path!), width: w, height: h, circular: 5, fit: BoxFit.cover);
                 },
               );
             },

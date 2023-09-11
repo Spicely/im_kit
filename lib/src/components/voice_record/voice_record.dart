@@ -9,20 +9,25 @@ class VoiceRecord extends StatelessWidget {
   /// 录音时间不足
   final Function()? onRecordTimeShort;
 
+  /// 取消发送
+  final Function()? onCancelRecord;
+
   const VoiceRecord({
     super.key,
     required this.child,
     this.onStopRecord,
     this.onRecordTimeShort,
+    this.onCancelRecord,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       child: GetBuilder(
-        init: VoiceRecordController(onRecordTimeShort: onRecordTimeShort, onStopRecord: onStopRecord),
+        init: VoiceRecordController(onRecordTimeShort: onRecordTimeShort, onStopRecord: onStopRecord, onCancelRecord: onCancelRecord),
         builder: (controller) => GestureDetector(
           behavior: HitTestBehavior.translucent,
+          onPanUpdate: controller.onPanUpdate,
           onPanEnd: controller.onPanEnd,
           child: Stack(
             children: [

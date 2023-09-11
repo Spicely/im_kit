@@ -10,8 +10,6 @@ class ImFile extends ImBase {
     this.onTapDownFile,
   }) : super(key: key, isMe: isMe, message: message);
 
-  ImExtModel get ext => message.ext;
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
