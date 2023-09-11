@@ -4,11 +4,11 @@ class ImVideo extends ImBase {
   final void Function(Message message)? onTapDownFile;
 
   const ImVideo({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
+    super.key,
+    required super.isMe,
+    required super.message,
     this.onTapDownFile,
-  }) : super(key: key, isMe: isMe, message: message);
+  });
 
   (double w, double h) get size {
     double width = msg.videoElem?.snapshotWidth?.toDouble() ?? 240.0;
