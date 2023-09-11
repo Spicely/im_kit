@@ -28,6 +28,7 @@ dependencies:
   lottie:
   encrypt: 
   pointycastle:
+  popup_menu: 
 
 dev_dependencies:
   flutter_test:

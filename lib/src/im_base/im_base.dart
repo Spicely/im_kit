@@ -20,6 +20,8 @@ class ImBase extends StatelessWidget {
 
   final MessageExt message;
 
+  final void Function(MenuItemProvider, MessageExt)? onClickMenu;
+
   ImTheme get theme => ImCore.theme;
 
   ImExtModel get ext => message.ext;
@@ -30,6 +32,7 @@ class ImBase extends StatelessWidget {
     super.key,
     required this.isMe,
     required this.message,
+    this.onClickMenu,
   });
 
   @override
@@ -51,7 +54,7 @@ class MessageExt {
 
 extension ExtensionMessage on Message {
   MessageExt toExt() {
-    final ext = ImExtModel();
+    final ext = ImExtModel(itemKey: GlobalKey());
     switch (contentType) {
       case MessageType.voice:
       case MessageType.video:
@@ -79,6 +82,8 @@ extension ExtensionMessage on Message {
 }
 
 class ImExtModel {
+  final GlobalKey itemKey;
+
   double? progress;
 
   String? path;
@@ -96,6 +101,7 @@ class ImExtModel {
   String? previewPath;
 
   ImExtModel({
+    required this.itemKey,
     this.progress,
     this.path,
     this.isPlaying = false,
@@ -152,7 +158,7 @@ class ImCore {
           return (false, null);
         }
       }
-      return (true, ImExtModel(path: msg.fileElem!.filePath!));
+      return (true, ImExtModel(itemKey: GlobalKey(), path: msg.fileElem!.filePath!));
     }
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl;
     if (url == null) return (false, null);
@@ -167,7 +173,7 @@ class ImCore {
         return (false, null);
       }
     }
-    return (true, ImExtModel(path: filePath));
+    return (true, ImExtModel(itemKey: GlobalKey(), path: filePath));
   }
 
   /// 播放音频

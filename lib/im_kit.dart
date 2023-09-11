@@ -23,10 +23,12 @@ import 'package:lottie/lottie.dart';
 import 'package:path/path.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:popup_menu/popup_menu.dart';
 import 'package:record/record.dart';
 import 'package:video_player/video_player.dart';
 
 export 'package:audioplayers/audioplayers.dart';
+export 'package:popup_menu/popup_menu.dart';
 
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';

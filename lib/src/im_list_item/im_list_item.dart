@@ -10,6 +10,9 @@ class ImListItem extends StatelessWidget {
   /// 失败重发
   final void Function(MessageExt message)? onTapResend;
 
+  /// 消息获取之前处理
+  final MessageExt Function(MessageExt message)? onBuildBeforeMsg;
+
   /// 发送消息等待Widget
   final Widget? sendLoadingWidget;
 
@@ -18,6 +21,10 @@ class ImListItem extends StatelessWidget {
 
   /// 发送消息成功Widget
   final Widget? sendSuccessWidget;
+
+  final void Function(MenuItemProvider, MessageExt)? onClickMenu;
+
+  final List<MenuItemProvider>? textMenuItems;
 
   const ImListItem({
     super.key,
@@ -28,6 +35,9 @@ class ImListItem extends StatelessWidget {
     this.sendErrorWidget,
     this.sendSuccessWidget,
     this.onTapResend,
+    this.onBuildBeforeMsg,
+    this.onClickMenu,
+    this.textMenuItems,
   });
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
@@ -87,7 +97,7 @@ class ImListItem extends StatelessWidget {
     switch (message.m.contentType) {
       case MessageType.text:
       case MessageType.at_text:
-        return ImAtText(message: message, isMe: isMe);
+        return ImAtText(message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message, isMe: isMe, onClickMenu: onClickMenu, textMenuItems: textMenuItems);
       case MessageType.picture:
         return ImImage(message: message, isMe: isMe);
       case MessageType.file:

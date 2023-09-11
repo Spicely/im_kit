@@ -319,7 +319,11 @@ class EncryptExtends {
   static String DEC_STR_AES_UTF8_P7({required String plainText, required String keyStr, required enc.IV iv}) {
     final key = enc.Key.fromUtf8(keyStr);
     final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
-    return encrypter.decrypt(enc.Encrypted.fromBase64(plainText), iv: iv);
+    try {
+      return encrypter.decrypt(enc.Encrypted.fromBase64(plainText), iv: iv);
+    } catch (e) {
+      return plainText;
+    }
   }
 
   static enc.Encrypted ENC_STR_AES_UTF8_ZP({required String plainText, required String keyStr}) {

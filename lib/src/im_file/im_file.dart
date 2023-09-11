@@ -4,11 +4,11 @@ class ImFile extends ImBase {
   final void Function(MessageExt message)? onTapDownFile;
 
   const ImFile({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
+    super.key,
+    required super.isMe,
+    required super.message,
     this.onTapDownFile,
-  }) : super(key: key, isMe: isMe, message: message);
+  });
 
   @override
   Widget build(BuildContext context) {
