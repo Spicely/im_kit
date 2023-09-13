@@ -26,7 +26,7 @@ class ImAtText extends ImBase {
         padding: theme.padding,
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: Text(message.m.content ?? ''),
+          child: Text(message.m.textElem?.content ?? ''),
         ),
       ),
     );

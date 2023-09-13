@@ -1,11 +1,14 @@
 part of im_kit;
 
-class ImListItem extends StatefulWidget {
+class ImListItem extends StatelessWidget {
   final MessageExt message;
 
   final void Function(MessageExt message)? onTapDownFile;
 
   final void Function(MessageExt message)? onTap;
+
+  /// 失败重发
+  final void Function(MessageExt message)? onTapResend;
 
   /// 通知用户点击事件
   final void Function(UserInfo userInfo)? onNotificationUserTap;
@@ -26,6 +29,8 @@ class ImListItem extends StatefulWidget {
 
   final List<MenuItemProvider>? textMenuItems;
 
+  bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
+
   const ImListItem({
     super.key,
     required this.message,
@@ -34,25 +39,12 @@ class ImListItem extends StatefulWidget {
     this.sendLoadingWidget,
     this.sendErrorWidget,
     this.sendSuccessWidget,
-<<<<<<< HEAD
     this.onNotificationUserTap,
-=======
     this.onTapResend,
     this.onBuildBeforeMsg,
     this.onClickMenu,
     this.textMenuItems,
->>>>>>> master
   });
-
-  @override
-  State<ImListItem> createState() => _ImListItemState();
-}
-
-class _ImListItemState extends State<ImListItem> {
-  MessageExt get message => widget.message;
-
-  bool get isMe => widget.message.m.sendID == OpenIM.iMManager.uid;
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -82,11 +74,11 @@ class _ImListItemState extends State<ImListItem> {
                       ..onTap = () {
                         if (OpenIM.iMManager.uid == message.m.sendID) {
                           OpenIM.iMManager.userManager.getSelfUserInfo().then((v) {
-                            widget.onNotificationUserTap?.call(v);
+                            onNotificationUserTap?.call(v);
                           });
                         } else {
                           OpenIM.iMManager.friendshipManager.getFriendsInfo(uidList: [message.m.sendID!]).then((v) {
-                            widget.onNotificationUserTap?.call(v.first);
+                            onNotificationUserTap?.call(v.first);
                           });
                         }
                       },
@@ -106,7 +98,7 @@ class _ImListItemState extends State<ImListItem> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    widget.onTap?.call(message);
+                    onTap?.call(message);
                   },
                   child: getTypeWidget(),
                 ),
@@ -120,11 +112,16 @@ class _ImListItemState extends State<ImListItem> {
   }
 
   Widget? getStatusWidget() {
-    if (message.m.status == MessageStatus.sending) return widget.sendLoadingWidget;
-    if (message.m.status == MessageStatus.failed) return widget.sendErrorWidget;
-    if (message.m.status == MessageStatus.succeeded && OpenIM.iMManager.uid == message.m.sendID && message.m.isSingleChat) {
-      return widget.sendSuccessWidget;
+    if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
+    if (message.m.status == MessageStatus.failed) {
+      return GestureDetector(
+        child: sendErrorWidget,
+        onTap: () {
+          onTapResend?.call(message);
+        },
+      );
     }
+    if (message.m.status == MessageStatus.succeeded && OpenIM.iMManager.uid == message.m.sendID) return sendSuccessWidget;
     return null;
   }
 
@@ -136,13 +133,11 @@ class _ImListItemState extends State<ImListItem> {
       case MessageType.picture:
         return ImImage(message: message, isMe: isMe);
       case MessageType.file:
-        return ImFile(message: message, isMe: isMe, onTapDownFile: widget.onTapDownFile);
+        return ImFile(message: message, isMe: isMe, onTapDownFile: onTapDownFile);
       case MessageType.voice:
         return ImVoice(message: message, isMe: isMe);
       case MessageType.video:
         return ImVideo(message: message, isMe: isMe);
-      case MessageType.card:
-        return ImCard(message: message, isMe: isMe);
       default:
         return const Text('暂不支持的消息');
     }
