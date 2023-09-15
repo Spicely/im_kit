@@ -52,7 +52,13 @@ class ImListItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CachedImage(imageUrl: message.m.senderFaceUrl, width: 35, height: 35, circular: 5, fit: BoxFit.cover),
+            CachedImage(
+              imageUrl: message.m.senderFaceUrl,
+              width: ImCore.theme.avatarTheme.width,
+              height: ImCore.theme.avatarTheme.height,
+              circular: ImCore.theme.avatarTheme.circular,
+              fit: ImCore.theme.avatarTheme.fit,
+            ),
             const SizedBox(width: 10),
             // Container(
             //   color: Colors.white,

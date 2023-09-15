@@ -218,6 +218,15 @@ class ImKitIsolateManager {
     return completer.future;
   }
 
+  /// 重命名文件
+  static Future<void> renameFile(String path, String url) async {
+    /// 检查文件是否存在  如果存在则重命名
+    File file = File(path);
+    if (await file.exists()) {
+      await file.rename(ImCore.getSavePathForFilePath(url));
+    }
+  }
+
   /// 解密文件
   static Future<String> decryptFile(String key, String iv, String path) async {
     var completer = Completer<String>();

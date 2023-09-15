@@ -17,8 +17,11 @@ class ImFile extends ImBase {
       child: Stack(
         children: [
           Container(
-            decoration: BoxDecoration(color: theme.themeColor, borderRadius: theme.borderRadius),
-            padding: theme.padding,
+            decoration: BoxDecoration(
+              color: isMe ? theme.dialogTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.dialogTheme.backgroundColor,
+              borderRadius: theme.dialogTheme.borderRadius,
+            ),
+            padding: theme.dialogTheme.padding,
             width: 240,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +54,7 @@ class ImFile extends ImBase {
                       Row(
                         children: [
                           Text(
-                            '${Utils.getFileSize(message.m.fileElem?.fileSize ?? 0)} / ${ext.path == null ? '未下载' : '已下载'}',
+                            '${Utils.getFileSize(message.m.fileElem?.fileSize ?? 0)} / ${ext.path == null ? theme.language.unDownload : theme.language.downloaded}',
                             style: TextStyle(fontSize: 10, color: theme.subtitleColor),
                           )
                           // snapshot.data?.$1 == true
