@@ -122,7 +122,7 @@ class ImExtModel {
 class ImCore {
   static ImTheme theme = const ImTheme();
 
-  static final AudioPlayer _player = AudioPlayer();
+  static final a.AudioPlayer _player = a.AudioPlayer();
 
   /// 文件路径
   static String dirPath = '';
@@ -133,8 +133,8 @@ class ImCore {
   static String get saveDir => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
 
   /// 播放回调
-  static void onPlayerStateChanged(void Function(PlayerState state, String id) listener) {
-    _player.onPlayerStateChanged.listen((PlayerState state) => listener(state, _playID));
+  static void onPlayerStateChanged(void Function(a.PlayerState state, String id) listener) {
+    _player.onPlayerStateChanged.listen((a.PlayerState state) => listener(state, _playID));
   }
 
   /// 文件保存地址
@@ -187,7 +187,7 @@ class ImCore {
   /// 播放音频
   static Future<void> play(String url, String id, {void Function(String)? onPlayerBeforePlay}) async {
     onPlayerBeforePlay?.call(_playID);
-    await _player.play(DeviceFileSource(url));
+    await _player.play(a.DeviceFileSource(url));
     _playID = id;
   }
 

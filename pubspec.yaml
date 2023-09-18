@@ -22,13 +22,14 @@ dependencies:
   image_gallery_saver:
   card_swiper: 
   photo_view: 
-  chewie: 
   image: 
-  video_player:
   lottie:
   encrypt: 
   pointycastle:
   popup_menu: 
+  media_kit: ^1.1.7
+  media_kit_video: ^1.1.8
+  media_kit_libs_video: ^1.0.1
 
 dev_dependencies:
   flutter_test:
