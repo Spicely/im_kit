@@ -22,8 +22,8 @@ class ImPlayer extends StatefulWidget {
 }
 
 class _ImPlayerState extends State<ImPlayer> {
-  late VideoPlayerController videoPlayerController;
-  ChewieController? chewieController;
+  late final player = Player();
+  late final controller = VideoController(player);
 
   @override
   void initState() {
@@ -32,16 +32,13 @@ class _ImPlayerState extends State<ImPlayer> {
   }
 
   Future<void> init() async {
-    videoPlayerController = VideoPlayerController.file(File(widget.message.ext.path!));
-    await videoPlayerController.initialize();
-    chewieController = ChewieController(videoPlayerController: videoPlayerController, autoPlay: true);
+    player.open(Media('file://${widget.message.ext.path!}'));
     setState(() {});
   }
 
   @override
   void dispose() {
-    videoPlayerController.dispose();
-    chewieController?.dispose();
+    player.dispose();
     super.dispose();
   }
 
@@ -51,7 +48,7 @@ class _ImPlayerState extends State<ImPlayer> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          if (chewieController != null) Chewie(controller: chewieController!),
+          Video(controller: controller),
           Positioned(
             top: 0,
             left: 0,
