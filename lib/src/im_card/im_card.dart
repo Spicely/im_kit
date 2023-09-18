@@ -28,11 +28,11 @@ class ImCard extends ImBase {
       textDirection: TextDirection.ltr,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 200),
-        decoration: BoxDecoration(
-          color: theme.primaryColor,
-          borderRadius: theme.borderRadius,
-        ),
-        padding: theme.padding,
+        // decoration: BoxDecoration(
+        //   color: theme.primaryColor,
+        //   borderRadius: theme.borderRadius,
+        // ),
+        // padding: theme.padding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

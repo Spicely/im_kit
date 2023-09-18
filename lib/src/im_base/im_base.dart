@@ -120,7 +120,7 @@ class ImExtModel {
 }
 
 class ImCore {
-  static final ImTheme theme = ImTheme();
+  static ImTheme theme = const ImTheme();
 
   static final AudioPlayer _player = AudioPlayer();
 
@@ -236,27 +236,90 @@ class ImCore {
 }
 
 class ImTheme {
-  /// 主题颜色
-  final Color primaryColor;
+  /// 副标题颜色
+  final Color subtitleColor;
+
+  /// 头像样式
+  final ImAvatarTheme avatarTheme;
+
+  /// 对话框样式
+  final ImDialogTheme dialogTheme;
+
+  /// 多语言
+  final ImLanguage language;
+
+  const ImTheme({
+    this.subtitleColor = const Color(0xff999999),
+    this.avatarTheme = const ImAvatarTheme(),
+    this.dialogTheme = const ImDialogTheme(),
+    this.language = const ImLanguage(),
+  });
+}
+
+class ImLanguage {
+  /// 长按录制语音
+  final String longPressRecordVoice;
+
+  /// 松开立即发送 上滑取消
+  final String releaseSendSlideCancel;
+
+  /// 已下载
+  final String downloaded;
+
+  /// 未下载
+  final String unDownload;
+
+  const ImLanguage({
+    this.releaseSendSlideCancel = '松开立即发送 上滑取消',
+    this.longPressRecordVoice = '长按录制语音',
+    this.downloaded = '已下载',
+    this.unDownload = '未下载',
+  });
+}
+
+class ImAvatarTheme {
+  /// 宽度
+  final double width;
+
+  /// 高度
+  final double height;
+
+  /// 圆角
+  final double circular;
+
+  /// 图片填充模式
+  final BoxFit fit;
+
+  const ImAvatarTheme({
+    this.width = 40,
+    this.height = 40,
+    this.circular = 5,
+    this.fit = BoxFit.cover,
+  });
+}
+
+class ImDialogTheme {
+  /// 间距
+  final EdgeInsetsGeometry padding;
 
   /// 圆角
   final BorderRadiusGeometry borderRadius;
 
-  /// 内边距
-  final EdgeInsetsGeometry padding;
+  /// 背景颜色
+  final Color backgroundColor;
 
-  /// 副标题颜色
-  final Color subtitleColor;
+  /// 我的消息颜色
+  final Color? meBackgroundColor;
 
-  /// 字体颜色
-  final Color fontColor;
+  /// 文本样式
+  final TextStyle textStyle;
 
-  ImTheme({
-    this.primaryColor = const Color(0xffffffff),
-    this.borderRadius = const BorderRadius.all(Radius.circular(5)),
+  const ImDialogTheme({
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    this.subtitleColor = const Color(0xff999999),
-    this.fontColor = const Color(0xFF272D2C),
+    this.borderRadius = const BorderRadius.all(Radius.circular(5)),
+    this.backgroundColor = const Color(0xffffffff),
+    this.meBackgroundColor,
+    this.textStyle = const TextStyle(fontSize: 16, color: Color(0xff333333)),
   });
 }
 

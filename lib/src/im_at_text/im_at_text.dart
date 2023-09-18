@@ -21,12 +21,15 @@ class ImAtText extends ImBase {
             },
       child: Container(
         key: message.ext.itemKey,
-        decoration: BoxDecoration(color: theme.primaryColor, borderRadius: theme.borderRadius),
+        decoration: BoxDecoration(
+          color: isMe ? theme.dialogTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.dialogTheme.backgroundColor,
+          borderRadius: theme.dialogTheme.borderRadius,
+        ),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
-        padding: theme.padding,
+        padding: theme.dialogTheme.padding,
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: Text(message.m.textElem?.content ?? ''),
+          child: Text(message.m.textElem?.content ?? '', style: theme.dialogTheme.textStyle),
         ),
       ),
     );

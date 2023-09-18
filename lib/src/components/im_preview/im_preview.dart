@@ -122,15 +122,15 @@ class _ImPreviewState extends State<ImPreview> {
                       child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
                     ),
                   ),
-                  Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
-                  ),
+                  // Container(
+                  //   width: 30,
+                  //   height: 30,
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.grey.withOpacity(0.8),
+                  //     borderRadius: BorderRadius.circular(15),
+                  //   ),
+                  //   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
+                  // ),
                 ],
               ),
             ),
