@@ -47,7 +47,7 @@ class ImCard extends ImBase {
               valueAlignment: Alignment.centerLeft,
               value: Text(
                 message.m.cardElem?.nickname ?? '',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: theme.fontColor, fontSize: 14),
+                // style: Theme.of(context).textTheme.bodySmall?.copyWith(color: theme.fontColor, fontSize: 14),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
