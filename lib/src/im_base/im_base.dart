@@ -195,6 +195,7 @@ class ImCore {
     MessageExt currentMessage, {
     void Function()? onSaveSuccess,
     void Function()? onSaveFailure,
+    Future<void> Function(String)? onSaveBefore,
   }) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -203,6 +204,7 @@ class ImCore {
           currentMessage: currentMessage,
           onSaveSuccess: onSaveSuccess,
           onSaveFailure: onSaveFailure,
+          onSaveBefore: onSaveBefore,
         ),
       ),
     );
