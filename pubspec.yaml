@@ -27,9 +27,8 @@ dependencies:
   encrypt: 
   pointycastle:
   popup_menu: 
-  media_kit:
-  media_kit_video:
-  media_kit_libs_video:
+  video_player:
+  chewie:
 
 dev_dependencies:
   flutter_test:
