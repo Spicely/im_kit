@@ -10,13 +10,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:chewie/chewie.dart';
+// import 'package:chewie/chewie.dart';
 import 'package:audioplayers/audioplayers.dart' as a;
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
+// import 'package:video_player/video_player.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:loading_indicator/loading_indicator.dart';

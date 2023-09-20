@@ -27,8 +27,8 @@ dependencies:
   encrypt: 
   pointycastle:
   popup_menu: 
-  video_player:
-  chewie:
+  # video_player:
+  # chewie:
 
 dev_dependencies:
   flutter_test:
