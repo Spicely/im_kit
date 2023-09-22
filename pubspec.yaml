@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_openim_sdk_ffi:
-    path: ../flutter_openim_sdk_ffi
+    path: ../../flutter_openim_sdk_ffi
   flutter_muka:
     path: ../flutter_muka
   path:

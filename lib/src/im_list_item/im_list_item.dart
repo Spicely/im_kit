@@ -44,6 +44,9 @@ class ImListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (message.m.contentType == MessageType.friendAddedNotification) {
+      return Container();
+    }
     return Directionality(
       textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
