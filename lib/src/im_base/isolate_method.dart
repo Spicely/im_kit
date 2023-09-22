@@ -71,7 +71,7 @@ class IsolateMethod {
       String iv = params.data['iv'];
       String filePath = params.data['filePath'];
 
-      final fileByte = File(filePath).readAsBytesSync();
+      final fileByte = await File(filePath).readAsBytes();
       DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: enc.IV.fromUtf8(iv));
       if (res2.isEncData == 0) {
         params.sendPort?.send(PortResult(data: filePath));
@@ -79,7 +79,7 @@ class IsolateMethod {
       }
       Uint8List decData = res2.decFile;
       File file = File(filePath);
-      file.writeAsBytesSync(decData, flush: true);
+      await file.writeAsBytes(decData, flush: true);
       params.sendPort?.send(PortResult(data: filePath));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
