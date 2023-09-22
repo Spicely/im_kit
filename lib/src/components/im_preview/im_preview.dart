@@ -75,7 +75,8 @@ class _ImPreviewState extends State<ImPreview> {
               return PhotoViewGalleryPageOptions(
                 imageProvider: FileImage(File(message.ext.path!)),
                 initialScale: PhotoViewComputedScale.contained,
-                minScale: 0.5,
+                minScale: PhotoViewComputedScale.contained * 0.5,
+                maxScale: PhotoViewComputedScale.contained * 2,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
                   return CachedImage(file: File(message.ext.path!), width: w, height: h, circular: 5, fit: BoxFit.cover);
