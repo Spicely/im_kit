@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_openim_sdk_ffi:
-    path: ../flutter_openim_sdk_ffi
+    path: ../../flutter_openim_sdk_ffi
   flutter_muka:
     path: ../flutter_muka
   path:
@@ -27,9 +27,8 @@ dependencies:
   encrypt: 
   pointycastle:
   popup_menu: 
-  media_kit: ^1.1.7
-  media_kit_video: ^1.1.8
-  media_kit_libs_video: ^1.0.1
+  # video_player:
+  # chewie:
 
 dev_dependencies:
   flutter_test:

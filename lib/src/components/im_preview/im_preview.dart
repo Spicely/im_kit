@@ -12,12 +12,15 @@ class ImPreview extends StatefulWidget {
   /// 保存失败
   final void Function()? onSaveFailure;
 
+  final Future<void> Function(String)? onSaveBefore;
+
   const ImPreview({
     super.key,
     required this.messages,
     required this.currentMessage,
     this.onSaveSuccess,
     this.onSaveFailure,
+    this.onSaveBefore,
   });
 
   @override
@@ -72,6 +75,8 @@ class _ImPreviewState extends State<ImPreview> {
               return PhotoViewGalleryPageOptions(
                 imageProvider: FileImage(File(message.ext.path!)),
                 initialScale: PhotoViewComputedScale.contained,
+                minScale: PhotoViewComputedScale.contained * 0.5,
+                maxScale: PhotoViewComputedScale.contained * 2,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
                   return CachedImage(file: File(message.ext.path!), width: w, height: h, circular: 5, fit: BoxFit.cover);
@@ -168,6 +173,9 @@ class _ImPreviewState extends State<ImPreview> {
       if (result.$1) {
         String suffix = url.substring(url.lastIndexOf('.'));
         String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
+        if (widget.onSaveBefore != null) {
+          await widget.onSaveBefore!(result.$2!.path!);
+        }
         await ImageGallerySaver.saveFile(result.$2!.path!, isReturnPathOfIOS: true, name: fileName);
       } else {
         String savePath = ImCore.getSavePath(message.m);
@@ -175,6 +183,9 @@ class _ImPreviewState extends State<ImPreview> {
 
         String suffix = url.substring(url.lastIndexOf('.'));
         String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
+        if (widget.onSaveBefore != null) {
+          await widget.onSaveBefore!(savePath);
+        }
         await ImageGallerySaver.saveFile(savePath, isReturnPathOfIOS: true, name: fileName);
       }
       widget.onSaveSuccess?.call();

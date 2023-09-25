@@ -11,11 +11,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+// import 'package:chewie/chewie.dart';
 import 'package:audioplayers/audioplayers.dart' as a;
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart';
+// import 'package:video_player/video_player.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:loading_indicator/loading_indicator.dart';
@@ -25,12 +27,9 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:record/record.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 
-export 'package:media_kit/media_kit.dart';
 export 'package:popup_menu/popup_menu.dart';
-
+export 'package:audioplayers/audioplayers.dart';
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';
 part 'src/components/im_player/im_player.dart';
