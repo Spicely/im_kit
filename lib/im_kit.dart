@@ -27,6 +27,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:record/record.dart';
+import 'package:chinese_font_library/chinese_font_library.dart';
 
 export 'package:popup_menu/popup_menu.dart';
 export 'package:audioplayers/audioplayers.dart';

@@ -11,9 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_openim_sdk_ffi:
-    path: ../../flutter_openim_sdk_ffi
+    path: ../../../flutter_openim_sdk_ffi
   flutter_muka:
-    path: ../flutter_muka
+    path: ../../../flutter_muka
   path:
   get:
   audioplayers:
@@ -27,6 +27,7 @@ dependencies:
   encrypt: 
   pointycastle:
   popup_menu: 
+  chinese_font_library: 
   # video_player:
   # chewie:
 

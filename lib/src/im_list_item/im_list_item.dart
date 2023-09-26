@@ -103,17 +103,25 @@ class ImListItem extends StatelessWidget {
               fit: ImCore.theme.avatarTheme.fit,
             ),
             const SizedBox(width: 10),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    onTap?.call(message);
-                  },
-                  child: getTypeWidget(),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(child: getStatusWidget()),
-              ],
+            Expanded(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Wrap(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            onTap?.call(message);
+                          },
+                          child: getTypeWidget(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // SizedBox(child: getStatusWidget()),
+                ],
+              ),
             ),
           ],
         );
