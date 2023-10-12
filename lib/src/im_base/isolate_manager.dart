@@ -98,7 +98,7 @@ class ImKitIsolateManager {
   static late final SendPort _isolateSendPort;
 
   /// 初始化
-  static Future<void> init(String dirPath, {String? privateKeyPath, String? publicKeyPath}) async {
+  static Future<void> init(String dirPath) async {
     if (_isInit) return;
     ImCore.dirPath = dirPath;
     _isInit = true;
@@ -195,7 +195,7 @@ class ImKitIsolateManager {
   }
 
   /// 加密文件
-  static Future<void> encryptFile(String key, String iv, String path) async {
+  static Future<void> encryptFile(String key, String path, {String iv = 'abcd1234abcd1234'}) async {
     var completer = Completer();
 
     ReceivePort port = ReceivePort();
@@ -228,7 +228,7 @@ class ImKitIsolateManager {
   }
 
   /// 解密文件
-  static Future<String> decryptFile(String key, String iv, String path) async {
+  static Future<String> decryptFile(String key, String path, {String iv = 'abcd1234abcd1234'}) async {
     var completer = Completer<String>();
 
     ReceivePort port = ReceivePort();

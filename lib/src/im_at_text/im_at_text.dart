@@ -17,10 +17,9 @@ class ImAtText extends ImBase {
       onLongPress: textMenuItems == null
           ? null
           : () {
-              onShow(context);
+              // onShow(context);
             },
       child: Container(
-        key: message.ext.itemKey,
         decoration: BoxDecoration(
           color: isMe ? theme.dialogTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.dialogTheme.backgroundColor,
           borderRadius: theme.dialogTheme.borderRadius,
@@ -29,7 +28,7 @@ class ImAtText extends ImBase {
         padding: theme.dialogTheme.padding,
         child: Directionality(
           textDirection: TextDirection.ltr,
-          child: Text(message.m.textElem?.content ?? '', style: theme.dialogTheme.textStyle.useSystemChineseFont()),
+          child: Text(message.m.content ?? '', style: theme.dialogTheme.textStyle.useSystemChineseFont()),
         ),
       ),
     );
@@ -45,6 +44,6 @@ class ImAtText extends ImBase {
       config: const MenuConfig(itemHeight: 40),
       onDismiss: () {},
     );
-    menu.show(widgetKey: message.ext.itemKey);
+    // menu.show(widgetKey: message.ext.itemKey);
   }
 }

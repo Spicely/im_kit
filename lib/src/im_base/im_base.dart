@@ -50,18 +50,48 @@ class MessageExt {
     required this.ext,
     required this.m,
   });
+
+  Map<String, Object?> toJson() {
+    return {
+      'ext': ext.toJson(),
+      'm': m.toJson(),
+    };
+  }
+
+  factory MessageExt.fromJson(Map<String, dynamic> json) {
+    return MessageExt(
+      ext: ImExtModel(
+        progress: json['ext']?['progress'] as double?,
+        path: json['ext']?['path'] as String?,
+        isPlaying: json['ext']?['isPlaying'] as bool? ?? false,
+        isDownloading: json['ext']?['isDownloading'] as bool? ?? false,
+        canDelete: json['ext']?['canDelete'] as bool? ?? true,
+        createTime: DateTime.fromMillisecondsSinceEpoch(json['ext']?['createTime'] as int? ?? 0),
+        preview: json['ext']?['preview'] as Uint8List?,
+        previewPath: json['ext']?['previewPath'] as String?,
+        secretKey: json['ext']?['secretKey'] as String? ?? '',
+      ),
+      m: Message.fromJson(json['m'] as Map<String, Object?>? ?? {}),
+    );
+  }
+}
+
+String _getSecretKey(Message message) {
+  String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
+  return k ?? '';
 }
 
 extension ExtensionMessage on Message {
   MessageExt toExt() {
-    final ext = ImExtModel(itemKey: GlobalKey(), createTime: DateTime.now());
+    final ext = ImExtModel(createTime: DateTime.now());
     switch (contentType) {
       case MessageType.voice:
       case MessageType.video:
       case MessageType.file:
+      case MessageType.picture:
 
         /// 优先判断本地文件
-        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath;
+        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath ?? pictureElem?.sourcePath;
         if (filePath != null && File(filePath).existsSync()) {
           ext.path = filePath;
           break;
@@ -70,6 +100,7 @@ extension ExtensionMessage on Message {
         if (File(filePath).existsSync()) {
           ext.path = filePath;
         }
+        ext.secretKey = _getSecretKey(this);
         break;
       default:
     }
@@ -84,8 +115,6 @@ extension ExtensionMessage on Message {
 class ImExtModel {
   /// 创建时间
   final DateTime createTime;
-
-  final GlobalKey itemKey;
 
   double? progress;
 
@@ -106,8 +135,10 @@ class ImExtModel {
   /// 预览地址
   String? previewPath;
 
+  /// 密钥
+  String secretKey;
+
   ImExtModel({
-    required this.itemKey,
     this.progress,
     this.path,
     this.isPlaying = false,
@@ -116,7 +147,22 @@ class ImExtModel {
     required this.createTime,
     this.preview,
     this.previewPath,
+    this.secretKey = '',
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'progress': progress,
+      'path': path,
+      'isPlaying': isPlaying,
+      'isDownloading': isDownloading,
+      'canDelete': canDelete,
+      'createTime': createTime.millisecondsSinceEpoch,
+      'preview': preview,
+      'previewPath': previewPath,
+      'secretKey': secretKey,
+    };
+  }
 }
 
 class ImCore {
@@ -166,7 +212,7 @@ class ImCore {
           return (false, null);
         }
       }
-      return (true, ImExtModel(itemKey: GlobalKey(), path: msg.fileElem!.filePath!, createTime: DateTime.now()));
+      return (true, ImExtModel(path: msg.fileElem!.filePath!, createTime: DateTime.now()));
     }
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl;
     if (url == null) return (false, null);
@@ -181,7 +227,7 @@ class ImCore {
         return (false, null);
       }
     }
-    return (true, ImExtModel(itemKey: GlobalKey(), path: filePath, createTime: DateTime.now()));
+    return (true, ImExtModel(path: filePath, createTime: DateTime.now()));
   }
 
   /// 播放音频

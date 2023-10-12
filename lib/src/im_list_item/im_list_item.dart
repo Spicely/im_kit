@@ -7,6 +7,9 @@ class ImListItem extends StatelessWidget {
 
   final void Function(MessageExt message)? onTap;
 
+  /// 双击
+  final void Function(MessageExt message)? onDoubleTap;
+
   /// 失败重发
   final void Function(MessageExt message)? onTapResend;
 
@@ -44,6 +47,7 @@ class ImListItem extends StatelessWidget {
     this.onBuildBeforeMsg,
     this.onClickMenu,
     this.textMenuItems,
+    this.onDoubleTap,
   });
   @override
   Widget build(BuildContext context) {
@@ -112,6 +116,9 @@ class ImListItem extends StatelessWidget {
                         GestureDetector(
                           onTap: () {
                             onTap?.call(message);
+                          },
+                          onDoubleTap: () {
+                            onDoubleTap?.call(message);
                           },
                           child: getTypeWidget(),
                         ),

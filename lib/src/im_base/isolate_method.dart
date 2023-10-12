@@ -80,6 +80,9 @@ class IsolateMethod {
       Uint8List decData = res2.decFile;
       File file = File(filePath);
       await file.writeAsBytes(decData, flush: true);
+
+      /// 延迟1s 避免文件还未写入完成
+      await Future.delayed(const Duration(seconds: 1));
       params.sendPort?.send(PortResult(data: filePath));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
@@ -333,7 +336,7 @@ class EncryptExtends {
     return encrypter.encryptBytes(dataPadded, iv: enc.IV.fromUtf8(keyStr));
   }
 
-  static String decStrAesUtf8ZP({required String plainText, required String keyStr}) {
+  static String DEC_STR_AES_UTF8_ZP({required String plainText, required String keyStr}) {
     try {
       if (plainText.isEmpty) return "";
       final key = enc.Key.fromUtf8(keyStr);

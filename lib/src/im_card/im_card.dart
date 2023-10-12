@@ -36,21 +36,21 @@ class ImCard extends ImBase {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListItem(
-              contentPadding: EdgeInsets.zero,
-              leading: CachedImage(
-                imageUrl: message.m.cardElem?.faceURL ?? '',
-                width: 40,
-                height: 40,
-                circular: 5,
-              ),
-              valueAlignment: Alignment.centerLeft,
-              value: Text(
-                message.m.cardElem?.nickname ?? '',
-                // style: Theme.of(context).textTheme.bodySmall?.copyWith(color: theme.fontColor, fontSize: 14),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            // ListItem(
+            //   contentPadding: EdgeInsets.zero,
+            //   leading: CachedImage(
+            //     imageUrl: message.m.cardElem?.faceURL ?? '',
+            //     width: 40,
+            //     height: 40,
+            //     circular: 5,
+            //   ),
+            //   valueAlignment: Alignment.centerLeft,
+            //   value: Text(
+            //     message.m.cardElem?.nickname ?? '',
+            //     // style: Theme.of(context).textTheme.bodySmall?.copyWith(color: theme.fontColor, fontSize: 14),
+            //     overflow: TextOverflow.ellipsis,
+            //   ),
+            // ),
           ],
         ),
       ),
