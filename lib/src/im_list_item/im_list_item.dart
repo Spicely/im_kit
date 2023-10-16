@@ -32,6 +32,18 @@ class ImListItem extends StatelessWidget {
 
   final List<MenuItemProvider>? textMenuItems;
 
+  /// 网址点击事件
+  final void Function(String)? onUrlTap;
+
+  /// 邮箱点击事件
+  final void Function(String)? onEmailTap;
+
+  /// 电话点击事件
+  final void Function(String)? onPhoneTap;
+
+  /// 点击播放视频
+  final void Function(MessageExt message)? onTapPlayVideo;
+
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
   const ImListItem({
@@ -48,6 +60,10 @@ class ImListItem extends StatelessWidget {
     this.onClickMenu,
     this.textMenuItems,
     this.onDoubleTap,
+    this.onUrlTap,
+    this.onEmailTap,
+    this.onPhoneTap,
+    this.onTapPlayVideo,
   });
   @override
   Widget build(BuildContext context) {
@@ -153,7 +169,15 @@ class ImListItem extends StatelessWidget {
     switch (message.m.contentType) {
       case MessageType.text:
       case MessageType.at_text:
-        return ImAtText(message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message, isMe: isMe, onClickMenu: onClickMenu, textMenuItems: textMenuItems);
+        return ImAtText(
+          message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
+          isMe: isMe,
+          onClickMenu: onClickMenu,
+          textMenuItems: textMenuItems,
+          onEmailTap: onEmailTap,
+          onUrlTap: onUrlTap,
+          onPhoneTap: onPhoneTap,
+        );
       case MessageType.picture:
         return ImImage(message: message, isMe: isMe);
       case MessageType.file:
@@ -161,7 +185,7 @@ class ImListItem extends StatelessWidget {
       case MessageType.voice:
         return ImVoice(message: message, isMe: isMe);
       case MessageType.video:
-        return ImVideo(message: message, isMe: isMe);
+        return ImVideo(message: message, isMe: isMe, onTapDownFile: onTapDownFile, onTapPlayVideo: onTapPlayVideo);
       default:
         return const Text('暂不支持的消息');
     }

@@ -28,11 +28,31 @@ class ImBase extends StatelessWidget {
 
   Message get msg => message.m;
 
+  /// 网址点击事件
+  final void Function(String)? onUrlTap;
+
+  /// 邮箱点击事件
+  final void Function(String)? onEmailTap;
+
+  /// 电话点击事件
+  final void Function(String)? onPhoneTap;
+
+  /// 点击下载文件
+  final void Function(MessageExt message)? onTapDownFile;
+
+  /// 点击播放视频
+  final void Function(MessageExt message)? onTapPlayVideo;
+
   const ImBase({
     super.key,
     required this.isMe,
     required this.message,
     this.onClickMenu,
+    this.onUrlTap,
+    this.onEmailTap,
+    this.onPhoneTap,
+    this.onTapDownFile,
+    this.onTapPlayVideo,
   });
 
   @override
@@ -86,7 +106,6 @@ extension ExtensionMessage on Message {
     final ext = ImExtModel(createTime: DateTime.now());
     switch (contentType) {
       case MessageType.voice:
-      case MessageType.video:
       case MessageType.file:
       case MessageType.picture:
 
@@ -102,6 +121,36 @@ extension ExtensionMessage on Message {
         }
         ext.secretKey = _getSecretKey(this);
         break;
+      case MessageType.video:
+        String? snapshotPath = videoElem?.snapshotPath;
+        String? videoPath = videoElem?.videoPath;
+        if (snapshotPath != null && File(snapshotPath).existsSync()) {
+          ext.previewPath = snapshotPath;
+          break;
+        }
+        if (videoPath != null && File(videoPath).existsSync()) {
+          ext.path = videoPath;
+          break;
+        }
+        String? url = videoElem?.snapshotUrl;
+
+        if (url != null) {
+          String fileName = url.split('/').last;
+          String previewPath = join(ImCore.saveDir, fileName);
+          if (File(previewPath).existsSync()) {
+            ext.previewPath = previewPath;
+          }
+        }
+        String? videoUrl = videoElem?.videoUrl;
+        if (videoUrl != null) {
+          String fileName = videoUrl.split('/').last;
+          String videoPath = join(ImCore.saveDir, fileName);
+          if (File(videoPath).existsSync()) {
+            ext.path = videoPath;
+          }
+        }
+        ext.secretKey = _getSecretKey(this);
+        break;
       default:
     }
 
@@ -110,6 +159,18 @@ extension ExtensionMessage on Message {
       m: this,
     );
   }
+
+  /// 消息类型
+  String get type => switch (contentType) {
+        MessageType.picture => isSingleChat ? '[图片]' : '$senderNickname: [图片]',
+        MessageType.file => isSingleChat ? '[文件]' : '$senderNickname: [文件]',
+        MessageType.video => isSingleChat ? '[视频]' : '$senderNickname: [视频]',
+        MessageType.voice => isSingleChat ? '[语音]' : '$senderNickname: [语音]',
+        MessageType.location => isSingleChat ? '[位置]' : '$senderNickname: [位置]',
+        MessageType.advancedRevoke => isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]',
+        MessageType.at_text || MessageType.text || MessageType.advancedText => isSingleChat ? atElem?.text ?? content ?? '' : '$senderNickname: ${atElem?.text ?? content ?? ''}',
+        _ => '暂不支持的消息',
+      };
 }
 
 class ImExtModel {
@@ -291,7 +352,7 @@ class ImTheme {
   final ImAvatarTheme avatarTheme;
 
   /// 对话框样式
-  final ImDialogTheme dialogTheme;
+  final ImChatTheme chatTheme;
 
   /// 多语言
   final ImLanguage language;
@@ -299,7 +360,7 @@ class ImTheme {
   const ImTheme({
     this.subtitleColor = const Color(0xff999999),
     this.avatarTheme = const ImAvatarTheme(),
-    this.dialogTheme = const ImDialogTheme(),
+    this.chatTheme = const ImChatTheme(),
     this.language = const ImLanguage(),
   });
 }
@@ -346,7 +407,7 @@ class ImAvatarTheme {
   });
 }
 
-class ImDialogTheme {
+class ImChatTheme {
   /// 间距
   final EdgeInsetsGeometry padding;
 
@@ -362,12 +423,28 @@ class ImDialogTheme {
   /// 文本样式
   final TextStyle textStyle;
 
-  const ImDialogTheme({
+  /// @字体颜色
+  final Color? atTextColor;
+
+  /// 网址颜色
+  final Color? urlColor;
+
+  /// 电话颜色
+  final Color? phoneColor;
+
+  /// 邮箱颜色
+  final Color? emailColor;
+
+  const ImChatTheme({
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
     this.borderRadius = const BorderRadius.all(Radius.circular(5)),
     this.backgroundColor = const Color(0xffffffff),
     this.meBackgroundColor,
-    this.textStyle = const TextStyle(fontSize: 16, color: Color(0xff333333)),
+    this.textStyle = const TextStyle(fontSize: 14, color: Color(0xff333333)),
+    this.atTextColor = const Color(0xff1a73e8),
+    this.urlColor = const Color(0xff1a73e8),
+    this.phoneColor = const Color(0xff1a73e8),
+    this.emailColor = const Color(0xff1a73e8),
   });
 }
 

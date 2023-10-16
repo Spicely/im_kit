@@ -88,23 +88,23 @@ class _ImPreviewState extends State<ImPreview> {
             pageController: pageController,
             onPageChanged: onPageChanged,
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: AppBar(
-              backgroundColor: Colors.transparent,
-              iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
-              systemOverlayStyle: const SystemUiOverlayStyle(
-                statusBarColor: Colors.transparent,
-                systemStatusBarContrastEnforced: false,
-              ),
-              leading: IconButton(
-                icon: const Icon(Icons.close_outlined, color: Colors.white),
-                onPressed: Get.back,
-              ),
-            ),
-          ),
+          // Positioned(
+          //   top: 0,
+          //   left: 0,
+          //   right: 0,
+          //   child: AppBar(
+          //     backgroundColor: Colors.transparent,
+          //     iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
+          //     systemOverlayStyle: const SystemUiOverlayStyle(
+          //       statusBarColor: Colors.transparent,
+          //       systemStatusBarContrastEnforced: false,
+          //     ),
+          //     leading: IconButton(
+          //       icon: const Icon(Icons.close_outlined, color: Colors.white),
+          //       onPressed: Get.back,
+          //     ),
+          //   ),
+          // ),
           Positioned(
             bottom: 20,
             left: 0,

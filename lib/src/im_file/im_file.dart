@@ -1,13 +1,11 @@
 part of im_kit;
 
 class ImFile extends ImBase {
-  final void Function(MessageExt message)? onTapDownFile;
-
   const ImFile({
     super.key,
     required super.isMe,
     required super.message,
-    this.onTapDownFile,
+    super.onTapDownFile,
   });
 
   @override
@@ -18,10 +16,10 @@ class ImFile extends ImBase {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: isMe ? theme.dialogTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.dialogTheme.backgroundColor,
-              borderRadius: theme.dialogTheme.borderRadius,
+              color: isMe ? theme.chatTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.chatTheme.backgroundColor,
+              borderRadius: theme.chatTheme.borderRadius,
             ),
-            padding: theme.dialogTheme.padding,
+            padding: theme.chatTheme.padding,
             width: 240,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

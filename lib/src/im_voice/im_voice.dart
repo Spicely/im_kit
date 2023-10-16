@@ -16,10 +16,10 @@ class ImVoice extends ImBase {
       textDirection: TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
-          color: isMe ? theme.dialogTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.dialogTheme.backgroundColor,
-          borderRadius: theme.dialogTheme.borderRadius,
+          color: isMe ? theme.chatTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.chatTheme.backgroundColor,
+          borderRadius: theme.chatTheme.borderRadius,
         ),
-        padding: theme.dialogTheme.padding,
+        padding: theme.chatTheme.padding,
         child: ext.path == null
             ? const ImLoading()
             : Row(
