@@ -100,6 +100,7 @@ class ImKitIsolateManager {
   /// 初始化
   static Future<void> init(String dirPath) async {
     if (_isInit) return;
+    MediaKit.ensureInitialized();
     ImCore.dirPath = dirPath;
     _isInit = true;
     IsolateTask task = await Utils.createIsolate(

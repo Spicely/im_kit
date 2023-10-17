@@ -18,7 +18,7 @@ dependencies:
   get:
   audioplayers:
   loading_indicator: 
-  record:
+  record: 
   image_gallery_saver:
   card_swiper: 
   photo_view: 
@@ -28,8 +28,9 @@ dependencies:
   pointycastle:
   popup_menu: 
   chinese_font_library: 
-  # video_player:
-  # chewie:
+  media_kit:
+  media_kit_video:
+  media_kit_libs_video:
 
 dev_dependencies:
   flutter_test:

@@ -16,7 +16,7 @@ class VoiceRecordController extends GetxController {
   RxBool isShowing = false.obs;
 
   /// 录音实例
-  final Record record = Record();
+  final AudioRecorder record = AudioRecorder();
 
   /// 保存文件路径
   final String _path = join(ImCore.dirPath, 'FileRecv', OpenIM.iMManager.uid);
@@ -51,7 +51,7 @@ class VoiceRecordController extends GetxController {
     startTime = DateTime.now();
     fileName = startTime.millisecondsSinceEpoch.toString();
     _filePath = '$_path/$fileName.m4a';
-    await record.start(path: _filePath);
+    await record.start(const RecordConfig(), path: _filePath);
   }
 
   void onPanUpdate(DragUpdateDetails details) {

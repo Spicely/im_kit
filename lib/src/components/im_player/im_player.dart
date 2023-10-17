@@ -22,8 +22,9 @@ class ImPlayer extends StatefulWidget {
 }
 
 class _ImPlayerState extends State<ImPlayer> {
-  // late VideoPlayerController videoPlayerController;
-  // ChewieController? chewieController;
+  late final player = Player();
+
+  late final videoController = VideoController(player);
 
   @override
   void initState() {
@@ -32,9 +33,7 @@ class _ImPlayerState extends State<ImPlayer> {
   }
 
   Future<void> init() async {
-    // videoPlayerController = VideoPlayerController.file(File(widget.message.ext.path!));
-    // await videoPlayerController.initialize();
-    // chewieController = ChewieController(videoPlayerController: videoPlayerController, autoPlay: true);
+    player.open(Media('file://${widget.message.ext.path!}'));
   }
 
   @override
@@ -43,7 +42,7 @@ class _ImPlayerState extends State<ImPlayer> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          // if (chewieController != null) Chewie(controller: chewieController!),
+          Video(controller: videoController!),
           Positioned(
             top: 0,
             left: 0,
@@ -61,41 +60,42 @@ class _ImPlayerState extends State<ImPlayer> {
               ),
             ),
           ),
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Wrap(
-                spacing: 10,
-                alignment: WrapAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: saveImage,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(15),
+          if (!Utils.isDesktop)
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Wrap(
+                  spacing: 10,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    GestureDetector(
+                      onTap: saveImage,
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
                       ),
-                      child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
                     ),
-                  ),
-                  // Container(
-                  //   width: 30,
-                  //   height: 30,
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.grey.withOpacity(0.8),
-                  //     borderRadius: BorderRadius.circular(15),
-                  //   ),
-                  //   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
-                  // ),
-                ],
+                    // Container(
+                    //   width: 30,
+                    //   height: 30,
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.grey.withOpacity(0.8),
+                    //     borderRadius: BorderRadius.circular(15),
+                    //   ),
+                    //   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
+                    // ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

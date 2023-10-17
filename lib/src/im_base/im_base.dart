@@ -168,9 +168,47 @@ extension ExtensionMessage on Message {
         MessageType.voice => isSingleChat ? '[语音]' : '$senderNickname: [语音]',
         MessageType.location => isSingleChat ? '[位置]' : '$senderNickname: [位置]',
         MessageType.advancedRevoke => isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]',
-        MessageType.at_text || MessageType.text || MessageType.advancedText => isSingleChat ? atElem?.text ?? content ?? '' : '$senderNickname: ${atElem?.text ?? content ?? ''}',
+        MessageType.text || MessageType.advancedText => isSingleChat ? atElem?.text ?? content ?? '' : '$senderNickname: ${atElem?.text ?? content ?? ''}',
+        MessageType.at_text => _getAtText(this),
         _ => '暂不支持的消息',
       };
+}
+
+String _getAtText(Message msg) {
+  String v = msg.atElem?.text ?? '';
+  List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
+  // /// 匹配艾特用户
+  String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
+
+  String regExp;
+  if (atUsersInfo.isEmpty) {
+    return v;
+  } else {
+    regExp = [atReg].join('|');
+  }
+  return v.splitMapJoin(
+    RegExp('($regExp)'),
+    onMatch: (Match m) {
+      String value = m.group(0)!;
+      if (RegExp(atReg).hasMatch(value)) {
+        String id = value.replaceAll('@', '').trim();
+        AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
+        if (atUserInfo == null) {
+          return value;
+        } else {
+          if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
+            return '@你 ';
+          } else {
+            return '@${atUserInfo.groupNickname} ';
+          }
+        }
+      }
+      return '';
+    },
+    onNonMatch: (String n) {
+      return n;
+    },
+  );
 }
 
 class ImExtModel {
