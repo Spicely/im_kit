@@ -44,6 +44,9 @@ class ImListItem extends StatelessWidget {
   /// 点击播放视频
   final void Function(MessageExt message)? onTapPlayVideo;
 
+  /// 图片点击事件
+  final void Function(MessageExt message)? onTapPicture;
+
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
   const ImListItem({
@@ -64,7 +67,9 @@ class ImListItem extends StatelessWidget {
     this.onEmailTap,
     this.onPhoneTap,
     this.onTapPlayVideo,
+    this.onTapPicture,
   });
+
   @override
   Widget build(BuildContext context) {
     if (message.m.contentType == MessageType.friendAddedNotification) {
@@ -179,13 +184,17 @@ class ImListItem extends StatelessWidget {
           onPhoneTap: onPhoneTap,
         );
       case MessageType.picture:
-        return ImImage(message: message, isMe: isMe);
+        return ImImage(message: message, isMe: isMe, onTapPicture: onTapPicture);
       case MessageType.file:
         return ImFile(message: message, isMe: isMe, onTapDownFile: onTapDownFile);
       case MessageType.voice:
         return ImVoice(message: message, isMe: isMe);
       case MessageType.video:
         return ImVideo(message: message, isMe: isMe, onTapDownFile: onTapDownFile, onTapPlayVideo: onTapPlayVideo);
+      case MessageType.card:
+        return ImCard(message: message, isMe: isMe);
+      case MessageType.location:
+        return ImLocation(message: message, isMe: isMe);
       default:
         return const Text('暂不支持的消息');
     }

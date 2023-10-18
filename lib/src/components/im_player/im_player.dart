@@ -32,6 +32,12 @@ class _ImPlayerState extends State<ImPlayer> {
     init();
   }
 
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
+  }
+
   Future<void> init() async {
     player.open(Media('file://${widget.message.ext.path!}'));
   }
@@ -42,7 +48,7 @@ class _ImPlayerState extends State<ImPlayer> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          Video(controller: videoController!),
+          Video(controller: videoController),
           Positioned(
             top: 0,
             left: 0,

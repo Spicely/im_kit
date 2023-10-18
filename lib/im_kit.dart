@@ -47,3 +47,8 @@ part 'src/im_list_item/im_list_item.dart';
 part 'src/im_image/im_image.dart';
 part 'src/im_video/im_video.dart';
 part 'src/im_voice/im_voice.dart';
+part 'src/im_location/im_location.dart';
+part 'src/im_base/extensions.dart';
+
+part 'src/pages/chat_page/chat_page.dart';
+part 'src/pages/chat_page/chat_page_controller.dart';

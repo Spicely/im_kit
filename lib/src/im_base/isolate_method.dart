@@ -2,6 +2,7 @@
 
 part of im_kit;
 
+// ignore: constant_identifier_names
 const ROADOM_STR = "bwGO8X5gdaM5dsV@";
 
 class IsolateMethod {
@@ -38,6 +39,7 @@ class IsolateMethod {
 
       params.sendPort?.send(PortResult(data: urls.map((e) => e['savePath']!).toList()));
     } catch (e) {
+      print(e);
       params.sendPort?.send(PortResult(error: e.toString()));
     }
   }
@@ -247,29 +249,29 @@ class DecDataRes {
     head.addAll(b0);
 
     if (b1.length < 4) {
-      List<int> _t = [];
+      List<int> t = [];
       for (int i = 0; i < 4 - b1.length; i++) {
-        _t.add(0);
+        t.add(0);
       }
-      b1.addAll(_t);
+      b1.addAll(t);
     }
     head.addAll(b1);
 
     if (b2.length < 4) {
-      List<int> _t = [];
+      List<int> t = [];
       for (int i = 0; i < 4 - b2.length; i++) {
-        _t.add(0);
+        t.add(0);
       }
-      b2.addAll(_t);
+      b2.addAll(t);
     }
     head.addAll(b2);
 
     if (b3.length < 4) {
-      List<int> _t = [];
+      List<int> t = [];
       for (int i = 0; i < 4 - b3.length; i++) {
-        _t.add(0);
+        t.add(0);
       }
-      b3.addAll(_t);
+      b3.addAll(t);
     }
     head.addAll(b3);
 

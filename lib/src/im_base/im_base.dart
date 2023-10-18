@@ -96,82 +96,9 @@ class MessageExt {
   }
 }
 
-String _getSecretKey(Message message) {
+String _getSecretKey(Message message, String currentSecretKey) {
   String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
-  return k ?? '';
-}
-
-extension ExtensionMessage on Message {
-  MessageExt toExt() {
-    final ext = ImExtModel(createTime: DateTime.now());
-    switch (contentType) {
-      case MessageType.voice:
-      case MessageType.file:
-      case MessageType.picture:
-
-        /// 优先判断本地文件
-        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath ?? pictureElem?.sourcePath;
-        if (filePath != null && File(filePath).existsSync()) {
-          ext.path = filePath;
-          break;
-        }
-        filePath = ImCore.getSavePath(this);
-        if (File(filePath).existsSync()) {
-          ext.path = filePath;
-        }
-        ext.secretKey = _getSecretKey(this);
-        break;
-      case MessageType.video:
-        String? snapshotPath = videoElem?.snapshotPath;
-        String? videoPath = videoElem?.videoPath;
-        if (snapshotPath != null && File(snapshotPath).existsSync()) {
-          ext.previewPath = snapshotPath;
-          break;
-        }
-        if (videoPath != null && File(videoPath).existsSync()) {
-          ext.path = videoPath;
-          break;
-        }
-        String? url = videoElem?.snapshotUrl;
-
-        if (url != null) {
-          String fileName = url.split('/').last;
-          String previewPath = join(ImCore.saveDir, fileName);
-          if (File(previewPath).existsSync()) {
-            ext.previewPath = previewPath;
-          }
-        }
-        String? videoUrl = videoElem?.videoUrl;
-        if (videoUrl != null) {
-          String fileName = videoUrl.split('/').last;
-          String videoPath = join(ImCore.saveDir, fileName);
-          if (File(videoPath).existsSync()) {
-            ext.path = videoPath;
-          }
-        }
-        ext.secretKey = _getSecretKey(this);
-        break;
-      default:
-    }
-
-    return MessageExt(
-      ext: ext,
-      m: this,
-    );
-  }
-
-  /// 消息类型
-  String get type => switch (contentType) {
-        MessageType.picture => isSingleChat ? '[图片]' : '$senderNickname: [图片]',
-        MessageType.file => isSingleChat ? '[文件]' : '$senderNickname: [文件]',
-        MessageType.video => isSingleChat ? '[视频]' : '$senderNickname: [视频]',
-        MessageType.voice => isSingleChat ? '[语音]' : '$senderNickname: [语音]',
-        MessageType.location => isSingleChat ? '[位置]' : '$senderNickname: [位置]',
-        MessageType.advancedRevoke => isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]',
-        MessageType.text || MessageType.advancedText => isSingleChat ? atElem?.text ?? content ?? '' : '$senderNickname: ${atElem?.text ?? content ?? ''}',
-        MessageType.at_text => _getAtText(this),
-        _ => '暂不支持的消息',
-      };
+  return k ?? currentSecretKey;
 }
 
 String _getAtText(Message msg) {
@@ -237,6 +164,15 @@ class ImExtModel {
   /// 密钥
   String secretKey;
 
+  /// 宽
+  double? width;
+
+  /// 高
+  double? height;
+
+  /// 自定义数据
+  Map<String, dynamic>? data;
+
   ImExtModel({
     this.progress,
     this.path,
@@ -247,6 +183,9 @@ class ImExtModel {
     this.preview,
     this.previewPath,
     this.secretKey = '',
+    this.width,
+    this.height,
+    this.data,
   });
 
   Map<String, dynamic> toJson() {
@@ -424,6 +363,30 @@ class ImLanguage {
   });
 }
 
+(double width, double height) _computedSize({double? width, double? height}) {
+  double w = width?.toDouble() ?? 1.0;
+  double h = height?.toDouble() ?? 1.0;
+  if (w == 0) w = 120;
+  if (h == 0) h = 120;
+
+  // 获取宽高比例
+  double ratio = w / h;
+  double maxWidth = 180;
+  // 最小高度
+  double minHeight = 30;
+
+  if (w > maxWidth) {
+    w = maxWidth;
+    h = w / ratio;
+  }
+
+  if (h < minHeight) {
+    h = minHeight;
+    w = h * ratio;
+  }
+  return (w, h);
+}
+
 class ImAvatarTheme {
   /// 宽度
   final double width;
@@ -484,6 +447,10 @@ class ImChatTheme {
     this.phoneColor = const Color(0xff1a73e8),
     this.emailColor = const Color(0xff1a73e8),
   });
+}
+
+String _fixAutoLines(String data) {
+  return Characters(data).join('\u{200B}');
 }
 
 mixin ImKitListen {

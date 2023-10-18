@@ -58,13 +58,13 @@ class PortResult<T> {
 }
 
 class _PortModel {
-  _PortMethod method;
+  final _PortMethod method;
 
-  dynamic data;
+  final dynamic data;
 
-  SendPort? sendPort;
+  final SendPort? sendPort;
 
-  String? error;
+  final String? error;
 
   _PortModel({
     required this.method,
@@ -73,9 +73,13 @@ class _PortModel {
     this.error,
   });
 
-  _PortModel.fromJson(Map<String, dynamic> json) : method = json['method'] {
-    data = json['data'];
-    error = json['error'];
+  factory _PortModel.fromJson(Map<String, dynamic> json) {
+    return _PortModel(
+      method: _PortMethod.values[json['method']],
+      data: json['data'],
+      sendPort: json['sendPort'],
+      error: json['error'],
+    );
   }
 }
 
@@ -132,17 +136,17 @@ class ImKitIsolateManager {
         for (ImKitListen listener in _listeners) {
           listener.onDownloadProgress(id, msg.progress);
         }
-      }
-      if (msg is PortResult<List<String>>) {
+      } else if (msg is PortResult<List<String>>) {
         _downloadIds.remove(id);
         if (msg.data != null) {
           for (ImKitListen listener in _listeners) {
             listener.onDownloadSuccess(id, msg.data!);
           }
-        } else {
-          for (ImKitListen listener in _listeners) {
-            listener.onDownloadFailure(id, msg.error!);
-          }
+        }
+        port.close();
+      } else {
+        for (ImKitListen listener in _listeners) {
+          listener.onDownloadFailure(id, msg.error!);
         }
         port.close();
       }

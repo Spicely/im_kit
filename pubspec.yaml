@@ -18,7 +18,7 @@ dependencies:
   get:
   audioplayers:
   loading_indicator: 
-  record: 
+  record: ^5.0.1
   image_gallery_saver:
   card_swiper: 
   photo_view: 
