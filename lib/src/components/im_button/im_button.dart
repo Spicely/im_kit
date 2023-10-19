@@ -18,7 +18,7 @@ class ImButton extends StatelessWidget {
       onTap: onPressed,
       child: Text(
         label,
-        style: TextStyle(color: onPressed == null ? ImCore.theme.subtitleColor : Theme.of(context).primaryColor, fontSize: 12),
+        // style: TextStyle(color: onPressed == null ? ImCore.theme.subtitleColor : Theme.of(context).primaryColor, fontSize: 12),
       ),
     );
   }

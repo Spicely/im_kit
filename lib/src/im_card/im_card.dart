@@ -24,13 +24,14 @@ class ImCard extends ImBase {
   }) : super(key: key, isMe: isMe, message: message);
   @override
   Widget build(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return Container(
       width: 220,
       height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: const Color.fromRGBO(247, 247, 247, 1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: chatTheme.messageTheme.borderRadius,
       ),
       child: Column(
         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,

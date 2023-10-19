@@ -22,8 +22,6 @@ class ImBase extends StatelessWidget {
 
   final void Function(MenuItemProvider, MessageExt)? onClickMenu;
 
-  ImTheme get theme => ImCore.theme;
-
   ImExtModel get ext => message.ext;
 
   Message get msg => message.m;
@@ -171,7 +169,7 @@ class ImExtModel {
   double? height;
 
   /// 自定义数据
-  Map<String, dynamic>? data;
+  dynamic data;
 
   ImExtModel({
     this.progress,
@@ -204,8 +202,6 @@ class ImExtModel {
 }
 
 class ImCore {
-  static ImTheme theme = const ImTheme();
-
   static final a.AudioPlayer _player = a.AudioPlayer();
 
   /// 文件路径
@@ -321,48 +317,6 @@ class ImCore {
   }
 }
 
-class ImTheme {
-  /// 副标题颜色
-  final Color subtitleColor;
-
-  /// 头像样式
-  final ImAvatarTheme avatarTheme;
-
-  /// 对话框样式
-  final ImChatTheme chatTheme;
-
-  /// 多语言
-  final ImLanguage language;
-
-  const ImTheme({
-    this.subtitleColor = const Color(0xff999999),
-    this.avatarTheme = const ImAvatarTheme(),
-    this.chatTheme = const ImChatTheme(),
-    this.language = const ImLanguage(),
-  });
-}
-
-class ImLanguage {
-  /// 长按录制语音
-  final String longPressRecordVoice;
-
-  /// 松开立即发送 上滑取消
-  final String releaseSendSlideCancel;
-
-  /// 已下载
-  final String downloaded;
-
-  /// 未下载
-  final String unDownload;
-
-  const ImLanguage({
-    this.releaseSendSlideCancel = '松开立即发送 上滑取消',
-    this.longPressRecordVoice = '长按录制语音',
-    this.downloaded = '已下载',
-    this.unDownload = '未下载',
-  });
-}
-
 (double width, double height) _computedSize({double? width, double? height}) {
   double w = width?.toDouble() ?? 1.0;
   double h = height?.toDouble() ?? 1.0;
@@ -385,68 +339,6 @@ class ImLanguage {
     w = h * ratio;
   }
   return (w, h);
-}
-
-class ImAvatarTheme {
-  /// 宽度
-  final double width;
-
-  /// 高度
-  final double height;
-
-  /// 圆角
-  final double circular;
-
-  /// 图片填充模式
-  final BoxFit fit;
-
-  const ImAvatarTheme({
-    this.width = 40,
-    this.height = 40,
-    this.circular = 5,
-    this.fit = BoxFit.cover,
-  });
-}
-
-class ImChatTheme {
-  /// 间距
-  final EdgeInsetsGeometry padding;
-
-  /// 圆角
-  final BorderRadiusGeometry borderRadius;
-
-  /// 背景颜色
-  final Color backgroundColor;
-
-  /// 我的消息颜色
-  final Color? meBackgroundColor;
-
-  /// 文本样式
-  final TextStyle textStyle;
-
-  /// @字体颜色
-  final Color? atTextColor;
-
-  /// 网址颜色
-  final Color? urlColor;
-
-  /// 电话颜色
-  final Color? phoneColor;
-
-  /// 邮箱颜色
-  final Color? emailColor;
-
-  const ImChatTheme({
-    this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-    this.borderRadius = const BorderRadius.all(Radius.circular(5)),
-    this.backgroundColor = const Color(0xffffffff),
-    this.meBackgroundColor,
-    this.textStyle = const TextStyle(fontSize: 14, color: Color(0xff333333)),
-    this.atTextColor = const Color(0xff1a73e8),
-    this.urlColor = const Color(0xff1a73e8),
-    this.phoneColor = const Color(0xff1a73e8),
-    this.emailColor = const Color(0xff1a73e8),
-  });
 }
 
 String _fixAutoLines(String data) {

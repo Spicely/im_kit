@@ -12,14 +12,14 @@ class ImVoice extends ImBase {
 
   @override
   Widget build(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
-          color: isMe ? theme.chatTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.chatTheme.backgroundColor,
-          borderRadius: theme.chatTheme.borderRadius,
+          color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.backgroundColor,
+          borderRadius: chatTheme.messageTheme.borderRadius,
         ),
-        padding: theme.chatTheme.padding,
         child: ext.path == null
             ? const ImLoading()
             : Row(

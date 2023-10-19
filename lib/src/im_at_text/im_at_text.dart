@@ -37,72 +37,6 @@ class ImAtTextType {
 class ImAtText extends ImBase {
   final List<MenuItemProvider>? textMenuItems;
 
-  List<ImAtTextType> get text {
-    String v = message.m.atElem?.text ?? message.m.atElem?.text ?? message.m.content ?? '';
-
-    List<ImAtTextType> list = [];
-
-    /// 匹配艾特用户
-    String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
-
-    /// 匹配电话号码
-    String phoneReg = r"\b\d{5,}\b";
-
-    /// 匹配网址
-    String urlRge = r'(((http(s)?:\/\/(www\.)?)|(www\.))([-a-zA-Z0-9@:;_\+.%#?&\/=]*))|([-a-zA-Z@:;_\+.%#?&\/=]{2,}\.((com)|(cn)))/g';
-
-    /// 匹配邮箱
-    String email = r"\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b";
-    String regExp;
-    if (atUsersInfo.isEmpty) {
-      regExp = [urlRge, email, phoneReg].join('|');
-    } else {
-      regExp = [urlRge, atReg, email, phoneReg].join('|');
-    }
-    v.splitMapJoin(
-      RegExp('($regExp)'),
-      onMatch: (Match m) {
-        String value = m.group(0)!;
-        if (RegExp(urlRge).hasMatch(value)) {
-          list.add(ImAtTextType(type: ImAtType.url, text: value.trimRight()));
-        } /*else if (RegExp(regexEmoji).hasMatch(value)) {
-          String emoji = emojiFaces[value]!;
-          list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
-        } */
-        else if (RegExp(email).hasMatch(value)) {
-          list.add(ImAtTextType(type: ImAtType.email, text: value));
-        } else if (RegExp(atReg).hasMatch(value)) {
-          String id = value.replaceAll('@', '').trim();
-          AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
-          if (atUserInfo == null) {
-            if (RegExp(phoneReg).hasMatch(value)) {
-              list.add(ImAtTextType(type: ImAtType.phone, text: value));
-            } else {
-              list.add(ImAtTextType(type: ImAtType.text, text: value));
-            }
-          } else {
-            if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
-              list.add(ImAtTextType(type: ImAtType.at, text: '@你 ', userInfo: atUserInfo));
-            } else {
-              list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
-            }
-          }
-        } else if (RegExp(phoneReg).hasMatch(value)) {
-          list.add(ImAtTextType(type: ImAtType.phone, text: value));
-        }
-        return '';
-      },
-      onNonMatch: (String n) {
-        list.add(ImAtTextType(type: ImAtType.text, text: n));
-        return '';
-      },
-    );
-
-    return list;
-  }
-
-  List<AtUserInfo> get atUsersInfo => message.m.atElem?.atUsersInfo ?? [];
-
   const ImAtText({
     super.key,
     required super.isMe,
@@ -116,58 +50,61 @@ class ImAtText extends ImBase {
 
   @override
   Widget build(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return GestureDetector(
       onLongPress: textMenuItems == null
           ? null
           : () {
               // onShow(context);
             },
-      child: Container(
-        decoration: BoxDecoration(
-          color: isMe ? theme.chatTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.chatTheme.backgroundColor,
-          borderRadius: theme.chatTheme.borderRadius,
-        ),
-        padding: theme.chatTheme.padding,
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: SelectableText.rich(
-            TextSpan(
-                children: text
-                    .map(
-                      (e) => TextSpan(
-                        text: e.text,
-                        style: TextStyle(color: atTypeColor(e)),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            switch (e.type) {
-                              case ImAtType.url:
-                                onUrlTap?.call(e.text);
-                                break;
-                              case ImAtType.email:
-                                onEmailTap?.call(e.text);
-                                break;
-                              case ImAtType.phone:
-                                onPhoneTap?.call(e.text);
-                                break;
-                              default:
-                            }
-                          },
-                      ),
-                    )
-                    .toList()),
-            style: theme.chatTheme.textStyle.useSystemChineseFont(),
-          ),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: SelectableText.rich(
+          TextSpan(
+              children: (message.ext.data as List<ImAtTextType>).map((e) {
+            if (e.type == ImAtType.emoji) {
+              return WidgetSpan(
+                child: CachedImage(
+                  assetUrl: 'assets/emoji/${e.text}.webp',
+                  width: 25,
+                  height: 25,
+                  package: 'im_kit',
+                ),
+              );
+            } else {
+              return TextSpan(
+                text: e.text,
+                style: TextStyle(color: atTypeColor(e, chatTheme)),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    switch (e.type) {
+                      case ImAtType.url:
+                        onUrlTap?.call(e.text);
+                        break;
+                      case ImAtType.email:
+                        onEmailTap?.call(e.text);
+                        break;
+                      case ImAtType.phone:
+                        onPhoneTap?.call(e.text);
+                        break;
+                      default:
+                    }
+                  },
+              );
+            }
+          }).toList()),
+          style: chatTheme.textStyle.useSystemChineseFont(),
         ),
       ),
     );
   }
 
-  Color? atTypeColor(ImAtTextType info) {
+  Color? atTypeColor(ImAtTextType info, ImChatTheme chatTheme) {
     return switch (info.type) {
-      ImAtType.at => theme.chatTheme.atTextColor,
-      ImAtType.email => theme.chatTheme.emailColor,
-      ImAtType.phone => theme.chatTheme.phoneColor,
-      ImAtType.url => theme.chatTheme.urlColor,
+      ImAtType.at => chatTheme.atTextColor,
+      ImAtType.email => chatTheme.emailColor,
+      ImAtType.phone => chatTheme.phoneColor,
+      ImAtType.url => chatTheme.urlColor,
       _ => null,
     };
   }

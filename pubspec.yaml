@@ -23,6 +23,7 @@ dependencies:
   card_swiper: 
   photo_view: 
   image: 
+  html:
   lottie:
   encrypt: 
   pointycastle:
@@ -40,3 +41,4 @@ dev_dependencies:
 flutter:
   assets:
     - assets/json/
+    - assets/emoji/

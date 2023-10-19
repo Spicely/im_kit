@@ -10,16 +10,16 @@ class ImFile extends ImBase {
 
   @override
   Widget build(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Stack(
         children: [
           Container(
             decoration: BoxDecoration(
-              color: isMe ? theme.chatTheme.meBackgroundColor ?? Theme.of(context).primaryColor : theme.chatTheme.backgroundColor,
-              borderRadius: theme.chatTheme.borderRadius,
+              color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.backgroundColor,
+              borderRadius: chatTheme.messageTheme.borderRadius,
             ),
-            padding: theme.chatTheme.padding,
             width: 240,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,10 +51,10 @@ class ImFile extends ImBase {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          Text(
-                            '${Utils.getFileSize(message.m.fileElem?.fileSize ?? 0)} / ${ext.path == null ? theme.language.unDownload : theme.language.downloaded}',
-                            style: TextStyle(fontSize: 10, color: theme.subtitleColor),
-                          )
+                          // Text(
+                          //   '${Utils.getFileSize(message.m.fileElem?.fileSize ?? 0)} / ${ext.path == null ? theme.language.unDownload : theme.language.downloaded}',
+                          //   style: TextStyle(fontSize: 10, color: theme.subtitleColor),
+                          // )
                           // snapshot.data?.$1 == true
                           //     ? Wrap(
                           //         spacing: 5,

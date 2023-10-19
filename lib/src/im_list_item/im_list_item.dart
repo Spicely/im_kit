@@ -1,5 +1,16 @@
 part of im_kit;
 
+/// 没有内边距的消息框
+const _noPadMsgType = [
+  MessageType.picture,
+  MessageType.file,
+  MessageType.card,
+  MessageType.voice,
+  MessageType.video,
+  MessageType.location,
+  MessageType.merger,
+];
+
 class ImListItem extends StatelessWidget {
   final MessageExt message;
 
@@ -79,12 +90,14 @@ class ImListItem extends StatelessWidget {
       textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
         padding: const EdgeInsets.only(top: 20),
-        child: getContentType(),
+        child: getContentType(context),
       ),
     );
   }
 
-  Widget getContentType() {
+  Widget getContentType(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
+    ImAvatarTheme avatarTheme = ImKitTheme.of(context).chatTheme.avatarTheme;
     switch (message.m.contentType) {
       case MessageType.friendApplicationApprovedNotification:
         return const Center(
@@ -122,12 +135,12 @@ class ImListItem extends StatelessWidget {
           children: [
             CachedImage(
               imageUrl: message.m.senderFaceUrl,
-              width: ImCore.theme.avatarTheme.width,
-              height: ImCore.theme.avatarTheme.height,
-              circular: ImCore.theme.avatarTheme.circular,
-              fit: ImCore.theme.avatarTheme.fit,
+              width: avatarTheme.width,
+              height: avatarTheme.height,
+              circular: avatarTheme.circular,
+              fit: avatarTheme.fit,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 6),
             Expanded(
               child: Row(
                 children: [
@@ -141,7 +154,29 @@ class ImListItem extends StatelessWidget {
                           onDoubleTap: () {
                             onDoubleTap?.call(message);
                           },
-                          child: getTypeWidget(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                  borderRadius: chatTheme.messageTheme.borderRadius,
+                                ),
+                                padding: _noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                child: getTypeWidget(),
+                              ),
+                              if (message.m.contentType == MessageType.quote)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                    borderRadius: chatTheme.messageTheme.borderRadius,
+                                  ),
+                                  margin: const EdgeInsets.only(top: 5),
+                                  padding: chatTheme.messageTheme.padding,
+                                  child: ImQuote(isMe: isMe, message: message),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -174,6 +209,7 @@ class ImListItem extends StatelessWidget {
     switch (message.m.contentType) {
       case MessageType.text:
       case MessageType.at_text:
+      case MessageType.quote:
         return ImAtText(
           message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
           isMe: isMe,
@@ -195,6 +231,8 @@ class ImListItem extends StatelessWidget {
         return ImCard(message: message, isMe: isMe);
       case MessageType.location:
         return ImLocation(message: message, isMe: isMe);
+      case MessageType.merger:
+        return ImMerge(message: message, isMe: isMe);
       default:
         return const Text('暂不支持的消息');
     }

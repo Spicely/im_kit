@@ -16,18 +16,26 @@ class ChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return GetBuilder(
       init: ChatPageController(secretKey: secretKey, advancedMessage: advancedMessage, conversationInfo: conversationInfo),
       builder: (controller) => Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: chatTheme.backgroundColor,
         appBar: AppBar(
+          backgroundColor: chatTheme.appBarTheme.backgroundColor,
+          iconTheme: chatTheme.appBarTheme.iconTheme,
           title: Column(
             children: [
-              Obx(() => Text(controller.conversationInfo.value.title(number: controller.groupMemberInfo.length))),
+              Obx(
+                () => Text(
+                  controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
+                  style: chatTheme.appBarTheme.style,
+                ),
+              ),
               // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
             ],
           ),
-          centerTitle: true,
+          centerTitle: chatTheme.appBarTheme.centerTitle,
         ),
         body: ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
@@ -49,6 +57,9 @@ class ChatPage extends StatelessWidget {
             ),
           ),
           itemCount: controller.data.length,
+        ),
+        bottomNavigationBar: Container(
+          height: 58,
         ),
       ),
     );

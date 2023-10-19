@@ -46,7 +46,7 @@ class VoiceRecord extends StatelessWidget {
                         children: [
                           const Expanded(child: SizedBox()),
                           // 裁切的控件
-                          Text(ImCore.theme.language.releaseSendSlideCancel, style: const TextStyle(color: Colors.white)),
+                          // Text(ImCore.theme.language.releaseSendSlideCancel, style: const TextStyle(color: Colors.white)),
                           Stack(
                             children: [
                               ClipPath(
@@ -78,7 +78,7 @@ class VoiceRecord extends StatelessWidget {
                                   alignment: Alignment.center,
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 60),
-                                    child: Text(ImCore.theme.language.longPressRecordVoice, style: const TextStyle(color: Colors.black)),
+                                    // child: Text(ImCore.theme.language.longPressRecordVoice, style: const TextStyle(color: Colors.black)),
                                   ),
                                 ),
                               ),
