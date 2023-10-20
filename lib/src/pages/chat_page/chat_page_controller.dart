@@ -1,19 +1,30 @@
 part of im_kit;
 
-class ChatPageController extends GetxController with OpenIMListener, ImKitListen {
+enum FieldType {
+  voice,
+  emoji,
+  actions,
+  none,
+}
+
+class ChatPageController extends GetxController with OpenIMListener, ImKitListen, GetTickerProviderStateMixin {
   late Rx<ConversationInfo> conversationInfo;
 
   late RxList<MessageExt> data;
 
   late String _secretKey;
 
+  late TabController tabController;
+
+  TextEditingController textEditingController = TextEditingController();
+
   ChatPageController({
     required String secretKey,
-    required AdvancedMessage advancedMessage,
+    required List<MessageExt> messages,
     required ConversationInfo conversationInfo,
   }) {
     _secretKey = secretKey;
-    data = RxList((advancedMessage.messageList ?? []).reversed.map((e) => e.toExt(secretKey)).toList());
+    data = RxList(messages.reversed.toList());
     this.conversationInfo = Rx(conversationInfo);
   }
   ScrollController scrollController = ScrollController();
@@ -31,17 +42,26 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 是群聊
   bool get isGroupChat => conversationInfo.value.isGroupChat;
 
+  /// 是否有输入内容
+  RxBool hasInput = false.obs;
+
+  Rx<FieldType> fieldType = FieldType.none.obs;
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);
     ImKitIsolateManager.addListener(this);
     super.onInit();
+    tabController = TabController(length: 1, vsync: this);
   }
 
   @override
   void onReady() {
     super.onReady();
     getData();
+    textEditingController.addListener(() {
+      hasInput.value = textEditingController.text.isNotEmpty;
+    });
   }
 
   Future<void> getData() async {
@@ -69,6 +89,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     String? id = Utils.getValue(msg.groupID, msg.sendID);
     if (id == userID || id == groupID || userID == msg.recvID) {
       MessageExt extMsg = msg.toExt(_secretKey);
+      if (msg.contentType == MessageType.quote) {
+        extMsg.ext.quoteMessage = msg.quoteElem!.quoteMessage!.toExt(_secretKey);
+      }
       data.insert(0, extMsg);
       // markMessageRead([extMsg]);
       downloadFile(extMsg);
@@ -132,7 +155,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 点击播放视频
   void onTapPlayVideo(MessageExt ext) {
-    Get.to(ImPlayer(message: ext));
+    Get.to(() => ImPlayer(message: ext));
   }
 
   /// 点击图片
@@ -140,8 +163,57 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     /// 获取所有图片
     List<MessageExt> messages = data.where((v) => v.m.contentType == MessageType.picture).toList();
     Get.to(
-      ImPreview(messages: messages, currentMessage: ext),
+      () => ImPreview(messages: messages, currentMessage: ext),
       transition: Transition.fadeIn,
     );
+  }
+
+  /// 发送消息统一入口
+  Future<void> sendMessage(MessageExt msg) async {
+    try {
+      if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(msg.m.contentType)) {
+        /// 先对文件加密
+        String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.sourceUrl ?? '';
+        await ImKitIsolateManager.encryptFile(_secretKey, path);
+      }
+      Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
+        message: msg.m,
+        userID: userID,
+        groupID: groupID,
+        offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
+      );
+      if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
+        /// 对文件解密
+        String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.sourceUrl ?? '';
+        await ImKitIsolateManager.decryptFile(_secretKey, path);
+      }
+      MessageExt extMsg = newMsg.toExt(_secretKey);
+      updateMessage(extMsg);
+    } catch (e) {
+      msg.m.status = MessageStatus.failed;
+      updateMessage(msg);
+    }
+  }
+
+  /// 发送消息
+  Future<void> onSendMessage() async {
+    /// 对< > 转成html
+    String val = textEditingController.text.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    String text = EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: val, keyStr: _secretKey).base64;
+    textEditingController.clear();
+    Message msg = await OpenIM.iMManager.messageManager.createTextMessage(text: text);
+    MessageExt extMsg = msg.toExt(_secretKey);
+    data.insert(0, extMsg);
+    sendMessage(extMsg);
+  }
+
+  /// 设置为显示表情
+  void onShowEmoji() {
+    fieldType.value = FieldType.emoji;
+  }
+
+  /// 设置为显示功能模块
+  void onShowActions() {
+    fieldType.value = FieldType.actions;
   }
 }

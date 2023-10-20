@@ -22,16 +22,45 @@ class ImQuote extends ImBase {
     required MessageExt message,
   }) : super(key: key, isMe: isMe, message: message);
 
-  Message? get quoteMsg => msg.quoteElem?.quoteMessage;
-
-  String get regexEmoji => _emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
-
-  List<AtUserInfo> get atUsersInfo => msg.atElem?.atUsersInfo ?? [];
+  MessageExt get quoteMessage => message.ext.quoteMessage!;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: ImAtText(isMe: isMe, message: message.m.quoteElem!.quoteMessage!.toExt(message.ext.secretKey)),
+      child: getTypeWidget(context),
     );
+  }
+
+  /// 获取类型数据
+  Widget getTypeWidget(BuildContext context) {
+    switch (message.m.contentType) {
+      case MessageType.text:
+      case MessageType.at_text:
+      case MessageType.quote:
+        return ImAtText(
+          message: quoteMessage,
+          isMe: isMe,
+          onClickMenu: onClickMenu,
+          onEmailTap: onEmailTap,
+          onUrlTap: onUrlTap,
+          onPhoneTap: onPhoneTap,
+        );
+      case MessageType.picture:
+        return ImImage(message: quoteMessage, isMe: isMe);
+      case MessageType.file:
+        return ImFile(message: quoteMessage, isMe: isMe);
+      case MessageType.voice:
+        return ImVoice(message: quoteMessage, isMe: isMe);
+      case MessageType.video:
+        return ImVideo(message: quoteMessage, isMe: isMe);
+      case MessageType.card:
+        return ImCard(message: quoteMessage, isMe: isMe);
+      case MessageType.location:
+        return ImLocation(message: quoteMessage, isMe: isMe);
+      case MessageType.merger:
+        return ImMerge(message: quoteMessage, isMe: isMe);
+      default:
+        return const Text('暂不支持的消息');
+    }
   }
 }

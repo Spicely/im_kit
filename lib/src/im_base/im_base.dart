@@ -171,6 +171,9 @@ class ImExtModel {
   /// 自定义数据
   dynamic data;
 
+  /// 引用数据
+  MessageExt? quoteMessage;
+
   ImExtModel({
     this.progress,
     this.path,
@@ -184,6 +187,7 @@ class ImExtModel {
     this.width,
     this.height,
     this.data,
+    this.quoteMessage,
   });
 
   Map<String, dynamic> toJson() {

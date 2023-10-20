@@ -145,38 +145,53 @@ class ImListItem extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: Wrap(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GestureDetector(
-                          onTap: () {
-                            onTap?.call(message);
-                          },
-                          onDoubleTap: () {
-                            onDoubleTap?.call(message);
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-                                  borderRadius: chatTheme.messageTheme.borderRadius,
-                                ),
-                                padding: _noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                child: getTypeWidget(),
-                              ),
-                              if (message.m.contentType == MessageType.quote)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-                                    borderRadius: chatTheme.messageTheme.borderRadius,
-                                  ),
-                                  margin: const EdgeInsets.only(top: 5),
-                                  padding: chatTheme.messageTheme.padding,
-                                  child: ImQuote(isMe: isMe, message: message),
-                                ),
-                            ],
+                        if (message.m.isGroupChat)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                           ),
+                        Wrap(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                onTap?.call(message);
+                              },
+                              onDoubleTap: () {
+                                onDoubleTap?.call(message);
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                      borderRadius: chatTheme.messageTheme.borderRadius,
+                                    ),
+                                    padding: _noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                    child: getTypeWidget(),
+                                  ),
+                                  if (message.m.contentType == MessageType.quote)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                        borderRadius: chatTheme.messageTheme.borderRadius,
+                                      ),
+                                      margin: const EdgeInsets.only(top: 5),
+                                      padding: chatTheme.messageTheme.padding,
+                                      child: Wrap(
+                                        children: [
+                                          Text('${message.m.quoteElem?.quoteMessage?.senderNickname}：'),
+                                          ImQuote(isMe: isMe, message: message),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -190,6 +205,16 @@ class ImListItem extends StatelessWidget {
         );
     }
   }
+
+  // String getShowName() {
+  //   ImServerData serverData = Get.find<ImServerData>();
+  //   UserInfo? userInfo = serverData.friendList.firstWhereOrNull((v) => v.userID == message.sendID);
+  //   FrinendRemarkEx? ex;
+  //   if (userInfo != null) {
+  //     ex = FrinendRemarkEx.fromString(userInfo.remark ?? '');
+  //   }
+  //   return Utils.getValue(ex?.remark, null) ?? Utils.getValue(groupMembersInfo?.nickname, null) ?? Utils.getValue(message.senderNickname, '');
+  // }
 
   Widget? getStatusWidget() {
     if (message.m.status == MessageStatus.sending) return sendLoadingWidget;

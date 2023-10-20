@@ -1,5 +1,19 @@
 part of im_kit;
 
+extension ExtensionAdvancedMessage on AdvancedMessage {
+  List<MessageExt> toExt(String secretKey) {
+    return (messageList ?? []).map((e) {
+      if (e.contentType == MessageType.quote) {
+        MessageExt extMsg = e.toExt(secretKey);
+        extMsg.ext.quoteMessage = extMsg.m.quoteElem!.quoteMessage!.toExt(secretKey);
+        return extMsg;
+      } else {
+        return e.toExt(secretKey);
+      }
+    }).toList();
+  }
+}
+
 extension ExtensionMessage on Message {
   MessageExt toExt(String secretKey) {
     final ext = ImExtModel(createTime: DateTime.now());
@@ -8,7 +22,7 @@ extension ExtensionMessage on Message {
       case MessageType.text:
       case MessageType.quote:
         {
-          String v = atElem?.text ?? atElem?.text ?? quoteElem?.text ?? content ?? '';
+          String v = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: atElem?.text ?? atElem?.text ?? quoteElem?.text ?? content ?? '', keyStr: secretKey);
           List<AtUserInfo> atUsersInfo = atElem?.atUsersInfo ?? [];
 
           List<ImAtTextType> list = [];

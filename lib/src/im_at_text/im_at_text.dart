@@ -61,7 +61,7 @@ class ImAtText extends ImBase {
         textDirection: TextDirection.ltr,
         child: SelectableText.rich(
           TextSpan(
-              children: (message.ext.data as List<ImAtTextType>).map((e) {
+              children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
             if (e.type == ImAtType.emoji) {
               return WidgetSpan(
                 child: CachedImage(

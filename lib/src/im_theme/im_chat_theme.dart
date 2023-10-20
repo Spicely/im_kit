@@ -13,6 +13,9 @@ class ImChatTheme {
   /// 消息框样式
   final ImMessageTheme messageTheme;
 
+  /// 输入框样式
+  final ImTextFieldTheme textFieldTheme;
+
   /// 文本样式
   final TextStyle textStyle;
 
@@ -32,6 +35,7 @@ class ImChatTheme {
     this.appBarTheme = const ImChatAppBarTheme(),
     this.avatarTheme = const ImAvatarTheme(),
     this.messageTheme = const ImMessageTheme(),
+    this.textFieldTheme = const ImTextFieldTheme(),
     this.backgroundColor = const Color(0xffffffff),
     this.textStyle = const TextStyle(fontSize: 14, color: Color(0xff333333)),
     this.atTextColor = const Color(0xff1a73e8),
@@ -100,5 +104,31 @@ class ImMessageTheme {
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
     this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
     this.style,
+  });
+}
+
+class ImTextFieldTheme {
+  final double height;
+
+  /// 背景颜色
+  final Color backgroundColor;
+
+  final String hintText;
+
+  /// 输入框颜色
+  final Color textFieldColor;
+
+  /// 输入框默认高度
+  final double textFieldHeight;
+
+  final BorderRadiusGeometry textFieldBorderRadius;
+
+  const ImTextFieldTheme({
+    this.backgroundColor = const Color.fromRGBO(241, 241, 241, 1),
+    this.height = 58,
+    this.hintText = '请输入消息...',
+    this.textFieldColor = Colors.white,
+    this.textFieldHeight = 38,
+    this.textFieldBorderRadius = const BorderRadius.all(Radius.circular(38)),
   });
 }
