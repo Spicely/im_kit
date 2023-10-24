@@ -7,12 +7,12 @@ class ImLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SizedBox(
       width: 20,
-      child: LoadingIndicator(
-        indicatorType: Indicator.lineSpinFadeLoader,
-        colors: [Colors.black],
-        strokeWidth: 0.3,
-        pathBackgroundColor: Colors.black,
-      ),
+      // child: LoadingIndicator(
+      //   indicatorType: Indicator.lineSpinFadeLoader,
+      //   colors: [Colors.black],
+      //   strokeWidth: 0.3,
+      //   pathBackgroundColor: Colors.black,
+      // ),
     );
   }
 }

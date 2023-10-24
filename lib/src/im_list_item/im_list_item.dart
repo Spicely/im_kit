@@ -25,7 +25,7 @@ class ImListItem extends StatelessWidget {
   final void Function(MessageExt message)? onTapResend;
 
   /// 通知用户点击事件
-  final void Function(UserInfo userInfo)? onNotificationUserTap;
+  final UserNotificationCallback? onNotificationUserTap;
 
   /// 消息获取之前处理
   final MessageExt Function(MessageExt message)? onBuildBeforeMsg;
@@ -44,19 +44,22 @@ class ImListItem extends StatelessWidget {
   final List<MenuItemProvider>? textMenuItems;
 
   /// 网址点击事件
-  final void Function(String)? onUrlTap;
+  final void Function(String)? onTapUrl;
 
   /// 邮箱点击事件
-  final void Function(String)? onEmailTap;
+  final void Function(String)? onTapEmail;
 
   /// 电话点击事件
-  final void Function(String)? onPhoneTap;
+  final void Function(String)? onTapPhone;
 
   /// 点击播放视频
   final void Function(MessageExt message)? onTapPlayVideo;
 
   /// 图片点击事件
   final void Function(MessageExt message)? onTapPicture;
+
+  /// at点击事件
+  final void Function(UserInfo userInfo)? onTapAt;
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
@@ -74,11 +77,12 @@ class ImListItem extends StatelessWidget {
     this.onClickMenu,
     this.textMenuItems,
     this.onDoubleTap,
-    this.onUrlTap,
-    this.onEmailTap,
-    this.onPhoneTap,
+    this.onTapUrl,
+    this.onTapEmail,
+    this.onTapPhone,
     this.onTapPlayVideo,
     this.onTapPicture,
+    this.onTapAt,
   });
 
   @override
@@ -99,9 +103,69 @@ class ImListItem extends StatelessWidget {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImAvatarTheme avatarTheme = ImKitTheme.of(context).chatTheme.avatarTheme;
     switch (message.m.contentType) {
+      case MessageType.custom:
+        switch (message.ext.data['contentType']) {
+          case 81:
+            return ImRedEnv(isMe: isMe, message: message);
+          case 82:
+            return Center(
+              child: Text.rich(
+                _getRedEnvelope(message, message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            );
+
+          default:
+            return const Center(
+              child: Text('暂不支持的消息', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            );
+        }
       case MessageType.friendApplicationApprovedNotification:
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        );
+      case MessageType.memberEnterNotification:
+        return Center(
+          child: Text.rich(
+            _getMemberEnterNotification(message, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.revoke:
+        return Center(
+          child: Text.rich(
+            _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+
+      case MessageType.groupInfoSetNotification:
+        return Center(
+          child: Text.rich(
+            _getGroupInfoSetNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.memberInvitedNotification:
+        return Center(
+          child: Text.rich(
+            _getMemberInvitedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.groupMemberMutedNotification:
+        return Center(
+          child: Text.rich(
+            _getGroupMemberMutedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.groupMemberCancelMutedNotification:
+        return Center(
+          child: Text.rich(
+            _getGroupMemberCancelMutedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         );
       case MessageType.groupCreatedNotification:
         return Center(
@@ -114,9 +178,7 @@ class ImListItem extends StatelessWidget {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         if (OpenIM.iMManager.uid == message.m.sendID) {
-                          OpenIM.iMManager.userManager.getSelfUserInfo().then((v) {
-                            onNotificationUserTap?.call(v);
-                          });
+                          onNotificationUserTap?.call(OpenIM.iMManager.uInfo!);
                         } else {
                           OpenIM.iMManager.friendshipManager.getFriendsInfo(uidList: [message.m.sendID!]).then((v) {
                             onNotificationUserTap?.call(v.first);
@@ -148,7 +210,7 @@ class ImListItem extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (message.m.isGroupChat)
+                        if (message.m.isGroupChat && !isMe)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
@@ -181,11 +243,14 @@ class ImListItem extends StatelessWidget {
                                       ),
                                       margin: const EdgeInsets.only(top: 5),
                                       padding: chatTheme.messageTheme.padding,
-                                      child: Wrap(
-                                        children: [
-                                          Text('${message.m.quoteElem?.quoteMessage?.senderNickname}：'),
-                                          ImQuote(isMe: isMe, message: message),
-                                        ],
+                                      child: Directionality(
+                                        textDirection: TextDirection.ltr,
+                                        child: Wrap(
+                                          children: [
+                                            Text('${message.m.quoteElem?.quoteMessage?.senderNickname}：'),
+                                            ImQuote(isMe: isMe, message: message),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                 ],
@@ -205,16 +270,6 @@ class ImListItem extends StatelessWidget {
         );
     }
   }
-
-  // String getShowName() {
-  //   ImServerData serverData = Get.find<ImServerData>();
-  //   UserInfo? userInfo = serverData.friendList.firstWhereOrNull((v) => v.userID == message.sendID);
-  //   FrinendRemarkEx? ex;
-  //   if (userInfo != null) {
-  //     ex = FrinendRemarkEx.fromString(userInfo.remark ?? '');
-  //   }
-  //   return Utils.getValue(ex?.remark, null) ?? Utils.getValue(groupMembersInfo?.nickname, null) ?? Utils.getValue(message.senderNickname, '');
-  // }
 
   Widget? getStatusWidget() {
     if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
@@ -240,9 +295,10 @@ class ImListItem extends StatelessWidget {
           isMe: isMe,
           onClickMenu: onClickMenu,
           textMenuItems: textMenuItems,
-          onEmailTap: onEmailTap,
-          onUrlTap: onUrlTap,
-          onPhoneTap: onPhoneTap,
+          onTapEmail: onTapEmail,
+          onTapUrl: onTapUrl,
+          onTapPhone: onTapPhone,
+          onTapAt: onTapAt,
         );
       case MessageType.picture:
         return ImImage(message: message, isMe: isMe, onTapPicture: onTapPicture);

@@ -37,15 +37,19 @@ class ImAtTextType {
 class ImAtText extends ImBase {
   final List<MenuItemProvider>? textMenuItems;
 
+  /// at点击事件
+  final void Function(UserInfo userInfo)? onTapAt;
+
   const ImAtText({
     super.key,
     required super.isMe,
     required super.message,
     super.onClickMenu,
     this.textMenuItems,
-    super.onUrlTap,
-    super.onEmailTap,
-    super.onPhoneTap,
+    super.onTapUrl,
+    super.onTapEmail,
+    super.onTapPhone,
+    this.onTapAt,
   });
 
   @override
@@ -59,7 +63,7 @@ class ImAtText extends ImBase {
             },
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: SelectableText.rich(
+        child: Text.rich(
           TextSpan(
               children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
             if (e.type == ImAtType.emoji) {
@@ -79,14 +83,22 @@ class ImAtText extends ImBase {
                   ..onTap = () {
                     switch (e.type) {
                       case ImAtType.url:
-                        onUrlTap?.call(e.text);
+                        onTapUrl?.call(e.text);
                         break;
                       case ImAtType.email:
-                        onEmailTap?.call(e.text);
+                        onTapEmail?.call(e.text);
                         break;
                       case ImAtType.phone:
-                        onPhoneTap?.call(e.text);
+                        onTapPhone?.call(e.text);
                         break;
+                      case ImAtType.at:
+                        if (OpenIM.iMManager.uid == e.userInfo?.atUserID) {
+                          onTapAt?.call(OpenIM.iMManager.uInfo!);
+                        } else {
+                          OpenIM.iMManager.userManager.getUsersInfo(uidList: [e.userInfo!.atUserID!]).then((v) {
+                            onTapAt?.call(v.first);
+                          });
+                        }
                       default:
                     }
                   },

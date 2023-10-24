@@ -41,9 +41,9 @@ class ImQuote extends ImBase {
           message: quoteMessage,
           isMe: isMe,
           onClickMenu: onClickMenu,
-          onEmailTap: onEmailTap,
-          onUrlTap: onUrlTap,
-          onPhoneTap: onPhoneTap,
+          onTapEmail: onTapEmail,
+          onTapUrl: onTapUrl,
+          onTapPhone: onTapPhone,
         );
       case MessageType.picture:
         return ImImage(message: quoteMessage, isMe: isMe);

@@ -83,6 +83,9 @@ extension ExtensionMessage on Message {
               return '';
             },
           );
+          if (contentType == MessageType.quote) {
+            ext.quoteMessage = quoteElem?.quoteMessage?.toExt(secretKey);
+          }
 
           ext.data = list;
         }
@@ -93,6 +96,19 @@ extension ExtensionMessage on Message {
         break;
       case MessageType.location:
         var data = json.decode(locationElem?.description ?? '{}');
+        ext.data = data;
+        break;
+      case MessageType.custom:
+        var data = json.decode(customElem?.data ?? '{}');
+        ext.data = data;
+        break;
+
+      case MessageType.groupMemberMutedNotification:
+      case MessageType.groupMemberCancelMutedNotification:
+      case MessageType.memberInvitedNotification:
+      case MessageType.groupInfoSetNotification:
+      case MessageType.memberEnterNotification:
+        var data = json.decode(notificationElem?.detail ?? '{}');
         ext.data = data;
         break;
       case MessageType.voice:
@@ -163,16 +179,26 @@ extension ExtensionMessage on Message {
   }
 
   /// 消息类型
-  String get type => switch (contentType) {
-        MessageType.picture => isSingleChat ? '[图片]' : '$senderNickname: [图片]',
-        MessageType.file => isSingleChat ? '[文件]' : '$senderNickname: [文件]',
-        MessageType.video => isSingleChat ? '[视频]' : '$senderNickname: [视频]',
-        MessageType.voice => isSingleChat ? '[语音]' : '$senderNickname: [语音]',
-        MessageType.location => isSingleChat ? '[位置]' : '$senderNickname: [位置]',
-        MessageType.advancedRevoke => isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]',
-        MessageType.text || MessageType.advancedText => isSingleChat ? atElem?.text ?? content ?? '' : '$senderNickname: ${atElem?.text ?? content ?? ''}',
-        MessageType.at_text => _getAtText(this),
-        _ => '暂不支持的消息',
+  InlineSpan get type => switch (contentType) {
+        MessageType.picture => TextSpan(text: isSingleChat ? '[图片]' : '$senderNickname: [图片]'),
+        MessageType.file => TextSpan(text: isSingleChat ? '[文件]' : '$senderNickname: [文件]'),
+        MessageType.video => TextSpan(text: isSingleChat ? '[视频]' : '$senderNickname: [视频]'),
+        MessageType.voice => TextSpan(text: isSingleChat ? '[语音]' : '$senderNickname: [语音]'),
+        MessageType.location => TextSpan(text: isSingleChat ? '[位置]' : '$senderNickname: [位置]'),
+        MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
+        MessageType.advancedRevoke => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
+        MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
+        MessageType.revoke => TextSpan(text: '$senderNickname撤回了一条消息'),
+        MessageType.groupMemberMutedNotification => _getGroupMemberMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.groupMemberCancelMutedNotification => _getGroupMemberCancelMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
+            81 => const TextSpan(text: '[红包消息]'),
+            82 => TextSpan(text: '$senderNickname领取了你的红包'),
+            83 => const TextSpan(text: '[转账消息]'),
+            84 => const TextSpan(text: '[红包退还消息]'),
+            _ => const TextSpan(text: '暂不支持的消息'),
+          },
+        _ => const TextSpan(text: '暂不支持的消息'),
       };
 }
 

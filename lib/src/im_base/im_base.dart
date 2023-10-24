@@ -27,13 +27,13 @@ class ImBase extends StatelessWidget {
   Message get msg => message.m;
 
   /// 网址点击事件
-  final void Function(String)? onUrlTap;
+  final void Function(String)? onTapUrl;
 
   /// 邮箱点击事件
-  final void Function(String)? onEmailTap;
+  final void Function(String)? onTapEmail;
 
   /// 电话点击事件
-  final void Function(String)? onPhoneTap;
+  final void Function(String)? onTapPhone;
 
   /// 点击下载文件
   final void Function(MessageExt message)? onTapDownFile;
@@ -46,9 +46,9 @@ class ImBase extends StatelessWidget {
     required this.isMe,
     required this.message,
     this.onClickMenu,
-    this.onUrlTap,
-    this.onEmailTap,
-    this.onPhoneTap,
+    this.onTapUrl,
+    this.onTapEmail,
+    this.onTapPhone,
     this.onTapDownFile,
     this.onTapPlayVideo,
   });
@@ -97,43 +97,6 @@ class MessageExt {
 String _getSecretKey(Message message, String currentSecretKey) {
   String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
   return k ?? currentSecretKey;
-}
-
-String _getAtText(Message msg) {
-  String v = msg.atElem?.text ?? '';
-  List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
-  // /// 匹配艾特用户
-  String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
-
-  String regExp;
-  if (atUsersInfo.isEmpty) {
-    return v;
-  } else {
-    regExp = [atReg].join('|');
-  }
-  return v.splitMapJoin(
-    RegExp('($regExp)'),
-    onMatch: (Match m) {
-      String value = m.group(0)!;
-      if (RegExp(atReg).hasMatch(value)) {
-        String id = value.replaceAll('@', '').trim();
-        AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
-        if (atUserInfo == null) {
-          return value;
-        } else {
-          if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
-            return '@你 ';
-          } else {
-            return '@${atUserInfo.groupNickname} ';
-          }
-        }
-      }
-      return '';
-    },
-    onNonMatch: (String n) {
-      return n;
-    },
-  );
 }
 
 class ImExtModel {
@@ -318,6 +281,20 @@ class ImCore {
         ),
       ),
     );
+  }
+
+  /// 文件下载
+  static void downloadFile(MessageExt extMsg) {
+    if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
+      if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
+        if (extMsg.m.contentType == MessageType.video) {
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [extMsg.m.videoElem?.snapshotUrl ?? '', extMsg.m.videoElem?.videoUrl ?? '']);
+        } else {
+          String url = extMsg.m.fileElem?.sourceUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '';
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [url]);
+        }
+      }
+    }
   }
 }
 

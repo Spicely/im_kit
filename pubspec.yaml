@@ -17,7 +17,6 @@ dependencies:
   path:
   get:
   audioplayers:
-  loading_indicator: 
   record: ^5.0.1
   image_gallery_saver:
   card_swiper: 
@@ -33,6 +32,11 @@ dependencies:
   media_kit_video:
   media_kit_libs_video:
   extended_text_field:
+  bubble_tab_indicator: 
+  intl:
+  sprintf: 
+  url_launcher:
+  easy_refresh:
 
 dev_dependencies:
   flutter_test:

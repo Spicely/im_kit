@@ -1,6 +1,6 @@
 part of im_kit;
 
-enum FieldType {
+enum ImChatPageFieldType {
   voice,
   emoji,
   actions,
@@ -45,7 +45,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 是否有输入内容
   RxBool hasInput = false.obs;
 
-  Rx<FieldType> fieldType = FieldType.none.obs;
+  Rx<ImChatPageFieldType> fieldType = ImChatPageFieldType.none.obs;
+
+  final FocusNode focusNode = FocusNode();
+
+  final EasyRefreshController easyRefreshController = EasyRefreshController(controlFinishLoad: true);
 
   @override
   void onInit() {
@@ -53,6 +57,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     ImKitIsolateManager.addListener(this);
     super.onInit();
     tabController = TabController(length: 1, vsync: this);
+    focusNode.addListener(() {
+      if (focusNode.hasFocus) {
+        fieldType.value = ImChatPageFieldType.none;
+      }
+    });
   }
 
   @override
@@ -73,7 +82,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
     /// 下载文件
     for (var v in data) {
-      downloadFile(v);
+      ImCore.downloadFile(v);
     }
   }
 
@@ -94,21 +103,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       }
       data.insert(0, extMsg);
       // markMessageRead([extMsg]);
-      downloadFile(extMsg);
-    }
-  }
-
-  /// 文件下载
-  void downloadFile(MessageExt extMsg) {
-    if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
-      if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
-        if (extMsg.m.contentType == MessageType.video) {
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [extMsg.m.videoElem?.snapshotUrl ?? '', extMsg.m.videoElem?.videoUrl ?? '']);
-        } else {
-          String url = extMsg.m.fileElem?.sourceUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [url]);
-        }
-      }
+      ImCore.downloadFile(extMsg);
     }
   }
 
@@ -209,11 +204,40 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 设置为显示表情
   void onShowEmoji() {
-    fieldType.value = FieldType.emoji;
+    focusNode.unfocus();
+    fieldType.value = ImChatPageFieldType.emoji;
   }
 
   /// 设置为显示功能模块
   void onShowActions() {
-    fieldType.value = FieldType.actions;
+    focusNode.unfocus();
+    fieldType.value = ImChatPageFieldType.actions;
+  }
+
+  void onUrlTap(String url) {
+    Uri uri = Uri.parse(url);
+    launchUrl(uri);
+  }
+
+  void onTapAt(UserInfo info) {}
+
+  void onTapPhone(String phone) {}
+
+  Future<void> onLoad() async {
+    List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
+      conversationID: conversationInfo.value.conversationID,
+      count: 40,
+      startMsg: data.last.m,
+    );
+    if (list.length < 40) {
+      easyRefreshController.finishLoad(IndicatorResult.noMore);
+    } else {
+      easyRefreshController.finishLoad(IndicatorResult.success);
+    }
+    List<MessageExt> newExts = list.reversed.map((e) => e.toExt(_secretKey)).toList();
+    data.addAll(newExts);
+    for (var v in newExts) {
+      ImCore.downloadFile(v);
+    }
   }
 }
