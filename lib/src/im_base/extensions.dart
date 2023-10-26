@@ -117,17 +117,23 @@ extension ExtensionMessage on Message {
       case MessageType.picture:
 
         /// 优先判断本地文件
-        String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath ?? pictureElem?.sourcePath;
-        if (filePath != null && File(filePath).existsSync()) {
+        // String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath ?? pictureElem?.sourcePath;
+        // if (filePath != null && File(filePath).existsSync()) {
+        //   ImKitIsolateManager.decryptFile(secretKey, filePath);
+        //   ext.path = filePath;
+        // } else {
+        //   filePath = ImCore.getSavePath(this);
+        //   if (File(filePath).existsSync()) {
+        //     ImKitIsolateManager.decryptFile(secretKey, filePath);
+        //     ext.path = filePath;
+        //   }
+        // }
+        String? filePath = ImCore.getSavePath(this);
+        if (File(filePath).existsSync()) {
           ImKitIsolateManager.decryptFile(secretKey, filePath);
           ext.path = filePath;
-        } else {
-          filePath = ImCore.getSavePath(this);
-          if (File(filePath).existsSync()) {
-            ImKitIsolateManager.decryptFile(secretKey, filePath);
-            ext.path = filePath;
-          }
         }
+        print(ext.path);
         ext.secretKey = _getSecretKey(this, secretKey);
         var (width, height) = _computedSize(width: pictureElem?.sourcePicture?.width?.toDouble(), height: pictureElem?.sourcePicture?.height?.toDouble());
         ext.width = width;

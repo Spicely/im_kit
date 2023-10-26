@@ -30,6 +30,9 @@ enum _PortMethod {
 
   /// 复制文件
   copyFile,
+
+  /// 将Uint8List保存成图片
+  saveImageByUint8List,
 }
 
 /// 下载进度
@@ -127,7 +130,7 @@ class ImKitIsolateManager {
     /// 获取保存路径
     List<Map<String, String>> list = [];
     for (var v in urls) {
-      list.add({'url': v, 'savePath': ImCore.getSavePathForFilePath(v)});
+      list.add({'url': v, 'savePath': ImCore.getSaveForUrlPath(v)});
     }
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: list, sendPort: port.sendPort));
@@ -228,7 +231,7 @@ class ImKitIsolateManager {
     /// 检查文件是否存在  如果存在则重命名
     File file = File(path);
     if (await file.exists()) {
-      await file.rename(ImCore.getSavePathForFilePath(url));
+      await file.rename(ImCore.getSaveForUrlPath(url));
     }
   }
 
@@ -278,11 +281,40 @@ class ImKitIsolateManager {
               IsolateMethod.getImageInfo(msg);
             case _PortMethod.copyFile:
               IsolateMethod.copyFile(msg);
+            case _PortMethod.saveImageByUint8List:
+              IsolateMethod.saveImageByUint8List(msg);
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
         }
       }
     });
+  }
+
+  /// 将Uint8List存储为图片
+  static Future<String> saveImageByUint8List(Uint8List bytes) async {
+    var completer = Completer<String>();
+
+    String path = join(ImCore.saveDir, '${const Uuid().v4()}.jpg');
+
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.saveImageByUint8List,
+      data: {'filePath': path, 'uint8List': bytes},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
+          print(msg.error);
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
   }
 }

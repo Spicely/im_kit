@@ -197,6 +197,12 @@ class ImCore {
   }
 
   /// 文件保存地址
+  static String getSaveForUrlPath(String path) {
+    String fileName = path.split('/').last;
+    return join(saveDir, fileName);
+  }
+
+  /// 文件保存地址
   static String getSavePathForFilePath(String path) {
     /// 获取后缀名
     String ext = path.split('.').last;
@@ -307,7 +313,7 @@ class ImCore {
   static List<int> noPadMsgType = [MessageType.picture, MessageType.file, MessageType.card, MessageType.voice, MessageType.video, MessageType.location, MessageType.merger, 300];
 
   /// 没有背景颜色的消息
-  static List<int> noBgMsgType = [300];
+  static List<int> noBgMsgType = [300, MessageType.picture, MessageType.video];
 }
 
 (double width, double height) _computedSize({double? width, double? height}) {

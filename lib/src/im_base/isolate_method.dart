@@ -122,6 +122,18 @@ class IsolateMethod {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
   }
+
+  /// 复制文件
+  static void saveImageByUint8List(_PortModel params) async {
+    String path = params.data['filePath'];
+    Uint8List bytes = params.data['uint8List'];
+    try {
+      await File(path).writeAsBytes(bytes, flush: true);
+      params.sendPort?.send(PortResult(data: path));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
 }
 
 class DecDataRes {

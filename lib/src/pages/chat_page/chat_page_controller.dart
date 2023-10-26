@@ -197,7 +197,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 更新消息
   Future<void> updateMessage(MessageExt ext) async {
     int index = data.indexWhere((v) => v.m.clientMsgID == ext.m.clientMsgID);
-    if (index != -1) data[index] = ext;
+    if (index != -1) {
+      if (data[index].ext.path == null) {
+        data[index] = ext;
+      } else {
+        data[index].m = ext.m;
+      }
+    }
   }
 
   /// 下载文件
@@ -223,10 +229,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 发送消息统一入口
   Future<MessageExt> sendMessage(MessageExt msg) async {
     try {
-      if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(msg.m.contentType)) {
-        /// 先对文件加密
-        String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.sourceUrl ?? '';
+      /// 先对文件加密
+      if ([MessageType.file, MessageType.picture, MessageType.voice].contains(msg.m.contentType)) {
+        String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.soundPath ?? '';
         await ImKitIsolateManager.encryptFile(secretKey, path);
+      } else if ([MessageType.video].contains(msg.m.contentType)) {
+        await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.videoPath!);
+        await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.snapshotPath!);
       }
       Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
         message: msg.m,
@@ -236,8 +245,21 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       );
       if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
         /// 对文件解密
-        String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.sourceUrl ?? '';
+        String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.soundPath ?? '';
+
         await ImKitIsolateManager.decryptFile(secretKey, path);
+
+        /// 把文件重命名
+        await ImKitIsolateManager.renameFile(path, path);
+      } else if ([MessageType.video].contains(newMsg.contentType)) {
+        /// 对文件解密
+
+        await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.videoPath!);
+        await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.snapshotPath!);
+
+        /// 把文件重命名
+        await ImKitIsolateManager.renameFile(newMsg.videoElem!.videoPath!, newMsg.videoElem!.videoUrl!);
+        await ImKitIsolateManager.renameFile(newMsg.videoElem!.snapshotPath!, newMsg.videoElem!.snapshotUrl!);
       }
       MessageExt extMsg = newMsg.toExt(secretKey);
       updateMessage(extMsg);
