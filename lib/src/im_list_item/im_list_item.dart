@@ -1,16 +1,5 @@
 part of im_kit;
 
-/// 没有内边距的消息框
-const _noPadMsgType = [
-  MessageType.picture,
-  MessageType.file,
-  MessageType.card,
-  MessageType.voice,
-  MessageType.video,
-  MessageType.location,
-  MessageType.merger,
-];
-
 class ImListItem extends StatelessWidget {
   final MessageExt message;
 
@@ -29,6 +18,9 @@ class ImListItem extends StatelessWidget {
 
   /// 消息获取之前处理
   final MessageExt Function(MessageExt message)? onBuildBeforeMsg;
+
+  /// 名片信息点击
+  final void Function(MessageExt message)? onCardTap;
 
   /// 发送消息等待Widget
   final Widget? sendLoadingWidget;
@@ -83,6 +75,7 @@ class ImListItem extends StatelessWidget {
     this.onTapPlayVideo,
     this.onTapPicture,
     this.onTapAt,
+    this.onCardTap,
   });
 
   @override
@@ -127,7 +120,7 @@ class ImListItem extends StatelessWidget {
       case MessageType.memberEnterNotification:
         return Center(
           child: Text.rich(
-            _getMemberEnterNotification(message, userColor: Colors.blue, onTap: onNotificationUserTap),
+            _getMemberEnterNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
@@ -229,10 +222,14 @@ class ImListItem extends StatelessWidget {
                                 children: [
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                      color: ImCore.noBgMsgType.contains(message.m.contentType)
+                                          ? null
+                                          : isMe
+                                              ? chatTheme.messageTheme.meBackgroundColor
+                                              : chatTheme.messageTheme.backgroundColor,
                                       borderRadius: chatTheme.messageTheme.borderRadius,
                                     ),
-                                    padding: _noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                    padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
                                     child: getTypeWidget(),
                                   ),
                                   if (message.m.contentType == MessageType.quote)
@@ -309,11 +306,13 @@ class ImListItem extends StatelessWidget {
       case MessageType.video:
         return ImVideo(message: message, isMe: isMe, onTapDownFile: onTapDownFile, onTapPlayVideo: onTapPlayVideo);
       case MessageType.card:
-        return ImCard(message: message, isMe: isMe);
+        return ImCard(message: message, isMe: isMe, onTap: onCardTap);
       case MessageType.location:
         return ImLocation(message: message, isMe: isMe);
       case MessageType.merger:
         return ImMerge(message: message, isMe: isMe);
+      case 300:
+        return ImCustomFace(message: message, isMe: isMe);
       default:
         return const Text('暂不支持的消息');
     }

@@ -36,8 +36,10 @@ import 'package:record/record.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+export 'package:intl/intl.dart';
 export 'package:popup_menu/popup_menu.dart';
 export 'package:audioplayers/audioplayers.dart';
+export 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';
@@ -53,6 +55,7 @@ part 'src/im_theme/im_theme.dart';
 part 'src/im_theme/im_chat_theme.dart';
 part 'src/im_card/im_card.dart';
 part 'src/im_quote/im_quote.dart';
+part 'src/im_custom_face/im_custom_face.dart';
 part 'src/im_base/isolate_method.dart';
 part 'src/im_file/im_file.dart';
 part 'src/im_list_item/im_list_item.dart';
@@ -63,6 +66,7 @@ part 'src/im_red_env/im_red_env.dart';
 part 'src/im_merger/im_merger.dart';
 part 'src/im_location/im_location.dart';
 part 'src/im_base/fun.dart';
+
 part 'src/im_base/extensions.dart';
 part 'src/im_base/extend_special_text_span_builder.dart';
 part 'src/im_base/extensions_int_to_time.dart';

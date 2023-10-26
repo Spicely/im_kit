@@ -132,6 +132,23 @@ extension ExtensionMessage on Message {
         ext.width = width;
         ext.height = height;
         break;
+      case 300:
+        Map<String, dynamic> map = jsonDecode(content ?? '{}');
+        ext.data = jsonDecode(map['data'] ?? '{}');
+
+        /// 获取文件名
+        String fileName = (ext.data['url'] as String).split('/').last;
+
+        /// 优先判断本地文件
+        String? filePath = '${ImCore.dirPath}/emoji/${ext.data['emoticons_id']}/$fileName';
+        if (File(filePath).existsSync()) {
+          ext.path = filePath;
+        }
+        ext.secretKey = _getSecretKey(this, secretKey);
+        var (width, height) = _computedSize(width: map['w'] ?? 120, height: map['h'] ?? 120);
+        ext.width = width;
+        ext.height = height;
+        break;
       case MessageType.video:
         String? snapshotPath = videoElem?.snapshotPath;
         String? videoPath = videoElem?.videoPath;
@@ -185,12 +202,16 @@ extension ExtensionMessage on Message {
         MessageType.video => TextSpan(text: isSingleChat ? '[视频]' : '$senderNickname: [视频]'),
         MessageType.voice => TextSpan(text: isSingleChat ? '[语音]' : '$senderNickname: [语音]'),
         MessageType.location => TextSpan(text: isSingleChat ? '[位置]' : '$senderNickname: [位置]'),
+        MessageType.card => TextSpan(text: isSingleChat ? '[用户名片]' : '$senderNickname: [用户名片]'),
         MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
         MessageType.advancedRevoke => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
         MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
         MessageType.revoke => TextSpan(text: '$senderNickname撤回了一条消息'),
+        300 => TextSpan(text: isSingleChat ? '[表情]' : '$senderNickname: [表情]'),
         MessageType.groupMemberMutedNotification => _getGroupMemberMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
         MessageType.groupMemberCancelMutedNotification => _getGroupMemberCancelMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.memberInvitedNotification => _getMemberInvitedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.memberEnterNotification => _getMemberEnterNotification(jsonDecode(notificationElem?.detail ?? '{}')),
         MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
             81 => const TextSpan(text: '[红包消息]'),
             82 => TextSpan(text: '$senderNickname领取了你的红包'),

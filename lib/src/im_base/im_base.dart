@@ -26,6 +26,9 @@ class ImBase extends StatelessWidget {
 
   Message get msg => message.m;
 
+  // 点击消息体
+  final void Function(MessageExt message)? onTap;
+
   /// 网址点击事件
   final void Function(String)? onTapUrl;
 
@@ -46,6 +49,7 @@ class ImBase extends StatelessWidget {
     required this.isMe,
     required this.message,
     this.onClickMenu,
+    this.onTap,
     this.onTapUrl,
     this.onTapEmail,
     this.onTapPhone,
@@ -296,6 +300,12 @@ class ImCore {
       }
     }
   }
+
+  /// 没有内边距
+  static List<int> noPadMsgType = [MessageType.picture, MessageType.file, MessageType.card, MessageType.voice, MessageType.video, MessageType.location, MessageType.merger, 300];
+
+  /// 没有背景颜色的消息
+  static List<int> noBgMsgType = [300];
 }
 
 (double width, double height) _computedSize({double? width, double? height}) {

@@ -11,6 +11,11 @@ class ConversationController extends GetxController with OpenIMListener {
   /// 密钥列表
   Map<String, String> keyMap = {};
 
+  TapDownDetails? details;
+
+  /// 当前选中的会话信息
+  ConversationInfo? currentConversationInfo;
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);
@@ -65,11 +70,11 @@ class ConversationController extends GetxController with OpenIMListener {
   }
 
   Future<void> getData() async {
+    data.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
     var keys = await OpenIM.iMManager.conversationManager.getAllLocalKey();
     for (var value in keys) {
       keyMap[value['sessionID']] = value['sessionKey'];
     }
-    data.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
     OpenIM.iMManager.conversationManager.simpleSort(data);
   }
 
@@ -81,23 +86,28 @@ class ConversationController extends GetxController with OpenIMListener {
     }
   }
 
-  void onNotificationUserTap(UserInfo userInfo) {
-    print(userInfo);
-  }
-
   /// 跳转到聊天页面
   Future<void> toChatPage(ConversationInfo info) async {
     AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: info.conversationID,
       count: 40,
     );
+    List<GroupMembersInfo> groupMembers = [];
+    GroupInfo? groupInfo;
+    if (info.isGroupChat) {
+      groupMembers = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: info.groupID!);
+      groupInfo = (await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!])).first;
+    }
     String secretKey = getKey(info);
     Get.to(
       () => ChatPage(
-        conversationInfo: info,
-        messages: advancedMessage.toExt(secretKey),
-        secretKey: secretKey,
-        onNotificationUserTap: onNotificationUserTap,
+        controller: ChatPageController(
+          secretKey: secretKey,
+          messages: advancedMessage.toExt(secretKey),
+          conversationInfo: info,
+          groupMembers: groupMembers,
+          groupInfo: groupInfo,
+        ),
       ),
     );
   }
@@ -116,4 +126,11 @@ class ConversationController extends GetxController with OpenIMListener {
       ),
     );
   }
+
+  void onTapDown(TapDownDetails dragDownDetails, ConversationInfo info) {
+    details = dragDownDetails;
+    currentConversationInfo = info;
+  }
+
+  void onLongPress() {}
 }

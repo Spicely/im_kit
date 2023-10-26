@@ -26,8 +26,8 @@ TextSpan _getGroupMemberMutedNotification(Map<String, dynamic> detail, {Color? u
 }
 
 /// 成员进群
-TextSpan _getMemberEnterNotification(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap}) {
-  var entrantUser = extMsg.ext.data['entrantUser'];
+TextSpan _getMemberEnterNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+  var entrantUser = detail['entrantUser'];
   return TextSpan(
     children: [
       TextSpan(
@@ -156,7 +156,7 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
             if (extMsg.m.sendID == OpenIM.iMManager.uid) {
               onTap?.call(OpenIM.iMManager.uInfo!);
             } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [detail['red_envelope_user_id']]).then((users) {
+              OpenIM.iMManager.userManager.getUsersInfo(uidList: [extMsg.m.sendID!]).then((users) {
                 onTap?.call(users.first);
               });
             }

@@ -3,23 +3,14 @@ part of im_kit;
 List<String> _keys = _emojiFaces.keys.toList();
 
 class ChatPage extends StatelessWidget {
+  final ChatPageController controller;
+
   final List<Widget> actions;
-
-  final List<MessageExt> messages;
-
-  final ConversationInfo conversationInfo;
-
-  final String secretKey;
-
-  final UserNotificationCallback? onNotificationUserTap;
 
   const ChatPage({
     super.key,
-    required this.secretKey,
-    required this.messages,
-    required this.conversationInfo,
+    required this.controller,
     this.actions = const [],
-    this.onNotificationUserTap,
   });
 
   @override
@@ -27,7 +18,8 @@ class ChatPage extends StatelessWidget {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     int count = (actions.length / 8).ceil();
     return GetBuilder(
-      init: ChatPageController(secretKey: secretKey, messages: messages, conversationInfo: conversationInfo),
+      // init: ,
+      init: controller,
       builder: (controller) => Scaffold(
         backgroundColor: chatTheme.backgroundColor,
         appBar: AppBar(
@@ -53,7 +45,7 @@ class ChatPage extends StatelessWidget {
                 () => EasyRefresh(
                   controller: controller.easyRefreshController,
                   clipBehavior: Clip.none,
-                  footer: BuilderFooter(
+                  header: BuilderHeader(
                       triggerOffset: 40,
                       infiniteOffset: 60,
                       clamping: false,
@@ -83,11 +75,11 @@ class ChatPage extends StatelessWidget {
                           ],
                         );
                       }),
-                  onLoad: controller.onLoad,
+                  onRefresh: controller.onLoad,
+                  onLoad: null,
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     controller: controller.scrollController,
-                    reverse: true,
                     itemBuilder: (context, index) => ImListItem(
                       message: controller.data[index],
                       // onTap: controller.onTap,
@@ -96,10 +88,11 @@ class ChatPage extends StatelessWidget {
                       onTapDownFile: controller.onTapDownFile,
                       onTapPlayVideo: controller.onTapPlayVideo,
                       onTapPicture: controller.onTapPicture,
-                      onNotificationUserTap: onNotificationUserTap,
+                      onNotificationUserTap: controller.onNotificationUserTap,
                       onTapUrl: controller.onUrlTap,
                       onTapAt: controller.onTapAt,
                       onTapPhone: controller.onTapPhone,
+                      onCardTap: controller.onCardTap,
                       sendSuccessWidget: Text(
                         controller.data[index].m.isRead == true ? '已读' : '未读',
                         // style: TextStyle(fontSize: 10, color: gray),
@@ -202,8 +195,9 @@ class ChatPage extends StatelessWidget {
                                 indicatorRadius: 8,
                                 tabBarIndicatorSize: TabBarIndicatorSize.tab,
                               ),
-                              tabs: const [
-                                Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
+                              tabs: [
+                                const Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
+                                ...controller.tabs.map((e) => e.tab).toList(),
                               ],
                             ),
                           ),
@@ -236,6 +230,7 @@ class ChatPage extends StatelessWidget {
                                   },
                                   itemCount: _keys.length,
                                 ),
+                                ...controller.tabs.map((e) => e.view.call(controller)).toList(),
                               ],
                             ),
                           ),
