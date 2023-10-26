@@ -5,7 +5,7 @@ class ImFile extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onTapDownFile,
+    super.onTap,
   });
 
   @override
@@ -13,89 +13,94 @@ class ImFile extends ImBase {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     String? filename = msg.fileElem?.fileName;
     String? suffix = getSuffix();
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-              borderRadius: chatTheme.messageTheme.borderRadius,
-            ),
-            width: 220,
-            height: 80,
-            padding: const EdgeInsets.all(12),
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: SizedBox(
-                            height: 40,
-                            child: Text(
-                              _fixAutoLines(filename ?? ''),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 2,
-                              style: const TextStyle(fontSize: 14),
+    return GestureDetector(
+      onTap: () {
+        onTap?.call(message);
+      },
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                borderRadius: chatTheme.messageTheme.borderRadius,
+              ),
+              width: 220,
+              height: 80,
+              padding: const EdgeInsets.all(12),
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: Text(
+                                _fixAutoLines(filename ?? ''),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: const TextStyle(fontSize: 14),
+                              ),
                             ),
                           ),
+                          // 文件大小
+                          Text(
+                            formatBytes(msg.fileElem?.fileSize ?? 0),
+                            style: const TextStyle(fontSize: 10, color: Color.fromRGBO(175, 175, 175, 1)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Stack(
+                      children: [
+                        const CachedImage(
+                          width: 40,
+                          height: 49,
+                          assetUrl: 'assets/icons/msg_default.png',
+                          package: 'im_kit',
                         ),
-                        // 文件大小
-                        Text(
-                          formatBytes(msg.fileElem?.fileSize ?? 0),
-                          style: const TextStyle(fontSize: 10, color: Color.fromRGBO(175, 175, 175, 1)),
+                        Positioned(
+                          top: 0,
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: suffix == null
+                                ? const CachedImage(
+                                    width: 20,
+                                    height: 20,
+                                    assetUrl: 'assets/icons/query.png',
+                                    package: 'im_kit',
+                                  )
+                                : Text(suffix, style: const TextStyle(fontSize: 12, color: Colors.white)),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Stack(
-                    children: [
-                      const CachedImage(
-                        width: 40,
-                        height: 49,
-                        assetUrl: 'assets/icons/msg_default.png',
-                        package: 'im_kit',
-                      ),
-                      Positioned(
-                        top: 0,
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: suffix == null
-                              ? const CachedImage(
-                                  width: 20,
-                                  height: 20,
-                                  assetUrl: 'assets/icons/query.png',
-                                  package: 'im_kit',
-                                )
-                              : Text(suffix, style: const TextStyle(fontSize: 12, color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 10),
-                ],
+                    const SizedBox(width: 10),
+                  ],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: LinearProgressIndicator(
-              value: ext.isDownloading ? ext.progress : 0,
-              minHeight: 2,
-              backgroundColor: Colors.transparent,
-              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: LinearProgressIndicator(
+                value: ext.isDownloading ? ext.progress : 0,
+                minHeight: 2,
+                backgroundColor: Colors.transparent,
+                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

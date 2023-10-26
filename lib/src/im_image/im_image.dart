@@ -1,23 +1,21 @@
 part of im_kit;
 
 class ImImage extends ImBase {
-  /// 图片点击事件
-  final void Function(MessageExt message)? onTapPicture;
-
   const ImImage({
     super.key,
     required super.isMe,
     required super.message,
-    this.onTapPicture,
+    super.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    print(message.ext.width);
     return Hero(
       tag: ValueKey(msg.clientMsgID),
       child: GestureDetector(
         onTap: () {
-          onTapPicture?.call(message);
+          onTap?.call(message);
         },
         child: CachedImage(
           file: ext.path != null ? File(ext.path!) : null,

@@ -13,7 +13,6 @@ class ImCustomFace extends ImBase {
       file: ext.path != null ? File(ext.path!) : null,
       width: message.ext.width,
       height: message.ext.height,
-      circular: 5,
       fit: BoxFit.cover,
     );
   }

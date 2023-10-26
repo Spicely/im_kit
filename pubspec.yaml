@@ -26,6 +26,7 @@ dependencies:
   image: 
   html:
   lottie:
+  uuid:
   encrypt: 
   pointycastle:
   popup_menu: 

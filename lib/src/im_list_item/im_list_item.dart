@@ -22,6 +22,12 @@ class ImListItem extends StatelessWidget {
   /// 名片信息点击
   final void Function(MessageExt message)? onCardTap;
 
+  /// 位置信息点击
+  final void Function(MessageExt message)? onLocationTap;
+
+  /// 文件信息点击
+  final void Function(MessageExt message)? onFileTap;
+
   /// 发送消息等待Widget
   final Widget? sendLoadingWidget;
 
@@ -48,10 +54,10 @@ class ImListItem extends StatelessWidget {
   final void Function(MessageExt message)? onTapPlayVideo;
 
   /// 图片点击事件
-  final void Function(MessageExt message)? onTapPicture;
+  final void Function(MessageExt message)? onPictureTap;
 
   /// at点击事件
-  final void Function(UserInfo userInfo)? onTapAt;
+  final void Function(UserInfo userInfo)? onAtTap;
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
@@ -73,9 +79,11 @@ class ImListItem extends StatelessWidget {
     this.onTapEmail,
     this.onTapPhone,
     this.onTapPlayVideo,
-    this.onTapPicture,
-    this.onTapAt,
+    this.onPictureTap,
+    this.onAtTap,
     this.onCardTap,
+    this.onLocationTap,
+    this.onFileTap,
   });
 
   @override
@@ -121,6 +129,13 @@ class ImListItem extends StatelessWidget {
         return Center(
           child: Text.rich(
             _getMemberEnterNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.memberKickedNotification:
+        return Center(
+          child: Text.rich(
+            _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
@@ -295,12 +310,12 @@ class ImListItem extends StatelessWidget {
           onTapEmail: onTapEmail,
           onTapUrl: onTapUrl,
           onTapPhone: onTapPhone,
-          onTapAt: onTapAt,
+          onAtTap: onAtTap,
         );
       case MessageType.picture:
-        return ImImage(message: message, isMe: isMe, onTapPicture: onTapPicture);
+        return ImImage(message: message, isMe: isMe, onTap: onPictureTap);
       case MessageType.file:
-        return ImFile(message: message, isMe: isMe, onTapDownFile: onTapDownFile);
+        return ImFile(message: message, isMe: isMe, onTap: onFileTap);
       case MessageType.voice:
         return ImVoice(message: message, isMe: isMe);
       case MessageType.video:
@@ -308,7 +323,7 @@ class ImListItem extends StatelessWidget {
       case MessageType.card:
         return ImCard(message: message, isMe: isMe, onTap: onCardTap);
       case MessageType.location:
-        return ImLocation(message: message, isMe: isMe);
+        return ImLocation(message: message, isMe: isMe, onTap: onLocationTap);
       case MessageType.merger:
         return ImMerge(message: message, isMe: isMe);
       case 300:

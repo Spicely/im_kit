@@ -35,6 +35,7 @@ import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:record/record.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 export 'package:intl/intl.dart';
 export 'package:popup_menu/popup_menu.dart';

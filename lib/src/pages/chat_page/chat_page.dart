@@ -7,9 +7,12 @@ class ChatPage extends StatelessWidget {
 
   final List<Widget> actions;
 
+  final List<Widget> appBarActions;
+
   const ChatPage({
     super.key,
     required this.controller,
+    this.appBarActions = const [],
     this.actions = const [],
   });
 
@@ -37,6 +40,7 @@ class ChatPage extends StatelessWidget {
             ],
           ),
           centerTitle: chatTheme.appBarTheme.centerTitle,
+          actions: appBarActions,
         ),
         body: Column(
           children: [
@@ -76,30 +80,34 @@ class ChatPage extends StatelessWidget {
                         );
                       }),
                   onLoad: controller.noMore.value ? null : controller.onLoad,
-                  childBuilder: (context, physics) => ListView.builder(
-                    physics: physics,
-                    padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    controller: controller.scrollController,
-                    reverse: true,
-                    itemBuilder: (context, index) => ImListItem(
-                      message: controller.data[index],
-                      // onTap: controller.onTap,
-                      // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
-                      sendErrorWidget: const Icon(Icons.error, color: Colors.red),
-                      onTapDownFile: controller.onTapDownFile,
-                      onTapPlayVideo: controller.onTapPlayVideo,
-                      onTapPicture: controller.onTapPicture,
-                      onNotificationUserTap: controller.onNotificationUserTap,
-                      onTapUrl: controller.onUrlTap,
-                      onTapAt: controller.onTapAt,
-                      onTapPhone: controller.onTapPhone,
-                      onCardTap: controller.onCardTap,
-                      sendSuccessWidget: Text(
-                        controller.data[index].m.isRead == true ? '已读' : '未读',
-                        // style: TextStyle(fontSize: 10, color: gray),
+                  childBuilder: (context, physics) => Obx(
+                    () => ListView.builder(
+                      physics: physics,
+                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                      controller: controller.scrollController,
+                      reverse: true,
+                      itemBuilder: (context, index) => ImListItem(
+                        message: controller.data[index],
+                        // onTap: controller.onTap,
+                        // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
+                        sendErrorWidget: const Icon(Icons.error, color: Colors.red),
+                        onTapDownFile: controller.onTapDownFile,
+                        onTapPlayVideo: controller.onTapPlayVideo,
+                        onPictureTap: controller.onPictureTap,
+                        onNotificationUserTap: controller.onNotificationUserTap,
+                        onTapUrl: controller.onUrlTap,
+                        onAtTap: controller.onAtTap,
+                        onTapPhone: controller.onTapPhone,
+                        onCardTap: controller.onCardTap,
+                        onLocationTap: controller.onLocationTap,
+                        onFileTap: controller.onFileTap,
+                        sendSuccessWidget: Text(
+                          controller.data[index].m.isRead == true ? '已读' : '未读',
+                          // style: TextStyle(fontSize: 10, color: gray),
+                        ),
                       ),
+                      itemCount: controller.data.length,
                     ),
-                    itemCount: controller.data.length,
                   ),
                 ),
               ),

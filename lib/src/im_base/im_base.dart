@@ -198,8 +198,10 @@ class ImCore {
 
   /// 文件保存地址
   static String getSavePathForFilePath(String path) {
-    String fileName = path.split('/').last;
-    return join(saveDir, fileName);
+    /// 获取后缀名
+    String ext = path.split('.').last;
+    var uuid = const Uuid();
+    return join(saveDir, '${uuid.v4()}${ext.isEmpty ? '' : '.$ext'}');
   }
 
   /// 检测文件是否存在

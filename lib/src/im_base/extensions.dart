@@ -108,6 +108,7 @@ extension ExtensionMessage on Message {
       case MessageType.memberInvitedNotification:
       case MessageType.groupInfoSetNotification:
       case MessageType.memberEnterNotification:
+      case MessageType.memberKickedNotification:
         var data = json.decode(notificationElem?.detail ?? '{}');
         ext.data = data;
         break;
@@ -120,12 +121,12 @@ extension ExtensionMessage on Message {
         if (filePath != null && File(filePath).existsSync()) {
           ImKitIsolateManager.decryptFile(secretKey, filePath);
           ext.path = filePath;
-          break;
-        }
-        filePath = ImCore.getSavePath(this);
-        if (File(filePath).existsSync()) {
-          ImKitIsolateManager.decryptFile(secretKey, filePath);
-          ext.path = filePath;
+        } else {
+          filePath = ImCore.getSavePath(this);
+          if (File(filePath).existsSync()) {
+            ImKitIsolateManager.decryptFile(secretKey, filePath);
+            ext.path = filePath;
+          }
         }
         ext.secretKey = _getSecretKey(this, secretKey);
         var (width, height) = _computedSize(width: pictureElem?.sourcePicture?.width?.toDouble(), height: pictureElem?.sourcePicture?.height?.toDouble());

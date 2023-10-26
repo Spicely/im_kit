@@ -171,7 +171,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   @override
   void onDownloadProgress(String id, double progress) {
-    logger.e(progress);
+    // logger.e(progress);
   }
 
   @override
@@ -211,7 +211,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   }
 
   /// 点击图片
-  void onTapPicture(MessageExt ext) {
+  void onPictureTap(MessageExt ext) {
     /// 获取所有图片
     List<MessageExt> messages = data.where((v) => v.m.contentType == MessageType.picture).toList();
     Get.to(
@@ -221,7 +221,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   }
 
   /// 发送消息统一入口
-  Future<void> sendMessage(MessageExt msg) async {
+  Future<MessageExt> sendMessage(MessageExt msg) async {
     try {
       if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(msg.m.contentType)) {
         /// 先对文件加密
@@ -241,9 +241,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       }
       MessageExt extMsg = newMsg.toExt(secretKey);
       updateMessage(extMsg);
+      return extMsg;
     } catch (e) {
       msg.m.status = MessageStatus.failed;
       updateMessage(msg);
+      return msg;
     }
   }
 
@@ -276,7 +278,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     launchUrl(uri);
   }
 
-  void onTapAt(UserInfo info) {}
+  void onAtTap(UserInfo info) {}
 
   void onTapPhone(String phone) {}
 
@@ -302,4 +304,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onNotificationUserTap(UserInfo userInfo) {}
 
   void onCardTap(MessageExt extMsg) {}
+
+  void onLocationTap(MessageExt extMsg) {}
+
+  void onFileTap(MessageExt extMsg) {}
 }

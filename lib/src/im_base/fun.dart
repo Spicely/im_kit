@@ -25,6 +25,34 @@ TextSpan _getGroupMemberMutedNotification(Map<String, dynamic> detail, {Color? u
   );
 }
 
+/// 踢出群组
+TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+  List<dynamic> kickedUserList = detail['kickedUserList'];
+  return TextSpan(
+    children: [
+      ...kickedUserList
+          .map(
+            (v) => TextSpan(
+              text: v['userID'] == OpenIM.iMManager.uid ? '你${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}' : '${v['nickname']}${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}',
+              style: TextStyle(color: userColor),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () async {
+                  print(v);
+                  if (v['userID'] == OpenIM.iMManager.uid) {
+                    onTap?.call(OpenIM.iMManager.uInfo!);
+                  } else {
+                    List<UserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
+                    onTap?.call(users[0]);
+                  }
+                },
+            ),
+          )
+          .toList(),
+      const TextSpan(text: '被踢出群组'),
+    ],
+  );
+}
+
 /// 成员进群
 TextSpan _getMemberEnterNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
   var entrantUser = detail['entrantUser'];
