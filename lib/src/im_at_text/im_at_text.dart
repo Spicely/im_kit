@@ -63,7 +63,7 @@ class ImAtText extends ImBase {
             },
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: Text.rich(
+        child: SelectableText.rich(
           TextSpan(
               children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
             if (e.type == ImAtType.emoji) {

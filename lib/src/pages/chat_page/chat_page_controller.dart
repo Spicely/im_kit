@@ -75,7 +75,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     List<GroupMembersInfo>? groupMembers,
     this.tabs = const [],
   }) {
-    data = RxList(messages);
+    data = RxList(messages.reversed.toList());
     this.conversationInfo = Rx(conversationInfo);
     if (groupInfo != null) {
       this.groupInfo = Rx(groupInfo);
@@ -102,9 +102,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   Rx<ImChatPageFieldType> fieldType = ImChatPageFieldType.none.obs;
 
+  RxBool noMore = false.obs;
+
   final FocusNode focusNode = FocusNode();
 
-  final EasyRefreshController easyRefreshController = EasyRefreshController(controlFinishRefresh: true);
+  final EasyRefreshController easyRefreshController = EasyRefreshController(controlFinishLoad: true);
 
   @override
   void onInit() {
@@ -285,9 +287,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       startMsg: data.last.m,
     );
     if (list.length < 40) {
-      easyRefreshController.finishRefresh(IndicatorResult.noMore);
+      noMore.value = true;
+      easyRefreshController.finishLoad(IndicatorResult.noMore);
     } else {
-      easyRefreshController.finishRefresh(IndicatorResult.success);
+      easyRefreshController.finishLoad(IndicatorResult.success);
     }
     List<MessageExt> newExts = list.reversed.map((e) => e.toExt(secretKey)).toList();
     data.addAll(newExts);

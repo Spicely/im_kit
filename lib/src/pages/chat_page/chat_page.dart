@@ -42,10 +42,10 @@ class ChatPage extends StatelessWidget {
           children: [
             Expanded(
               child: Obx(
-                () => EasyRefresh(
+                () => EasyRefresh.builder(
                   controller: controller.easyRefreshController,
                   clipBehavior: Clip.none,
-                  header: BuilderHeader(
+                  footer: BuilderFooter(
                       triggerOffset: 40,
                       infiniteOffset: 60,
                       clamping: false,
@@ -75,11 +75,12 @@ class ChatPage extends StatelessWidget {
                           ],
                         );
                       }),
-                  onRefresh: controller.onLoad,
-                  onLoad: null,
-                  child: ListView.builder(
+                  onLoad: controller.noMore.value ? null : controller.onLoad,
+                  childBuilder: (context, physics) => ListView.builder(
+                    physics: physics,
                     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     controller: controller.scrollController,
+                    reverse: true,
                     itemBuilder: (context, index) => ImListItem(
                       message: controller.data[index],
                       // onTap: controller.onTap,
