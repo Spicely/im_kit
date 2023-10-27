@@ -85,6 +85,7 @@ class ChatPage extends StatelessWidget {
                       childBuilder: (context, physics) => Obx(
                         () => ScrollablePositionedList.builder(
                           itemCount: controller.data.length,
+                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                           physics: physics,
                           reverse: true,
                           shrinkWrap: true,
