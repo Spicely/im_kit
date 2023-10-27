@@ -137,9 +137,20 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       });
     }
 
+    List<String> messageIds = [];
+
     /// 下载文件
     for (var v in data) {
+      if (!v.m.isRead!) {
+        messageIds.add(v.m.clientMsgID!);
+      }
       ImCore.downloadFile(v);
+    }
+    if (isGroupChat) {
+      OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
+    } else {
+      OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: messageIds);
+      OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
     }
   }
 
@@ -147,6 +158,23 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onClose() {
     OpenIMManager.removeListener(this);
     ImKitIsolateManager.removeListener(this);
+
+    /// 设置草稿
+    if (textEditingController.text.trim().isNotEmpty) {
+      OpenIM.iMManager.conversationManager.setConversationDraft(
+        conversationID: conversationInfo.value.conversationID,
+        draftText: textEditingController.text,
+      );
+    }
+
+    /// 清空草稿
+    if (Utils.isNotEmpty(conversationInfo.value.draftText) && textEditingController.text.isEmpty) {
+      OpenIM.iMManager.conversationManager.setConversationDraft(
+        conversationID: conversationInfo.value.conversationID,
+        draftText: '',
+      );
+    }
+
     super.onClose();
   }
 
@@ -154,14 +182,20 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onRecvNewMessage(Message msg) {
     String? id = Utils.getValue(msg.groupID, msg.sendID);
     if (id == userID || id == groupID || userID == msg.recvID) {
-      MessageExt extMsg = msg.toExt(secretKey);
-      if (msg.contentType == MessageType.quote) {
-        extMsg.ext.quoteMessage = msg.quoteElem!.quoteMessage!.toExt(secretKey);
-      }
-      data.insert(0, extMsg);
-      // markMessageRead([extMsg]);
-      ImCore.downloadFile(extMsg);
+      msg.toExt(secretKey).then((extMsg) async {
+        if (msg.contentType == MessageType.quote) {
+          extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt(secretKey);
+        }
+        data.insert(0, extMsg);
+        // markMessageRead([extMsg]);
+        ImCore.downloadFile(extMsg);
+      });
     }
+  }
+
+  /// 内容区域点击
+  void onTapBody() {
+    fieldType.value = ImChatPageFieldType.none;
   }
 
   @override
@@ -198,10 +232,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   Future<void> updateMessage(MessageExt ext) async {
     int index = data.indexWhere((v) => v.m.clientMsgID == ext.m.clientMsgID);
     if (index != -1) {
-      if (data[index].ext.path == null) {
-        data[index] = ext;
-      } else {
-        data[index].m = ext.m;
+      String? path = data[index].ext.path;
+      data[index] = ext;
+      if (path != null && ext.m.contentType != MessageType.video) {
+        /// 路径还原避免闪烁
+        data[index].ext.path = path;
       }
     }
   }
@@ -261,7 +296,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         await ImKitIsolateManager.renameFile(newMsg.videoElem!.videoPath!, newMsg.videoElem!.videoUrl!);
         await ImKitIsolateManager.renameFile(newMsg.videoElem!.snapshotPath!, newMsg.videoElem!.snapshotUrl!);
       }
-      MessageExt extMsg = newMsg.toExt(secretKey);
+      MessageExt extMsg = await newMsg.toExt(secretKey);
       updateMessage(extMsg);
       return extMsg;
     } catch (e) {
@@ -278,7 +313,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     String text = EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: val, keyStr: secretKey).base64;
     textEditingController.clear();
     Message msg = await OpenIM.iMManager.messageManager.createTextMessage(text: text);
-    MessageExt extMsg = msg.toExt(secretKey);
+    MessageExt extMsg = await msg.toExt(secretKey);
     data.insert(0, extMsg);
     sendMessage(extMsg);
   }
@@ -316,7 +351,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } else {
       easyRefreshController.finishLoad(IndicatorResult.success);
     }
-    List<MessageExt> newExts = list.reversed.map((e) => e.toExt(secretKey)).toList();
+    List<MessageExt> newExts = await Future.wait(list.reversed.map((e) => e.toExt(secretKey)));
     data.addAll(newExts);
     for (var v in newExts) {
       ImCore.downloadFile(v);

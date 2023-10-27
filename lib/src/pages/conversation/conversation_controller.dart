@@ -65,8 +65,9 @@ class ConversationController extends GetxController with OpenIMListener {
     } else {
       secretKey = keyMap[msg.groupID] ?? '';
     }
-    MessageExt extMsg = msg.toExt(secretKey);
-    ImCore.downloadFile(extMsg);
+    msg.toExt(secretKey).then((extMsg) {
+      ImCore.downloadFile(extMsg);
+    });
   }
 
   Future<void> getData() async {
@@ -99,11 +100,12 @@ class ConversationController extends GetxController with OpenIMListener {
       groupInfo = (await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!])).first;
     }
     String secretKey = getKey(info);
+    List<MessageExt> messages = await advancedMessage.toExt(secretKey);
     Get.to(
       () => ChatPage(
         controller: ChatPageController(
           secretKey: secretKey,
-          messages: advancedMessage.toExt(secretKey),
+          messages: messages,
           conversationInfo: info,
           groupMembers: groupMembers,
           groupInfo: groupInfo,

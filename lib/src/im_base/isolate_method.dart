@@ -48,18 +48,9 @@ class IsolateMethod {
   static Future<void> encryptFile(_PortModel params) async {
     try {
       String key = params.data['key'];
-      final iv = enc.IV.fromUtf8(params.data['iv']);
       String path = params.data['path'];
 
-      final fileByte = File(path).readAsBytesSync();
-
-      DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: iv);
-      if (res2.isEncData != 0) return;
-      Uint8List encdata = res2.encData;
-
-      /// 写入加密后的文件
-      File file = File(path);
-      file.writeAsBytesSync(encdata, flush: true);
+      _IsolateFun.encryptFile(key, path, iv: params.data['iv']);
       params.sendPort?.send(PortResult(data: ''));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
@@ -73,15 +64,7 @@ class IsolateMethod {
       String iv = params.data['iv'];
       String filePath = params.data['filePath'];
 
-      final fileByte = await File(filePath).readAsBytes();
-      DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: enc.IV.fromUtf8(iv));
-      if (res2.isEncData == 0) {
-        params.sendPort?.send(PortResult(data: filePath));
-        return;
-      }
-      Uint8List decData = res2.decFile;
-      File file = File(filePath);
-      await file.writeAsBytes(decData, flush: true);
+      _IsolateFun.decryptFile(key, filePath, iv: iv);
 
       /// 延迟1s 避免文件还未写入完成
       await Future.delayed(const Duration(seconds: 1));
@@ -130,6 +113,22 @@ class IsolateMethod {
     try {
       await File(path).writeAsBytes(bytes, flush: true);
       params.sendPort?.send(PortResult(data: path));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
+
+  /// 加密文件
+  static Future<void> toMessageExt(_PortModel params) async {
+    try {
+      Message msg = params.data['msg'];
+      String secretKey = params.data['secretKey'];
+      String uid = params.data['uid'];
+      ImCore.setUid(uid);
+
+      MessageExt extMsg = await _IsolateFun.toMessageExt(msg, secretKey);
+
+      params.sendPort?.send(PortResult(data: extMsg));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
@@ -377,10 +376,14 @@ class EncryptExtends {
     required String keyStr,
     required enc.IV iv,
   }) {
-    final key = enc.Key.fromUtf8(keyStr);
-    final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
-    List<int> decList = encrypter.decryptBytes(enc.Encrypted(plainText), iv: iv);
-    return Uint8List.fromList(decList);
+    try {
+      final key = enc.Key.fromUtf8(keyStr);
+      final encrypter = enc.Encrypter(enc.AES(key, mode: enc.AESMode.cbc));
+      List<int> decList = encrypter.decryptBytes(enc.Encrypted(plainText), iv: iv);
+      return Uint8List.fromList(decList);
+    } catch (e) {
+      return Uint8List.fromList([]);
+    }
   }
 
   static int u8ToInt(Uint8List u8) {

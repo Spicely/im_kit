@@ -33,6 +33,9 @@ enum _PortMethod {
 
   /// 将Uint8List保存成图片
   saveImageByUint8List,
+
+  /// 转成MessageExt
+  toMessageExt,
 }
 
 /// 下载进度
@@ -112,7 +115,7 @@ class ImKitIsolateManager {
     _isInit = true;
     IsolateTask task = await Utils.createIsolate(
       'imKitIsolate',
-      null,
+      {'dirPath': dirPath},
       _isolateEntry,
     );
 
@@ -259,10 +262,36 @@ class ImKitIsolateManager {
     return completer.future;
   }
 
+  /// 转成MessageExt
+  static Future<MessageExt> toMessageExt(String uid, Message msg, String secretKey) async {
+    var completer = Completer<MessageExt>();
+
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.toMessageExt,
+      data: {'msg': msg, 'secretKey': secretKey, 'uid': uid},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
+  }
+
   static Future<void> _isolateEntry(IsolateTaskData task) async {
     if (task.rootIsolateToken != null) {
       BackgroundIsolateBinaryMessenger.ensureInitialized(task.rootIsolateToken!);
     }
+    Map<String, dynamic> data = task.data;
+    ImCore.dirPath = data['dirPath'];
     final receivePort = ReceivePort();
     task.sendPort.send(receivePort.sendPort);
 
@@ -283,6 +312,8 @@ class ImKitIsolateManager {
               IsolateMethod.copyFile(msg);
             case _PortMethod.saveImageByUint8List:
               IsolateMethod.saveImageByUint8List(msg);
+            case _PortMethod.toMessageExt:
+              IsolateMethod.toMessageExt(msg);
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));

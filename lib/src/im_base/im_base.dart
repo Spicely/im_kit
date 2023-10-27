@@ -180,8 +180,15 @@ class ImCore {
 
   static String _playID = '';
 
+  static String? _uid;
+
   /// 文件保存文件夹
-  static String get saveDir => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
+  static String get saveDir => join(dirPath, 'FileRecv', _uid ?? OpenIM.iMManager.uid);
+
+  /// 设置用户id
+  static void setUid(String? uid) {
+    _uid = uid;
+  }
 
   /// 播放回调
   static void onPlayerStateChanged(void Function(a.PlayerState state, String id) listener) {
