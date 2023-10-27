@@ -8,6 +8,7 @@ import 'dart:math';
 
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/foundation.dart';
@@ -33,6 +34,7 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:record/record.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';

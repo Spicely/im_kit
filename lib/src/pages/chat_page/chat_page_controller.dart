@@ -108,6 +108,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   final EasyRefreshController easyRefreshController = EasyRefreshController(controlFinishLoad: true);
 
+  final ItemScrollController itemScrollController = ItemScrollController();
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);
@@ -306,6 +308,61 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     }
   }
 
+  /// 更新自己在群里的信息
+  void updateGroupMemberInfo(GroupMembersInfo info) {
+    if (isGroupChat) {
+      int index = groupMembers.indexWhere((v) => v.userID == info.userID);
+      if (index != -1) {
+        groupMembers[index] = info;
+      }
+    }
+  }
+
+  // /// 发送消息统一入口
+  // Future<MessageExt> sendOtherMessage(MessageExt msg, key) async {
+  //   try {
+  //     /// 先对文件加密
+  //     if ([MessageType.file, MessageType.picture, MessageType.voice].contains(msg.m.contentType)) {
+  //       String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.soundPath ?? '';
+  //       await ImKitIsolateManager.encryptFile(secretKey, path);
+  //     } else if ([MessageType.video].contains(msg.m.contentType)) {
+  //       await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.videoPath!);
+  //       await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.snapshotPath!);
+  //     }
+  //     Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
+  //       message: msg.m,
+  //       userID: userID,
+  //       groupID: groupID,
+  //       offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
+  //     );
+  //     if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
+  //       /// 对文件解密
+  //       String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.soundPath ?? '';
+
+  //       await ImKitIsolateManager.decryptFile(secretKey, path);
+
+  //       /// 把文件重命名
+  //       await ImKitIsolateManager.renameFile(path, path);
+  //     } else if ([MessageType.video].contains(newMsg.contentType)) {
+  //       /// 对文件解密
+
+  //       await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.videoPath!);
+  //       await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.snapshotPath!);
+
+  //       /// 把文件重命名
+  //       await ImKitIsolateManager.renameFile(newMsg.videoElem!.videoPath!, newMsg.videoElem!.videoUrl!);
+  //       await ImKitIsolateManager.renameFile(newMsg.videoElem!.snapshotPath!, newMsg.videoElem!.snapshotUrl!);
+  //     }
+  //     MessageExt extMsg = await newMsg.toExt(secretKey);
+  //     updateMessage(extMsg);
+  //     return extMsg;
+  //   } catch (e) {
+  //     msg.m.status = MessageStatus.failed;
+  //     updateMessage(msg);
+  //     return msg;
+  //   }
+  // }
+
   /// 发送消息
   Future<void> onSendMessage() async {
     /// 对< > 转成html
@@ -339,6 +396,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   void onTapPhone(String phone) {}
 
+  void onForwardMessage(MessageExt extMsg) {}
+
   Future<void> onLoad() async {
     List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
       conversationID: conversationInfo.value.conversationID,
@@ -365,4 +424,49 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onLocationTap(MessageExt extMsg) {}
 
   void onFileTap(MessageExt extMsg) {}
+
+  void onCopyTip(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+  }
+
+  void onDeleteMessage(MessageExt extMsg) {}
+
+  /// 设置会话置顶
+  Future<void> setPinConversation(bool status, {String? conversationID}) async {
+    await OpenIM.iMManager.conversationManager.pinConversation(conversationID: conversationID ?? conversationInfo.value.conversationID, isPinned: status);
+  }
+
+  /// 设置消息免打扰
+  ///
+  /// [status] 0：正常；1：不接受消息；2：接受在线消息不接受离线消息；
+  Future<void> setConversationRecvMessageOpt(int status, {List<String>? conversationIDList}) async {
+    await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: conversationIDList ?? [conversationInfo.value.conversationID], status: status);
+  }
+
+  /// 删除聊天记录
+  Future<void> clearHistoryMessage() async {
+    if (isGroupChat) {
+      assert(gId != null, 'gId 不能为空');
+      await OpenIM.iMManager.messageManager.clearGroupHistoryMessage(gid: gId!);
+    } else {
+      assert(uId != null, 'uId 不能为空');
+      await OpenIM.iMManager.messageManager.clearC2CHistoryMessage(uid: uId!);
+    }
+  }
+
+  /// 退出群聊
+  Future<void> quitGroup() async {
+    await OpenIM.iMManager.groupManager.quitGroup(gid: gId!);
+  }
+
+  /// 解散群聊
+  Future<void> dismissGroup() async {
+    await OpenIM.iMManager.groupManager.dismissGroup(groupID: gId!);
+  }
+
+  Future<Message> createCardMessage(UserInfo user) async {
+    return await OpenIM.iMManager.messageManager.createCardMessage(
+      data: {'userID': user.userID, 'nickname': user.nickname, 'faceURL': user.faceURL},
+    );
+  }
 }

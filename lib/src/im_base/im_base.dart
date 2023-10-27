@@ -141,9 +141,16 @@ class ImExtModel {
   /// 引用数据
   MessageExt? quoteMessage;
 
+  /// 是否为语音消息
+  bool isVoice;
+
+  /// 是否为阅后即焚消息
+  bool isPrivateChat;
+
   ImExtModel({
     this.progress,
     this.path,
+    this.isVoice = false,
     this.isPlaying = false,
     this.isDownloading = false,
     this.canDelete = true,
@@ -155,6 +162,7 @@ class ImExtModel {
     this.height,
     this.data,
     this.quoteMessage,
+    this.isPrivateChat = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -360,4 +368,96 @@ mixin ImKitListen {
 
   /// 下载失败
   void onDownloadFailure(String id, String error);
+}
+
+class SignalingType {
+  /// 邀请通知
+  static const int CustomSignalingInviteType = 10;
+
+  /// 同意通话
+  static const int CustomSignalingAcceptType = 11;
+
+  /// 拒绝通话
+  static const int CustomSignalingRejectType = 12;
+
+  /// 取消通话
+  static const int CustomSignalingCancelType = 13;
+
+  /// 挂断通话
+  static const int CustomSignalingHungUpType = 14;
+
+  /// 邀请超时
+  static const int CustomSignalingTimeoutType = 15;
+
+  /// 正在通话中
+  static const int CustomSignalingIsBusyType = 16;
+
+  /// 持续呼叫
+  static const int CustomSignalingCallType = 20;
+
+  /// 等待重连
+  static const int CustomSignalingAwaitType = 21;
+
+  ///是否能继续通话
+  static bool isCanDeal(int type) {
+    switch (type) {
+      case SignalingType.CustomSignalingRejectType:
+        return true;
+      case SignalingType.CustomSignalingCancelType:
+        return true;
+      case SignalingType.CustomSignalingHungUpType:
+        return true;
+      case SignalingType.CustomSignalingTimeoutType:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  ///解析信令消息
+  static Map parseCallMessage(Message msg) {
+    if (msg.contentType != MessageType.custom) {
+      return {"err": true};
+    }
+    try {
+      var data = jsonDecode(msg.content!);
+      data = jsonDecode(data["data"]);
+      return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
+    } catch (e) {
+      return {"err": true};
+    }
+  }
+}
+
+enum MenuItemType {
+  /// 复制
+  copy,
+
+  /// 删除
+  delete,
+
+  /// 转发
+  forward,
+
+  /// 引用
+  quote,
+
+  /// 收藏
+  collect,
+
+  /// 多选
+  multiSelect,
+
+  /// 撤回
+  recall,
+}
+
+class ItemModel {
+  String title;
+
+  Widget icon;
+
+  MenuItemType type;
+
+  ItemModel(this.title, this.icon, this.type);
 }

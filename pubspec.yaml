@@ -40,6 +40,9 @@ dependencies:
   sprintf: 
   url_launcher:
   easy_refresh:
+  scrollable_positioned_list:
+  custom_pop_up_menu:
+    path: ../custom_pop_up_menu
 
 dev_dependencies:
   flutter_test:

@@ -7,36 +7,60 @@ class ImKitThemeData {
   /// 对话框样式
   final ImChatTheme chatTheme;
 
-  // /// 多语言
-  // final ImLanguage language;
+  /// 多语言
+  final ImLanguage language;
 
   const ImKitThemeData({
     this.subtitleColor = const Color(0xff999999),
     this.chatTheme = const ImChatTheme(),
-    // this.language = const ImLanguage(),
+    this.language = const ImLanguage(),
   });
 }
 
-// class ImLanguage {
-//   /// 长按录制语音
-//   final String longPressRecordVoice;
+class ImLanguage {
+  /// 撤回
+  final String revoke;
 
-//   /// 松开立即发送 上滑取消
-//   final String releaseSendSlideCancel;
+  /// 长按录制语音
+  final String longPressRecordVoice;
 
-//   /// 已下载
-//   final String downloaded;
+  /// 松开立即发送 上滑取消
+  final String releaseSendSlideCancel;
 
-//   /// 未下载
-//   final String unDownload;
+  /// 已下载
+  final String downloaded;
 
-//   const ImLanguage({
-//     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
-//     this.longPressRecordVoice = '长按录制语音',
-//     this.downloaded = '已下载',
-//     this.unDownload = '未下载',
-//   });
-// }
+  /// 未下载
+  final String unDownload;
+
+  /// 删除
+  final String delete;
+
+  /// 多选
+  final String multiChoice;
+
+  /// 转发
+  final String forward;
+
+  /// 回复
+  final String reply;
+
+  /// 复制
+  final String copy;
+
+  const ImLanguage({
+    this.releaseSendSlideCancel = '松开立即发送 上滑取消',
+    this.longPressRecordVoice = '长按录制语音',
+    this.downloaded = '已下载',
+    this.unDownload = '未下载',
+    this.revoke = '撤回',
+    this.delete = '删除',
+    this.multiChoice = '多选',
+    this.forward = '转发',
+    this.reply = '回复',
+    this.copy = '复制',
+  });
+}
 
 class _ImKitTheme extends InheritedTheme {
   const _ImKitTheme({

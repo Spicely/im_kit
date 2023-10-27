@@ -110,6 +110,16 @@ class ImAtText extends ImBase {
             }
           }).toList()),
           style: chatTheme.textStyle.useSystemChineseFont(),
+          contextMenuBuilder: (context, editableTextState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                color: Colors.red,
+              )
+            ],
+          ),
         ),
       ),
     );

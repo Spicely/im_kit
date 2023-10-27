@@ -32,6 +32,9 @@ class _IsolateFun {
   /// 转成MessageExt
   static Future<MessageExt> toMessageExt(Message msg, String secretKey) async {
     final ext = ImExtModel(createTime: DateTime.now());
+
+    /// 阅后即焚
+    ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;
     try {
       switch (msg.contentType) {
         case MessageType.at_text:
@@ -116,6 +119,17 @@ class _IsolateFun {
         case MessageType.custom:
           var data = json.decode(msg.customElem?.data ?? '{}');
           ext.data = data;
+          ext.isVoice = [
+            SignalingType.CustomSignalingAcceptType,
+            SignalingType.CustomSignalingAwaitType,
+            SignalingType.CustomSignalingCallType,
+            SignalingType.CustomSignalingCancelType,
+            SignalingType.CustomSignalingHungUpType,
+            SignalingType.CustomSignalingInviteType,
+            SignalingType.CustomSignalingIsBusyType,
+            SignalingType.CustomSignalingRejectType,
+            SignalingType.CustomSignalingTimeoutType
+          ].contains(data['contentType']);
           break;
 
         case MessageType.groupMemberMutedNotification:
