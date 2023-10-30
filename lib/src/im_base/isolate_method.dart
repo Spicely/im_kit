@@ -194,7 +194,11 @@ class DecDataRes {
 
   ///加密段
   Uint8List get encdata {
-    return source.sublist(headerLen, headerLen + encLen);
+    try {
+      return source.sublist(headerLen, headerLen + encLen);
+    } catch (e) {
+      return Uint8List(0);
+    }
   }
 
   ///得到解密过后的字段

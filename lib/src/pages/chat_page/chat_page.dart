@@ -141,7 +141,6 @@ class ChatPage extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                // height: chatTheme.textFieldTheme.textFieldHeight,
                                 decoration: BoxDecoration(
                                   color: chatTheme.textFieldTheme.textFieldColor,
                                   borderRadius: chatTheme.textFieldTheme.textFieldBorderRadius,
@@ -149,18 +148,20 @@ class ChatPage extends StatelessWidget {
                                 constraints: const BoxConstraints(maxHeight: 230),
                                 margin: const EdgeInsets.symmetric(vertical: 10),
                                 padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: ExtendedTextField(
-                                  controller: controller.textEditingController,
-                                  focusNode: controller.focusNode,
-                                  maxLines: null,
-                                  maxLength: null,
-                                  decoration: InputDecoration(
-                                    hintText: chatTheme.textFieldTheme.hintText,
-                                  ),
-                                  specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
-                                    allAtMap: [],
-                                    // quoteMessage: [],
-                                    groupMembersInfo: [],
+                                child: Obx(
+                                  () => ExtendedTextField(
+                                    controller: controller.textEditingController,
+                                    focusNode: controller.focusNode,
+                                    maxLines: null,
+                                    maxLength: null,
+                                    decoration: InputDecoration(
+                                      hintText: chatTheme.textFieldTheme.hintText,
+                                    ),
+                                    specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
+                                      allAtMap: controller.atUserMap,
+                                      quoteMessage: controller.quoteMessage.value,
+                                      groupMembersInfo: controller.groupMembers,
+                                    ),
                                   ),
                                 ),
                               ),

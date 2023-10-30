@@ -67,6 +67,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 用户id
   String? get uId => Utils.getValue<String?>(conversationInfo.value.userID, null);
 
+  /// 引用消息
+  Rx<Message?> quoteMessage = Rx(null);
+
   ChatPageController({
     required this.secretKey,
     required List<MessageExt> messages,
@@ -110,10 +113,45 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   final ItemScrollController itemScrollController = ItemScrollController();
 
+  /// 记录输入框的历史记录
+  String historyText = '';
+
+  /// at用户映射表
+  RxList<GroupMembersInfo> atUserMap = RxList<GroupMembersInfo>([]);
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);
     ImKitIsolateManager.addListener(this);
+    textEditingController.addListener(() {
+      if (textEditingController.text.isEmpty || textEditingController.text.trim().isEmpty) {
+      } else {
+        if (textEditingController.text.length == historyText.length + 1) {
+          /// 获取光标位置
+          int index = textEditingController.selection.baseOffset;
+
+          /// 光标前一个字符 == @
+          if (textEditingController.text[index - 1] == '@') {
+            onAtTriggerCallback();
+          }
+        }
+
+        /// 对比历史记录 当输入内容比历史记录少@10004467 10004467为userID时触发删除@事件
+        if (historyText.length > textEditingController.text.length) {
+          for (var key in atUserMap) {
+            GroupMembersInfo? v = key;
+
+            if (!textEditingController.text.contains('@${v.userID}#${v.nickname} ')) {
+              /// 跳出循环
+              onAtDeleteCallback(key.userID!);
+              break;
+            }
+          }
+        }
+      }
+      historyText = textEditingController.text;
+    });
+
     super.onInit();
     tabController = TabController(length: 1 + tabs.length, vsync: this);
     focusNode.addListener(() {
@@ -130,6 +168,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     textEditingController.addListener(() {
       hasInput.value = textEditingController.text.isNotEmpty;
     });
+  }
+
+  void onAtDeleteCallback(String id) {
+    atUserMap.removeWhere((v) => v.userID == id);
   }
 
   Future<void> getData() async {
@@ -153,6 +195,16 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } else {
       OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: messageIds);
       OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
+    }
+  }
+
+  /// @触发事件
+  void onAtTriggerCallback() async {}
+
+  void addAtUserMap(GroupMembersInfo info) {
+    int index = atUserMap.indexWhere((v) => v.userID == info.userID);
+    if (index == -1) {
+      atUserMap.add(info);
     }
   }
 
@@ -228,6 +280,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } catch (e) {
       logger.e(e);
     }
+  }
+
+  /// 引用消息删除事件
+  void onQuoteMessageDelete() {
+    quoteMessage.value = null;
   }
 
   /// 更新消息
@@ -318,61 +375,96 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     }
   }
 
-  // /// 发送消息统一入口
-  // Future<MessageExt> sendOtherMessage(MessageExt msg, key) async {
-  //   try {
-  //     /// 先对文件加密
-  //     if ([MessageType.file, MessageType.picture, MessageType.voice].contains(msg.m.contentType)) {
-  //       String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.soundPath ?? '';
-  //       await ImKitIsolateManager.encryptFile(secretKey, path);
-  //     } else if ([MessageType.video].contains(msg.m.contentType)) {
-  //       await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.videoPath!);
-  //       await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.snapshotPath!);
-  //     }
-  //     Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
-  //       message: msg.m,
-  //       userID: userID,
-  //       groupID: groupID,
-  //       offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
-  //     );
-  //     if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
-  //       /// 对文件解密
-  //       String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.soundPath ?? '';
-
-  //       await ImKitIsolateManager.decryptFile(secretKey, path);
-
-  //       /// 把文件重命名
-  //       await ImKitIsolateManager.renameFile(path, path);
-  //     } else if ([MessageType.video].contains(newMsg.contentType)) {
-  //       /// 对文件解密
-
-  //       await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.videoPath!);
-  //       await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.snapshotPath!);
-
-  //       /// 把文件重命名
-  //       await ImKitIsolateManager.renameFile(newMsg.videoElem!.videoPath!, newMsg.videoElem!.videoUrl!);
-  //       await ImKitIsolateManager.renameFile(newMsg.videoElem!.snapshotPath!, newMsg.videoElem!.snapshotUrl!);
-  //     }
-  //     MessageExt extMsg = await newMsg.toExt(secretKey);
-  //     updateMessage(extMsg);
-  //     return extMsg;
-  //   } catch (e) {
-  //     msg.m.status = MessageStatus.failed;
-  //     updateMessage(msg);
-  //     return msg;
-  //   }
-  // }
-
   /// 发送消息
   Future<void> onSendMessage() async {
+    String value = textEditingController.text;
+    if (value.trim().isEmpty) return;
+    MessageExt? message;
+    try {
+      /// 清空输入框
+      Message? quoteMsg = quoteMessage.value;
+      if (quoteMsg?.contentType != 300) {
+        quoteMsg?.pictureElem?.sourcePath = null;
+      }
+      quoteMsg?.videoElem?.snapshotPath = null;
+      quoteMsg?.fileElem?.filePath = null;
+      quoteMsg?.soundElem?.soundPath = null;
+
+      /// 创建@消息
+      List<AtUserInfo> list = atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList();
+      textEditingController.clear();
+      if (atUserMap.isNotEmpty) {
+        message = await createTextAtMessage(list, '$value ', secretKey, quoteMessage: quoteMsg);
+      } else if (quoteMsg != null) {
+        message = await createQuoteMessage('$value ', quoteMsg, secretKey);
+      } else {
+        message = await createTextMessage('$value ', secretKey);
+      }
+      quoteMessage.value = null;
+      atUserMap.clear();
+      // logger.e(message.toJson());
+      data.insert(0, message);
+
+      if (data.length > 5) {
+        itemScrollController.jumpTo(index: 0);
+      }
+      message = await sendMessage(message);
+      updateMessage(message);
+      ImCore.downloadFile(message);
+    } catch (e) {
+      if (message != null) {
+        /// 发送失败 修改状态
+        message.m.status = MessageStatus.failed;
+        updateMessage(message);
+      }
+    }
+  }
+
+  /// 创建文本消息
+  Future<MessageExt> createTextMessage(String val, String secretKey) async {
     /// 对< > 转成html
-    String val = textEditingController.text.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+    val = val.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
     String text = EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: val, keyStr: secretKey).base64;
-    textEditingController.clear();
     Message msg = await OpenIM.iMManager.messageManager.createTextMessage(text: text);
-    MessageExt extMsg = await msg.toExt(secretKey);
-    data.insert(0, extMsg);
-    sendMessage(extMsg);
+    return await msg.toExt(secretKey);
+  }
+
+  /// 创建引用
+  Future<MessageExt> createQuoteMessage(String text, Message quoteMsg, String secretKey) async {
+    quoteMsg.quoteElem?.text = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: quoteMsg.quoteElem?.text ?? '', keyStr: secretKey);
+    return await (await OpenIM.iMManager.messageManager.createQuoteMessage(
+      text: EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: text, keyStr: secretKey).base64,
+      quoteMsg: quoteMsg,
+    ))
+        .toExt(secretKey);
+  }
+
+  /// 创建@消息
+  Future<MessageExt> createTextAtMessage(List<AtUserInfo> atUserInfoList, String text, String secretKey, {Message? quoteMessage}) async {
+    /// 匹配@100010#ac @100011#qa 的字符串
+    var regexAt = atUserInfoList.map((e) => '@${e.atUserID}#${RegExp.escape(e.groupNickname!)} ').toList().join('|');
+
+    logger.e(regexAt);
+
+    /// 替换text中的@字符串
+    text = text.splitMapJoin(
+      RegExp(regexAt),
+      onMatch: (m) {
+        String value = m.group(0)!;
+        String id = value.split('#').first.replaceFirst("@", "").trim();
+
+        return '@$id ';
+      },
+      onNonMatch: (n) => n,
+    );
+
+    return await (await OpenIM.iMManager.messageManager.createTextAtMessage(
+      text: EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: text, keyStr: secretKey).base64,
+      atUserIDList: atUserInfoList.map((e) => e.atUserID ?? '').toList(),
+      atUserInfoList: atUserInfoList,
+      quoteMessage: quoteMessage,
+    ))
+        .toExt(secretKey);
   }
 
   /// 设置为显示表情

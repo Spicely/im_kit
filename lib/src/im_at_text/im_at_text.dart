@@ -56,73 +56,65 @@ class ImAtText extends ImBase {
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return GestureDetector(
-      onLongPress: textMenuItems == null
-          ? null
-          : () {
-              // onShow(context);
-            },
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: SelectableText.rich(
-          TextSpan(
-              children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
-            if (e.type == ImAtType.emoji) {
-              return WidgetSpan(
-                child: CachedImage(
-                  assetUrl: 'assets/emoji/${e.text}.webp',
-                  width: 25,
-                  height: 25,
-                  package: 'im_kit',
-                ),
-              );
-            } else {
-              return TextSpan(
-                text: e.text,
-                style: TextStyle(color: atTypeColor(e, chatTheme)),
-                recognizer: TapGestureRecognizer()
-                  ..onTap = () {
-                    switch (e.type) {
-                      case ImAtType.url:
-                        onTapUrl?.call(e.text);
-                        break;
-                      case ImAtType.email:
-                        onTapEmail?.call(e.text);
-                        break;
-                      case ImAtType.phone:
-                        onTapPhone?.call(e.text);
-                        break;
-                      case ImAtType.at:
-                        if (e.userInfo?.atUserID == '-1') {
-                          onAtTap?.call(UserInfo(userID: '-1'));
-                          return;
-                        }
-                        if (OpenIM.iMManager.uid == e.userInfo?.atUserID) {
-                          onAtTap?.call(OpenIM.iMManager.uInfo!);
-                        } else {
-                          OpenIM.iMManager.userManager.getUsersInfo(uidList: [e.userInfo!.atUserID!]).then((v) {
-                            onAtTap?.call(v.first);
-                          });
-                        }
-                      default:
-                    }
-                  },
-              );
-            }
-          }).toList()),
-          style: chatTheme.textStyle.useSystemChineseFont(),
-          contextMenuBuilder: (context, editableTextState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 20,
-                height: 20,
-                color: Colors.red,
-              )
-            ],
+        onLongPress: textMenuItems == null
+            ? null
+            : () {
+                // onShow(context);
+              },
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: SelectableText.rich(
+            TextSpan(
+                children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
+              if (e.type == ImAtType.emoji) {
+                return WidgetSpan(
+                  child: CachedImage(
+                    assetUrl: 'assets/emoji/${e.text}.webp',
+                    width: 25,
+                    height: 25,
+                    package: 'im_kit',
+                  ),
+                );
+              } else {
+                return TextSpan(
+                  text: e.text,
+                  style: TextStyle(color: atTypeColor(e, chatTheme)),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      switch (e.type) {
+                        case ImAtType.url:
+                          onTapUrl?.call(e.text);
+                          break;
+                        case ImAtType.email:
+                          onTapEmail?.call(e.text);
+                          break;
+                        case ImAtType.phone:
+                          onTapPhone?.call(e.text);
+                          break;
+                        case ImAtType.at:
+                          if (e.userInfo?.atUserID == '-1') {
+                            onAtTap?.call(UserInfo(userID: '-1'));
+                            return;
+                          }
+                          if (OpenIM.iMManager.uid == e.userInfo?.atUserID) {
+                            onAtTap?.call(OpenIM.iMManager.uInfo!);
+                          } else {
+                            OpenIM.iMManager.userManager.getUsersInfo(uidList: [e.userInfo!.atUserID!]).then((v) {
+                              onAtTap?.call(v.first);
+                            });
+                          }
+                        default:
+                      }
+                    },
+                );
+              }
+            }).toList()),
+            style: chatTheme.textStyle.useSystemChineseFont(),
+            contextMenuBuilder: (context, editableTextState) => ImAdaptiveTextSelection(
+              anchors: editableTextState.contextMenuAnchors,
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   Color? atTypeColor(ImAtTextType info, ImChatTheme chatTheme) {
