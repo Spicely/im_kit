@@ -55,6 +55,7 @@ class ImAtText extends ImBase {
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
+    ImLanguage language = ImKitTheme.of(context).language;
     return GestureDetector(
         onLongPress: textMenuItems == null
             ? null
@@ -112,6 +113,48 @@ class ImAtText extends ImBase {
             style: chatTheme.textStyle.useSystemChineseFont(),
             contextMenuBuilder: (context, editableTextState) => ImAdaptiveTextSelection(
               anchors: editableTextState.contextMenuAnchors,
+              children: [
+                ImAdaptiveTextItem(
+                  label: language.copy,
+                  icon: Image.asset('assets/icons/copy.png', width: 20, height: 20, package: 'im_kit'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    editableTextState.hideToolbar();
+                  },
+                ),
+                ImAdaptiveTextItem(
+                  label: language.delete,
+                  icon: Image.asset('assets/icons/delete1.png', width: 20, height: 20, package: 'im_kit'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    editableTextState.hideToolbar();
+                  },
+                ),
+                ImAdaptiveTextItem(
+                  label: language.forward,
+                  icon: Image.asset('assets/icons/forward.png', width: 20, height: 20, package: 'im_kit'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    editableTextState.hideToolbar();
+                  },
+                ),
+                ImAdaptiveTextItem(
+                  label: language.reply,
+                  icon: Image.asset('assets/icons/reply.png', width: 20, height: 20, package: 'im_kit'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    editableTextState.hideToolbar();
+                  },
+                ),
+                ImAdaptiveTextItem(
+                  label: language.multiChoice,
+                  icon: Image.asset('assets/icons/choice.png', width: 20, height: 20, package: 'im_kit'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    editableTextState.hideToolbar();
+                  },
+                ),
+              ],
             ),
           ),
         ));
