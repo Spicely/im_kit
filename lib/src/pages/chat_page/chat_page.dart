@@ -109,6 +109,8 @@ class ChatPage extends StatelessWidget {
                               onForwardMessage: controller.onForwardMessage,
                               onCopyTip: controller.onCopyTip,
                               onDeleteMessage: controller.onDeleteMessage,
+                              onMultiSelect: controller.onMoreSelectShare,
+                              onQuoteMessage: controller.onQuoteMessage,
                               sendSuccessWidget: Text(
                                 controller.data[index].m.isRead == true ? '已读' : '未读',
                                 // style: TextStyle(fontSize: 10, color: gray),
@@ -123,6 +125,20 @@ class ChatPage extends StatelessWidget {
               ),
               Column(
                 children: [
+                  Obx(
+                    () => controller.quoteMessage.value != null
+                        ? Container(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 58),
+                                Expanded(child: _buildQuoteView()),
+                                const SizedBox(width: 106),
+                              ],
+                            ),
+                          )
+                        : Container(),
+                  ),
                   Container(
                     decoration: BoxDecoration(
                       color: chatTheme.textFieldTheme.backgroundColor,
@@ -159,7 +175,7 @@ class ChatPage extends StatelessWidget {
                                     ),
                                     specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
                                       allAtMap: controller.atUserMap,
-                                      quoteMessage: controller.quoteMessage.value,
+                                      quoteMessage: controller.quoteMessage.value?.m,
                                       groupMembersInfo: controller.groupMembers,
                                     ),
                                   ),
@@ -303,6 +319,36 @@ class ChatPage extends StatelessWidget {
           ),
           resizeToAvoidBottomInset: true,
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuoteView() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(241, 241, 241, 1),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(
+              () => controller.quoteMessage.value == null
+                  ? Container()
+                  : ImQuote(
+                      padding: EdgeInsets.zero,
+                      isMe: controller.quoteMessage.value?.m.sendID == OpenIM.iMManager.uid,
+                      message: controller.quoteMessage.value!,
+                    ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: controller.onQuoteMessageDelete,
+            child: Image.asset('assets/icons/close.png', width: 12, height: 12),
+          ),
+        ],
       ),
     );
   }

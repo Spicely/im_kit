@@ -37,6 +37,15 @@ extension ExtensionMessage on Message {
           },
         _ => const TextSpan(text: '暂不支持的消息'),
       };
+
+  bool isExJson() {
+    try {
+      Map<String, dynamic> _ = json.decode(ex ?? '');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 extension ExtensionConversationInfo on ConversationInfo {

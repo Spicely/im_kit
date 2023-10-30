@@ -8,7 +8,6 @@ import 'dart:math';
 
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 import 'package:card_swiper/card_swiper.dart';
-import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/cupertino.dart';

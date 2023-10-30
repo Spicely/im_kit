@@ -44,6 +44,21 @@ class ImBase extends StatelessWidget {
   /// 点击播放视频
   final void Function(MessageExt message)? onTapPlayVideo;
 
+  /// 点击复制
+  final void Function(EditableTextState editableTextState)? onCopyTap;
+
+  /// 点击删除
+  final void Function(MessageExt message)? onDeleteTap;
+
+  /// 点击转发
+  final void Function(MessageExt message)? onForwardTap;
+
+  /// 点击回复
+  final void Function(MessageExt message)? onQuoteTap;
+
+  /// 点击多选
+  final void Function(MessageExt message)? onMultiSelectTap;
+
   const ImBase({
     super.key,
     required this.isMe,
@@ -55,6 +70,11 @@ class ImBase extends StatelessWidget {
     this.onTapPhone,
     this.onTapDownFile,
     this.onTapPlayVideo,
+    this.onCopyTap,
+    this.onDeleteTap,
+    this.onForwardTap,
+    this.onQuoteTap,
+    this.onMultiSelectTap,
   });
 
   @override

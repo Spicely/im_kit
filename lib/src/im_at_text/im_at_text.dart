@@ -50,6 +50,11 @@ class ImAtText extends ImBase {
     super.onTapEmail,
     super.onTapPhone,
     this.onAtTap,
+    super.onCopyTap,
+    super.onDeleteTap,
+    super.onForwardTap,
+    super.onQuoteTap,
+    super.onMultiSelectTap,
   });
 
   @override
@@ -118,7 +123,13 @@ class ImAtText extends ImBase {
                   label: language.copy,
                   icon: Image.asset('assets/icons/copy.png', width: 20, height: 20, package: 'im_kit'),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    if (onCopyTap == null) {
+                      /// 获取选中的文字
+                      String text = editableTextState.textEditingValue.text.substring(editableTextState.textEditingValue.selection.baseOffset, editableTextState.textEditingValue.selection.extentOffset);
+                      Clipboard.setData(ClipboardData(text: text));
+                    } else {
+                      onCopyTap?.call(editableTextState);
+                    }
                     editableTextState.hideToolbar();
                   },
                 ),
@@ -126,7 +137,7 @@ class ImAtText extends ImBase {
                   label: language.delete,
                   icon: Image.asset('assets/icons/delete1.png', width: 20, height: 20, package: 'im_kit'),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    onDeleteTap?.call(message);
                     editableTextState.hideToolbar();
                   },
                 ),
@@ -134,7 +145,7 @@ class ImAtText extends ImBase {
                   label: language.forward,
                   icon: Image.asset('assets/icons/forward.png', width: 20, height: 20, package: 'im_kit'),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    onForwardTap?.call(message);
                     editableTextState.hideToolbar();
                   },
                 ),
@@ -142,7 +153,7 @@ class ImAtText extends ImBase {
                   label: language.reply,
                   icon: Image.asset('assets/icons/reply.png', width: 20, height: 20, package: 'im_kit'),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    onQuoteTap?.call(message);
                     editableTextState.hideToolbar();
                   },
                 ),
@@ -150,7 +161,7 @@ class ImAtText extends ImBase {
                   label: language.multiChoice,
                   icon: Image.asset('assets/icons/choice.png', width: 20, height: 20, package: 'im_kit'),
                   onPressed: () {
-                    Clipboard.setData(ClipboardData(text: message.m.atElem?.text ?? ''));
+                    onMultiSelectTap?.call(message);
                     editableTextState.hideToolbar();
                   },
                 ),

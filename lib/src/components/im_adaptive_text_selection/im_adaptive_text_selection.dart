@@ -58,23 +58,26 @@ class ImAdaptiveTextSelection extends StatelessWidget {
           type: MaterialType.card,
           child: Wrap(
               children: children.map((e) {
-            return Container(
-              width: 280 / 5,
-              color: const Color.fromRGBO(10, 41, 62, 1),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  e.icon,
-                  Container(
-                    margin: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      e.label,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+            return GestureDetector(
+              onTap: e.onPressed,
+              child: Container(
+                width: 280 / 5,
+                color: const Color.fromRGBO(10, 41, 62, 1),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    e.icon,
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        e.label,
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }).toList()),

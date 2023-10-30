@@ -16,51 +16,123 @@ part of im_kit;
  */
 
 class ImQuote extends ImBase {
+  final EdgeInsetsGeometry? padding;
+
   const ImQuote({
     Key? key,
     required bool isMe,
     required MessageExt message,
+    this.padding,
   }) : super(key: key, isMe: isMe, message: message);
-
-  MessageExt get quoteMessage => message.ext.quoteMessage!;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: getTypeWidget(context),
+      margin: padding ?? EdgeInsets.only(right: isMe ? 66 : 0, left: isMe ? 0 : 66, top: 10),
+      padding: padding ?? EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(242, 242, 242, 1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: getQuoteContent(context),
     );
   }
 
-  /// 获取类型数据
-  Widget getTypeWidget(BuildContext context) {
+  Widget getQuoteContent(BuildContext context) {
+    ImLanguage language = ImKitTheme.of(context).language;
     switch (message.m.contentType) {
-      case MessageType.text:
+      case MessageType.picture:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.picture}]',
+          style: TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case MessageType.video:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.video}]',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+
+      case MessageType.merger:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.chatRecord}]${message.m.mergeElem?.title ?? ''}',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case MessageType.card:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.card}]',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case MessageType.voice:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.voice}]',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case 300:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.emoji}]',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case MessageType.file:
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.file}]',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
+      case MessageType.location:
+        Map<String, dynamic> des = message.ext.data;
+        return Text(
+          '${message.m.senderNickname ?? ''}: [${language.location}] ${des['addr']}',
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        );
       case MessageType.at_text:
       case MessageType.quote:
-        return ImAtText(
-          message: quoteMessage,
-          isMe: isMe,
-          onClickMenu: onClickMenu,
-          onTapEmail: onTapEmail,
-          onTapUrl: onTapUrl,
-          onTapPhone: onTapPhone,
+      case MessageType.text:
+        return Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '${message.m.senderNickname ?? ''}: ',
+              ),
+              TextSpan(
+                  children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
+                if (e.type == ImAtType.emoji) {
+                  return WidgetSpan(
+                    child: CachedImage(
+                      assetUrl: 'assets/emoji/${e.text}.webp',
+                      width: 25,
+                      height: 25,
+                      package: 'im_kit',
+                    ),
+                  );
+                } else {
+                  return TextSpan(
+                    text: e.text,
+                  );
+                }
+              }).toList()),
+            ],
+          ),
+          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         );
-      case MessageType.picture:
-        return ImImage(message: quoteMessage, isMe: isMe);
-      case MessageType.file:
-        return ImFile(message: quoteMessage, isMe: isMe);
-      case MessageType.voice:
-        return ImVoice(message: quoteMessage, isMe: isMe);
-      case MessageType.video:
-        return ImVideo(message: quoteMessage, isMe: isMe);
-      case MessageType.card:
-        return ImCard(message: quoteMessage, isMe: isMe);
-      case MessageType.location:
-        return ImLocation(message: quoteMessage, isMe: isMe);
-      case MessageType.merger:
-        return ImMerge(message: quoteMessage, isMe: isMe);
       default:
-        return const Text('暂不支持的消息');
+        return Container();
     }
   }
 }

@@ -48,6 +48,30 @@ class ImLanguage {
   /// 复制
   final String copy;
 
+  /// 聊天记录
+  final String chatRecord;
+
+  /// 图片
+  final String picture;
+
+  /// 视频
+  final String video;
+
+  /// 名片
+  final String card;
+
+  /// 语音
+  final String voice;
+
+  /// 表情
+  final String emoji;
+
+  /// 文件
+  final String file;
+
+  /// 位置
+  final String location;
+
   const ImLanguage({
     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
     this.longPressRecordVoice = '长按录制语音',
@@ -59,6 +83,14 @@ class ImLanguage {
     this.forward = '转发',
     this.reply = '回复',
     this.copy = '复制',
+    this.chatRecord = '聊天记录',
+    this.picture = '图片',
+    this.video = '视频',
+    this.card = '名片',
+    this.voice = '语音',
+    this.emoji = '表情',
+    this.file = '文件',
+    this.location = '位置',
   });
 }
 

@@ -51,6 +51,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 是否是群主
   bool get isOwner => gInfo?.roleLevel == GroupRoleLevel.owner;
 
+  RxBool showSelect = false.obs;
+
   /// 是否能管理群
   bool get isCanAdmin => gInfo?.roleLevel != GroupRoleLevel.member;
 
@@ -68,7 +70,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   String? get uId => Utils.getValue<String?>(conversationInfo.value.userID, null);
 
   /// 引用消息
-  Rx<Message?> quoteMessage = Rx(null);
+  Rx<MessageExt?> quoteMessage = Rx(null);
+
+  RxList<Message> selectList = RxList([]);
 
   ChatPageController({
     required this.secretKey,
@@ -287,6 +291,12 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     quoteMessage.value = null;
   }
 
+  /// 引用消息
+  void onQuoteMessage(MessageExt msg) async {
+    focusNode.requestFocus();
+    quoteMessage.value = msg;
+  }
+
   /// 更新消息
   Future<void> updateMessage(MessageExt ext) async {
     int index = data.indexWhere((v) => v.m.clientMsgID == ext.m.clientMsgID);
@@ -320,8 +330,34 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     );
   }
 
+  /// 设置草稿
+  Future<void> setConversationDraft(String draft) async {
+    await OpenIM.iMManager.conversationManager.setConversationDraft(
+      conversationID: conversationInfo.value.conversationID,
+      draftText: draft,
+    );
+  }
+
   /// 发送消息统一入口
-  Future<MessageExt> sendMessage(MessageExt msg) async {
+  Future<MessageExt> sendMessage(
+    MessageExt msg, {
+    String? userId,
+    String? groupId,
+  }) async {
+    if (Utils.isNotEmpty(conversationInfo.value.draftText)) {
+      setConversationDraft('');
+    }
+    // ignore: non_constant_identifier_names
+    String? u_id;
+    // ignore: non_constant_identifier_names
+    String? g_id;
+    if (Utils.isNotEmpty(userId) || Utils.isNotEmpty(groupId)) {
+      u_id = userId;
+      g_id = groupId;
+    } else {
+      u_id = uId;
+      g_id = gId;
+    }
     try {
       /// 先对文件加密
       if ([MessageType.file, MessageType.picture, MessageType.voice].contains(msg.m.contentType)) {
@@ -333,8 +369,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       }
       Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
         message: msg.m,
-        userID: userID,
-        groupID: groupID,
+        userID: u_id,
+        groupID: g_id,
         offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
       );
       if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
@@ -382,21 +418,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     MessageExt? message;
     try {
       /// 清空输入框
-      Message? quoteMsg = quoteMessage.value;
-      if (quoteMsg?.contentType != 300) {
-        quoteMsg?.pictureElem?.sourcePath = null;
-      }
-      quoteMsg?.videoElem?.snapshotPath = null;
-      quoteMsg?.fileElem?.filePath = null;
-      quoteMsg?.soundElem?.soundPath = null;
+      MessageExt? quoteMsg = quoteMessage.value;
 
       /// 创建@消息
       List<AtUserInfo> list = atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList();
       textEditingController.clear();
       if (atUserMap.isNotEmpty) {
-        message = await createTextAtMessage(list, '$value ', secretKey, quoteMessage: quoteMsg);
+        message = await createTextAtMessage(list, '$value ', secretKey, quoteMessage: quoteMsg?.m);
       } else if (quoteMsg != null) {
-        message = await createQuoteMessage('$value ', quoteMsg, secretKey);
+        message = await createQuoteMessage('$value ', quoteMsg.m, secretKey);
       } else {
         message = await createTextMessage('$value ', secretKey);
       }
@@ -561,4 +591,16 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       data: {'userID': user.userID, 'nickname': user.nickname, 'faceURL': user.faceURL},
     );
   }
+
+  /// 转发消息
+  Future<MessageExt> createForwardMessage(Message msg, String sessionID, int sessionType) async {
+    /// 获取所有回话Key
+    String key = await OpenIM.iMManager.conversationManager.getLocalKey(sessionID: sessionID, sessionType: sessionType);
+    if (Utils.isEmpty(msg.ex) || msg.isExJson()) {
+      msg.ex = key;
+    }
+    return await (await OpenIM.iMManager.messageManager.createForwardMessage(message: msg)).toExt(secretKey);
+  }
+
+  void onMoreSelectShare(MessageExt extMsg) async {}
 }
