@@ -61,6 +61,7 @@ part 'src/im_theme/im_theme.dart';
 part 'src/im_theme/im_chat_theme.dart';
 part 'src/im_card/im_card.dart';
 part 'src/im_quote/im_quote.dart';
+part 'src/im_quote/im_quote_item.dart';
 part 'src/im_custom_face/im_custom_face.dart';
 part 'src/im_base/isolate_method.dart';
 part 'src/im_file/im_file.dart';

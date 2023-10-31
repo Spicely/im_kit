@@ -31,8 +31,13 @@ class ImListItem extends StatelessWidget {
   /// 群是否被解散
   final bool isGroupDissolution;
 
+  final bool selected;
+
   /// 发送消息等待Widget
   final Widget? sendLoadingWidget;
+
+  /// 选择消息事件
+  final void Function(MessageExt, bool)? onMessageSelect;
 
   /// 发送消息失败Widget
   final Widget? sendErrorWidget;
@@ -98,11 +103,12 @@ class ImListItem extends StatelessWidget {
   final Function(MessageExt extMsg)? onResend;
 
   /// 多选事件
-  final Function(MessageExt extMsg)? onMultiSelect;
+  final Function(MessageExt extMsg)? onMultiSelectTap;
 
   const ImListItem({
     super.key,
     required this.message,
+    required this.selected,
     this.onTapDownFile,
     this.onTap,
     this.sendLoadingWidget,
@@ -131,10 +137,11 @@ class ImListItem extends StatelessWidget {
     this.onTagUserTap,
     this.onCopyTip,
     this.onDeleteMessage,
-    this.onMultiSelect,
+    this.onMultiSelectTap,
     this.onForwardMessage,
     this.onQuoteMessage,
     this.onResend,
+    this.onMessageSelect,
   });
 
   @override
@@ -145,9 +152,34 @@ class ImListItem extends StatelessWidget {
     return Directionality(
       textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
       child: Padding(
-        padding: const EdgeInsets.only(top: 20),
-        child: getContentType(context),
-      ),
+          padding: const EdgeInsets.only(top: 20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (showSelect)
+                Checkbox(
+                  value: selected,
+                  shape: const CircleBorder(),
+                  side: BorderSide(
+                    width: 1.2,
+                    color: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope ? const Color.fromRGBO(175, 175, 175, 0.2) : const Color.fromRGBO(175, 175, 175, 1),
+                  ),
+                  fillColor: MaterialStateProperty.resolveWith((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return Theme.of(context).primaryColor;
+                    } else {
+                      return Colors.transparent;
+                    }
+                  }),
+                  onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
+                      ? null
+                      : (value) {
+                          onMessageSelect?.call(message, !selected);
+                        },
+                ),
+              Expanded(child: getContentType(context)),
+            ],
+          )),
     );
   }
 
@@ -251,86 +283,95 @@ class ImListItem extends StatelessWidget {
               style: const TextStyle(fontSize: 12, color: Colors.grey)),
         );
       default:
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CachedImage(
-              imageUrl: message.m.senderFaceUrl,
-              width: avatarTheme.width,
-              height: avatarTheme.height,
-              circular: avatarTheme.circular,
-              fit: avatarTheme.fit,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (message.m.isGroupChat && !isMe)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                          ),
-                        Wrap(
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                onTap?.call(message);
-                              },
-                              onDoubleTap: () {
-                                onDoubleTap?.call(message);
-                              },
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                          ? null
-                                          : isMe
-                                              ? chatTheme.messageTheme.meBackgroundColor
-                                              : chatTheme.messageTheme.backgroundColor,
-                                      borderRadius: chatTheme.messageTheme.borderRadius,
-                                    ),
-                                    padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                    child: getTypeWidget(),
-                                  ),
-                                  if (message.m.contentType == MessageType.quote)
+        return GestureDetector(
+          onTap: onSelectTap,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CachedImage(
+                imageUrl: message.m.senderFaceUrl,
+                width: avatarTheme.width,
+                height: avatarTheme.height,
+                circular: avatarTheme.circular,
+                fit: avatarTheme.fit,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (message.m.isGroupChat && !isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                            ),
+                          Wrap(
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  print(111);
+                                  onSelectTap();
+                                  onTap?.call(message);
+                                },
+                                onDoubleTap: () {
+                                  onDoubleTap?.call(message);
+                                },
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                                        color: Colors.red,
+                                        // color: ImCore.noBgMsgType.contains(message.m.contentType)
+                                        //     ? null
+                                        //     : isMe
+                                        //         ? chatTheme.messageTheme.meBackgroundColor
+                                        //         : chatTheme.messageTheme.backgroundColor,
                                         borderRadius: chatTheme.messageTheme.borderRadius,
                                       ),
-                                      margin: const EdgeInsets.only(top: 5),
-                                      padding: chatTheme.messageTheme.padding,
-                                      child: Directionality(
-                                        textDirection: TextDirection.ltr,
-                                        child: Wrap(
-                                          children: [
-                                            Text('${message.m.quoteElem?.quoteMessage?.senderNickname}：'),
-                                            ImQuote(isMe: isMe, message: message),
-                                          ],
+                                      padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                      child: getTypeWidget(),
+                                    ),
+                                    if (message.m.contentType == MessageType.quote)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 5),
+                                        child: Directionality(
+                                          textDirection: TextDirection.ltr,
+                                          child: Wrap(
+                                            children: [
+                                              ImQuoteItem(isMe: isMe, message: message),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  // SizedBox(child: getStatusWidget()),
-                ],
+                    const SizedBox(width: 10),
+                    // SizedBox(child: getStatusWidget()),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
+    }
+  }
+
+  void onSelectTap() {
+    if (showSelect) {
+      if (message.m.status != MessageStatus.succeeded) return;
+      if (message.ext.isVoice) return;
+      if (message.ext.isRedEnvelope) return;
+      onMessageSelect?.call(message, !selected);
     }
   }
 
@@ -364,7 +405,7 @@ class ImListItem extends StatelessWidget {
           onAtTap: onAtTap,
           onDeleteTap: onDeleteMessage,
           onForwardTap: onForwardMessage,
-          onMultiSelectTap: onMultiSelect,
+          onMultiSelectTap: onMultiSelectTap,
           onQuoteTap: onQuoteMessage,
         );
       case MessageType.picture:

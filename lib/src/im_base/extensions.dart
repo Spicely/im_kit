@@ -19,6 +19,7 @@ extension ExtensionMessage on Message {
         MessageType.voice => TextSpan(text: isSingleChat ? '[语音]' : '$senderNickname: [语音]'),
         MessageType.location => TextSpan(text: isSingleChat ? '[位置]' : '$senderNickname: [位置]'),
         MessageType.card => TextSpan(text: isSingleChat ? '[用户名片]' : '$senderNickname: [用户名片]'),
+        MessageType.quote => TextSpan(text: isSingleChat ? '[引用消息]' : '$senderNickname: [引用消息]'),
         MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
         MessageType.advancedRevoke => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
         MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),

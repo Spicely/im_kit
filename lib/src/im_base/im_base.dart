@@ -167,6 +167,9 @@ class ImExtModel {
   /// 是否为阅后即焚消息
   bool isPrivateChat;
 
+  /// 是否为红包消息
+  bool isRedEnvelope;
+
   ImExtModel({
     this.progress,
     this.path,
@@ -183,6 +186,7 @@ class ImExtModel {
     this.data,
     this.quoteMessage,
     this.isPrivateChat = false,
+    this.isRedEnvelope = false,
   });
 
   Map<String, dynamic> toJson() {

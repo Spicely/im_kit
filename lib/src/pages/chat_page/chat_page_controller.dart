@@ -72,7 +72,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 引用消息
   Rx<MessageExt?> quoteMessage = Rx(null);
 
-  RxList<Message> selectList = RxList([]);
+  RxList<MessageExt> selectList = RxList([]);
 
   ChatPageController({
     required this.secretKey,
@@ -602,5 +602,25 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     return await (await OpenIM.iMManager.messageManager.createForwardMessage(message: msg)).toExt(secretKey);
   }
 
-  void onMoreSelectShare(MessageExt extMsg) async {}
+  void onMultiSelectTap(MessageExt extMsg) async {
+    showSelect.value = true;
+  }
+
+  void onMessageSelect(MessageExt msg, bool status) {
+    if (status) {
+      /// 判断消息是否已经被存储
+      int index = selectList.indexWhere((v) => v.m.clientMsgID == msg.m.clientMsgID);
+      if (index == -1) {
+        selectList.add(msg);
+      } else {
+        selectList[index] = msg;
+      }
+    } else {
+      selectList.removeWhere((v) => v.m.clientMsgID == msg.m.clientMsgID);
+    }
+  }
+
+  void onMoreSelectShare() {}
+
+  void onMoreSelectDelete() {}
 }

@@ -130,6 +130,7 @@ class _IsolateFun {
             SignalingType.CustomSignalingRejectType,
             SignalingType.CustomSignalingTimeoutType
           ].contains(data['contentType']);
+          ext.isRedEnvelope = [81, 82, 83].contains(data['contentType']);
           break;
 
         case MessageType.groupMemberMutedNotification:

@@ -72,6 +72,9 @@ class ImLanguage {
   /// 位置
   final String location;
 
+  /// 取消
+  final String cancel;
+
   const ImLanguage({
     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
     this.longPressRecordVoice = '长按录制语音',
@@ -91,6 +94,7 @@ class ImLanguage {
     this.emoji = '表情',
     this.file = '文件',
     this.location = '位置',
+    this.cancel = '取消',
   });
 }
 

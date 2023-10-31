@@ -29,7 +29,7 @@ class ImQuote extends ImBase {
   Widget build(BuildContext context) {
     return Container(
       margin: padding ?? EdgeInsets.only(right: isMe ? 66 : 0, left: isMe ? 0 : 66, top: 10),
-      padding: padding ?? EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       decoration: BoxDecoration(
         color: const Color.fromRGBO(242, 242, 242, 1),
         borderRadius: BorderRadius.circular(10),

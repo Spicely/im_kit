@@ -19,7 +19,8 @@ class ChatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    int count = (actions.length / 8).ceil();
+    ImLanguage language = ImKitTheme.of(context).language;
+
     return GetBuilder(
       init: controller,
       builder: (controller) => SelectionArea(
@@ -28,6 +29,22 @@ class ChatPage extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: chatTheme.appBarTheme.backgroundColor,
             iconTheme: chatTheme.appBarTheme.iconTheme,
+            leading: Obx(
+              () => Visibility(
+                visible: controller.showSelect.value,
+                replacement: TextButton(
+                  onPressed: Get.back,
+                  child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                ),
+                child: TextButton(
+                  onPressed: () {
+                    controller.selectList.clear();
+                    controller.showSelect.value = false;
+                  },
+                  child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
+                ),
+              ),
+            ),
             title: Column(
               children: [
                 Obx(
@@ -93,9 +110,11 @@ class ChatPage extends StatelessWidget {
                           itemBuilder: (context, index) => Obx(
                             () => ImListItem(
                               message: controller.data[index],
+                              selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
                               // onTap: controller.onTap,
                               // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
                               sendErrorWidget: const Icon(Icons.error, color: Colors.red),
+                              showSelect: controller.showSelect.value,
                               onTapDownFile: controller.onTapDownFile,
                               onTapPlayVideo: controller.onTapPlayVideo,
                               onPictureTap: controller.onPictureTap,
@@ -109,8 +128,9 @@ class ChatPage extends StatelessWidget {
                               onForwardMessage: controller.onForwardMessage,
                               onCopyTip: controller.onCopyTip,
                               onDeleteMessage: controller.onDeleteMessage,
-                              onMultiSelect: controller.onMoreSelectShare,
+                              onMultiSelectTap: controller.onMultiSelectTap,
                               onQuoteMessage: controller.onQuoteMessage,
+                              onMessageSelect: controller.onMessageSelect,
                               sendSuccessWidget: Text(
                                 controller.data[index].m.isRead == true ? '已读' : '未读',
                                 // style: TextStyle(fontSize: 10, color: gray),
@@ -123,198 +143,13 @@ class ChatPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Column(
-                children: [
-                  Obx(
-                    () => controller.quoteMessage.value != null
-                        ? Container(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 58),
-                                Expanded(child: _buildQuoteView()),
-                                const SizedBox(width: 106),
-                              ],
-                            ),
-                          )
-                        : Container(),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: chatTheme.textFieldTheme.backgroundColor,
-                    ),
-                    constraints: BoxConstraints(
-                      minHeight: chatTheme.textFieldTheme.height,
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () {},
-                          icon: const CachedImage(assetUrl: 'assets/icons/chat_voice.png', package: 'im_kit', width: 24, height: 24),
-                        ),
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: chatTheme.textFieldTheme.textFieldColor,
-                                  borderRadius: chatTheme.textFieldTheme.textFieldBorderRadius,
-                                ),
-                                constraints: const BoxConstraints(maxHeight: 230),
-                                margin: const EdgeInsets.symmetric(vertical: 10),
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: Obx(
-                                  () => ExtendedTextField(
-                                    controller: controller.textEditingController,
-                                    focusNode: controller.focusNode,
-                                    maxLines: null,
-                                    maxLength: null,
-                                    decoration: InputDecoration(
-                                      hintText: chatTheme.textFieldTheme.hintText,
-                                    ),
-                                    specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
-                                      allAtMap: controller.atUserMap,
-                                      quoteMessage: controller.quoteMessage.value?.m,
-                                      groupMembersInfo: controller.groupMembers,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: controller.onShowEmoji,
-                          icon: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 24, height: 24),
-                        ),
-                        Obx(
-                          () => Offstage(
-                            offstage: !controller.hasInput.value,
-                            child: IconButton(
-                              onPressed: controller.onSendMessage,
-                              icon: const CachedImage(assetUrl: 'assets/icons/chat_send.png', package: 'im_kit', width: 24, height: 24),
-                            ),
-                          ),
-                        ),
-                        Obx(
-                          () => Offstage(
-                            offstage: controller.hasInput.value,
-                            child: IconButton(
-                              onPressed: controller.onShowActions,
-                              icon: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 24, height: 24),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Obx(
-                    () => Offstage(
-                      offstage: !(controller.fieldType.value == ImChatPageFieldType.emoji),
-                      child: Container(
-                        height: 306,
-                        color: chatTheme.textFieldTheme.backgroundColor,
-                        child: Column(
-                          children: [
-                            SizedBox(
-                              height: 46,
-                              width: double.infinity,
-                              child: TabBar(
-                                isScrollable: true,
-                                controller: controller.tabController,
-                                indicator: const BubbleTabIndicator(
-                                  indicatorHeight: 36.0,
-                                  insets: EdgeInsets.symmetric(horizontal: 28.5),
-                                  indicatorColor: Colors.white,
-                                  indicatorRadius: 8,
-                                  tabBarIndicatorSize: TabBarIndicatorSize.tab,
-                                ),
-                                tabs: [
-                                  const Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
-                                  ...controller.tabs.map((e) => e.tab).toList(),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: TabBarView(
-                                controller: controller.tabController,
-                                children: [
-                                  GridView.builder(
-                                    padding: EdgeInsets.zero,
-                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 8,
-                                      mainAxisSpacing: 8,
-                                      crossAxisSpacing: 5,
-                                      childAspectRatio: 1.0,
-                                    ),
-                                    itemBuilder: (BuildContext context, int index) {
-                                      return GestureDetector(
-                                        onTap: () {
-                                          controller.textEditingController.text += _keys[index];
-                                        },
-                                        child: Center(
-                                          child: CachedImage(
-                                            assetUrl: 'assets/emoji/${_emojiFaces[_keys[index]]}.webp',
-                                            width: 27,
-                                            height: 27,
-                                            package: 'im_kit',
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    itemCount: _keys.length,
-                                  ),
-                                  ...controller.tabs.map((e) => e.view.call(controller)).toList(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Obx(
-                    () => Offstage(
-                      offstage: !(controller.fieldType.value == ImChatPageFieldType.actions),
-                      child: Container(
-                        height: 226,
-                        color: chatTheme.textFieldTheme.backgroundColor,
-                        child: Swiper(
-                          loop: false,
-                          itemBuilder: (BuildContext context, int i) {
-                            return GridView(
-                              padding: EdgeInsets.zero,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 4,
-                                mainAxisSpacing: 10,
-                                crossAxisSpacing: 5,
-                                childAspectRatio: 1.0,
-                              ),
-                              children: List.generate(actions.length > 8 ? 8 : actions.length, (index) {
-                                if (count > 1) {
-                                  int v = index + 8 * i;
-                                  if (v >= actions.length) {
-                                    return Container();
-                                  } else {
-                                    return actions[v];
-                                  }
-                                } else {
-                                  return actions[index];
-                                }
-                              }),
-                            );
-                          },
-
-                          /// 小数点向上取整
-                          itemCount: count,
-                          pagination: count <= 1 ? null : const SwiperPagination(),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )
+              Obx(
+                () => Visibility(
+                  visible: controller.showSelect.value,
+                  replacement: _buildBottomInput(chatTheme),
+                  child: _buildMoreBottomView(),
+                ),
+              ),
             ],
           ),
           resizeToAvoidBottomInset: true,
@@ -350,6 +185,244 @@ class ChatPage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  /// 绘制多选框
+  Widget _buildMoreBottomView() {
+    return Container(
+      height: 70,
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0d000000),
+            offset: Offset(0, -3),
+            blurRadius: 3,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: IconButton(
+              onPressed: controller.onMoreSelectShare,
+              icon: const CachedImage(assetUrl: 'assets/icons/share.png', width: 22, height: 22),
+            ),
+          ),
+          Expanded(
+            child: IconButton(
+              onPressed: () {},
+              icon: const CachedImage(assetUrl: 'assets/icons/collect.png', width: 22, height: 22),
+            ),
+          ),
+          Expanded(
+            child: IconButton(
+              onPressed: controller.onMoreSelectDelete,
+              icon: const CachedImage(assetUrl: 'assets/icons/delete.png', width: 22, height: 22),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 绘制输入框
+  Widget _buildBottomInput(ImChatTheme chatTheme) {
+    int count = (actions.length / 8).ceil();
+    return Column(
+      children: [
+        Obx(
+          () => controller.quoteMessage.value != null
+              ? Container(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 58),
+                      Expanded(child: _buildQuoteView()),
+                      const SizedBox(width: 106),
+                    ],
+                  ),
+                )
+              : Container(),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: chatTheme.textFieldTheme.backgroundColor,
+          ),
+          constraints: BoxConstraints(
+            minHeight: chatTheme.textFieldTheme.height,
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {},
+                icon: const CachedImage(assetUrl: 'assets/icons/chat_voice.png', package: 'im_kit', width: 24, height: 24),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: chatTheme.textFieldTheme.textFieldColor,
+                        borderRadius: chatTheme.textFieldTheme.textFieldBorderRadius,
+                      ),
+                      constraints: const BoxConstraints(maxHeight: 230),
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Obx(
+                        () => ExtendedTextField(
+                          controller: controller.textEditingController,
+                          focusNode: controller.focusNode,
+                          maxLines: null,
+                          maxLength: null,
+                          decoration: InputDecoration(
+                            hintText: chatTheme.textFieldTheme.hintText,
+                          ),
+                          specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
+                            allAtMap: controller.atUserMap,
+                            quoteMessage: controller.quoteMessage.value?.m,
+                            groupMembersInfo: controller.groupMembers,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: controller.onShowEmoji,
+                icon: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 24, height: 24),
+              ),
+              Obx(
+                () => Offstage(
+                  offstage: !controller.hasInput.value,
+                  child: IconButton(
+                    onPressed: controller.onSendMessage,
+                    icon: const CachedImage(assetUrl: 'assets/icons/chat_send.png', package: 'im_kit', width: 24, height: 24),
+                  ),
+                ),
+              ),
+              Obx(
+                () => Offstage(
+                  offstage: controller.hasInput.value,
+                  child: IconButton(
+                    onPressed: controller.onShowActions,
+                    icon: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 24, height: 24),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Obx(
+          () => Offstage(
+            offstage: !(controller.fieldType.value == ImChatPageFieldType.emoji),
+            child: Container(
+              height: 306,
+              color: chatTheme.textFieldTheme.backgroundColor,
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 46,
+                    width: double.infinity,
+                    child: TabBar(
+                      isScrollable: true,
+                      controller: controller.tabController,
+                      indicator: const BubbleTabIndicator(
+                        indicatorHeight: 36.0,
+                        insets: EdgeInsets.symmetric(horizontal: 28.5),
+                        indicatorColor: Colors.white,
+                        indicatorRadius: 8,
+                        tabBarIndicatorSize: TabBarIndicatorSize.tab,
+                      ),
+                      tabs: [
+                        const Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
+                        ...controller.tabs.map((e) => e.tab).toList(),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: controller.tabController,
+                      children: [
+                        GridView.builder(
+                          padding: EdgeInsets.zero,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 8,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 5,
+                            childAspectRatio: 1.0,
+                          ),
+                          itemBuilder: (BuildContext context, int index) {
+                            return GestureDetector(
+                              onTap: () {
+                                controller.textEditingController.text += _keys[index];
+                              },
+                              child: Center(
+                                child: CachedImage(
+                                  assetUrl: 'assets/emoji/${_emojiFaces[_keys[index]]}.webp',
+                                  width: 27,
+                                  height: 27,
+                                  package: 'im_kit',
+                                ),
+                              ),
+                            );
+                          },
+                          itemCount: _keys.length,
+                        ),
+                        ...controller.tabs.map((e) => e.view.call(controller)).toList(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Obx(
+          () => Offstage(
+            offstage: !(controller.fieldType.value == ImChatPageFieldType.actions),
+            child: Container(
+              height: 226,
+              color: chatTheme.textFieldTheme.backgroundColor,
+              child: Swiper(
+                loop: false,
+                itemBuilder: (BuildContext context, int i) {
+                  return GridView(
+                    padding: EdgeInsets.zero,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 5,
+                      childAspectRatio: 1.0,
+                    ),
+                    children: List.generate(actions.length > 8 ? 8 : actions.length, (index) {
+                      if (count > 1) {
+                        int v = index + 8 * i;
+                        if (v >= actions.length) {
+                          return Container();
+                        } else {
+                          return actions[v];
+                        }
+                      } else {
+                        return actions[index];
+                      }
+                    }),
+                  );
+                },
+
+                /// 小数点向上取整
+                itemCount: count,
+                pagination: count <= 1 ? null : const SwiperPagination(),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
