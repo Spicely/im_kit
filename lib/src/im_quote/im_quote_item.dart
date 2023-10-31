@@ -2,10 +2,12 @@ part of im_kit;
 
 class ImQuoteItem extends ImBase {
   const ImQuoteItem({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
-  }) : super(key: key, isMe: isMe, message: message);
+    super.key,
+    required super.isMe,
+    required super.message,
+    required super.contextMenuController,
+    super.onRevokeTap,
+  });
 
   MessageExt get quoteMsg => message.ext.quoteMessage!;
 

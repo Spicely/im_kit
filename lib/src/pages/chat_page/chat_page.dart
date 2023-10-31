@@ -23,118 +23,118 @@ class ChatPage extends StatelessWidget {
 
     return GetBuilder(
       init: controller,
-      builder: (controller) => SelectionArea(
-        child: Scaffold(
-          backgroundColor: chatTheme.backgroundColor,
-          appBar: AppBar(
-            backgroundColor: chatTheme.appBarTheme.backgroundColor,
-            iconTheme: chatTheme.appBarTheme.iconTheme,
-            leading: Obx(
-              () => Visibility(
-                visible: controller.showSelect.value,
-                replacement: TextButton(
-                  onPressed: Get.back,
-                  child: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                ),
-                child: TextButton(
-                  onPressed: () {
-                    controller.selectList.clear();
-                    controller.showSelect.value = false;
-                  },
-                  child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
-                ),
+      builder: (controller) => Scaffold(
+        backgroundColor: chatTheme.backgroundColor,
+        appBar: AppBar(
+          backgroundColor: chatTheme.appBarTheme.backgroundColor,
+          iconTheme: chatTheme.appBarTheme.iconTheme,
+          leading: Obx(
+            () => Visibility(
+              visible: controller.showSelect.value,
+              replacement: TextButton(
+                onPressed: Get.back,
+                child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+              ),
+              child: TextButton(
+                onPressed: () {
+                  controller.selectList.clear();
+                  controller.showSelect.value = false;
+                },
+                child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
               ),
             ),
-            title: Column(
-              children: [
-                Obx(
-                  () => Text(
-                    controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
-                    style: chatTheme.appBarTheme.style,
-                  ),
-                ),
-                // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
-              ],
-            ),
-            centerTitle: chatTheme.appBarTheme.centerTitle,
-            actions: appBarActions,
           ),
-          body: Column(
+          title: Column(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: controller.onTapBody,
-                  child: Obx(
-                    () => EasyRefresh.builder(
-                      controller: controller.easyRefreshController,
-                      clipBehavior: Clip.none,
-                      footer: BuilderFooter(
-                          triggerOffset: 40,
-                          infiniteOffset: 60,
-                          clamping: false,
-                          position: IndicatorPosition.above,
-                          processedDuration: Duration.zero,
-                          builder: (context, state) {
-                            return Stack(
-                              children: [
-                                SizedBox(
-                                  height: state.offset,
-                                  width: double.infinity,
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    alignment: Alignment.center,
-                                    width: double.infinity,
-                                    height: 40,
-                                    child: SpinKitCircle(
-                                      size: 24,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                )
-                              ],
-                            );
-                          }),
-                      onLoad: controller.noMore.value ? null : controller.onLoad,
-                      childBuilder: (context, physics) => Obx(
-                        () => ScrollablePositionedList.builder(
-                          itemCount: controller.data.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                          physics: physics,
-                          reverse: true,
-                          shrinkWrap: true,
-                          itemScrollController: controller.itemScrollController,
-                          itemBuilder: (context, index) => Obx(
-                            () => ImListItem(
-                              message: controller.data[index],
-                              selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
-                              // onTap: controller.onTap,
-                              // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
-                              sendErrorWidget: const Icon(Icons.error, color: Colors.red),
-                              showSelect: controller.showSelect.value,
-                              onTapDownFile: controller.onTapDownFile,
-                              onTapPlayVideo: controller.onTapPlayVideo,
-                              onPictureTap: controller.onPictureTap,
-                              onNotificationUserTap: controller.onNotificationUserTap,
-                              onTapUrl: controller.onUrlTap,
-                              onAtTap: controller.onAtTap,
-                              onTapPhone: controller.onTapPhone,
-                              onCardTap: controller.onCardTap,
-                              onLocationTap: controller.onLocationTap,
-                              onFileTap: controller.onFileTap,
-                              onForwardMessage: controller.onForwardMessage,
-                              onCopyTip: controller.onCopyTip,
-                              onDeleteMessage: controller.onDeleteMessage,
-                              onMultiSelectTap: controller.onMultiSelectTap,
-                              onQuoteMessage: controller.onQuoteMessage,
-                              onMessageSelect: controller.onMessageSelect,
-                              sendSuccessWidget: Text(
-                                controller.data[index].m.isRead == true ? '已读' : '未读',
-                                // style: TextStyle(fontSize: 10, color: gray),
+              Obx(
+                () => Text(
+                  controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
+                  style: chatTheme.appBarTheme.style,
+                ),
+              ),
+              // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
+            ],
+          ),
+          centerTitle: chatTheme.appBarTheme.centerTitle,
+          actions: appBarActions,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: controller.onTapBody,
+                child: Obx(
+                  () => EasyRefresh.builder(
+                    controller: controller.easyRefreshController,
+                    clipBehavior: Clip.none,
+                    footer: BuilderFooter(
+                        triggerOffset: 40,
+                        infiniteOffset: 60,
+                        clamping: false,
+                        position: IndicatorPosition.above,
+                        processedDuration: Duration.zero,
+                        builder: (context, state) {
+                          return Stack(
+                            children: [
+                              SizedBox(
+                                height: state.offset,
+                                width: double.infinity,
                               ),
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  alignment: Alignment.center,
+                                  width: double.infinity,
+                                  height: 40,
+                                  child: SpinKitCircle(
+                                    size: 24,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              )
+                            ],
+                          );
+                        }),
+                    onLoad: controller.noMore.value ? null : controller.onLoad,
+                    childBuilder: (context, physics) => Obx(
+                      () => ScrollablePositionedList.builder(
+                        itemCount: controller.data.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                        physics: physics,
+                        reverse: true,
+                        shrinkWrap: true,
+                        itemScrollController: controller.itemScrollController,
+                        itemBuilder: (context, index) => Obx(
+                          () => ImListItem(
+                            contextMenuController: controller.contextMenuController,
+                            message: controller.data[index],
+                            selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
+                            // onTap: controller.onTap,
+                            // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
+                            sendErrorWidget: const Icon(Icons.error, color: Colors.red),
+                            showSelect: controller.showSelect.value,
+                            onTapDownFile: controller.onTapDownFile,
+                            onTapPlayVideo: controller.onTapPlayVideo,
+                            onPictureTap: controller.onPictureTap,
+                            onNotificationUserTap: controller.onNotificationUserTap,
+                            onTapUrl: controller.onUrlTap,
+                            onAtTap: controller.onAtTap,
+                            onTapPhone: controller.onTapPhone,
+                            onCardTap: controller.onCardTap,
+                            onLocationTap: controller.onLocationTap,
+                            onFileTap: controller.onFileTap,
+                            onForwardMessage: controller.onForwardMessage,
+                            onCopyTip: controller.onCopyTip,
+                            onDeleteMessage: controller.onDeleteMessage,
+                            onMultiSelectTap: controller.onMultiSelectTap,
+                            onQuoteMessage: controller.onQuoteMessage,
+                            onMessageSelect: controller.onMessageSelect,
+                            onRevokeMessage: controller.onRevokeMessage,
+                            sendSuccessWidget: Text(
+                              controller.data[index].m.isRead == true ? '已读' : '未读',
+                              // style: TextStyle(fontSize: 10, color: gray),
                             ),
                           ),
                         ),
@@ -143,17 +143,17 @@ class ChatPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Obx(
-                () => Visibility(
-                  visible: controller.showSelect.value,
-                  replacement: _buildBottomInput(chatTheme),
-                  child: _buildMoreBottomView(),
-                ),
+            ),
+            Obx(
+              () => Visibility(
+                visible: controller.showSelect.value,
+                replacement: _buildBottomInput(chatTheme),
+                child: _buildMoreBottomView(),
               ),
-            ],
-          ),
-          resizeToAvoidBottomInset: true,
+            ),
+          ],
         ),
+        resizeToAvoidBottomInset: true,
       ),
     );
   }
@@ -172,6 +172,7 @@ class ChatPage extends StatelessWidget {
               () => controller.quoteMessage.value == null
                   ? Container()
                   : ImQuote(
+                      contextMenuController: controller.contextMenuController,
                       padding: EdgeInsets.zero,
                       isMe: controller.quoteMessage.value?.m.sendID == OpenIM.iMManager.uid,
                       message: controller.quoteMessage.value!,
@@ -192,7 +193,7 @@ class ChatPage extends StatelessWidget {
   Widget _buildMoreBottomView() {
     return Container(
       height: 70,
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [

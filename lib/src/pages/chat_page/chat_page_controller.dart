@@ -37,7 +37,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 自己的信息
   UserInfo get uInfo => OpenIM.iMManager.uInfo!;
 
-  TextEditingController textEditingController = TextEditingController();
+  final TextEditingController textEditingController = TextEditingController();
+
+  final ContextMenuController contextMenuController = ContextMenuController();
 
   /// 自己在群里的信息
   GroupMembersInfo? get gInfo => (isGroupChat && groupMembers.isNotEmpty) ? groupMembers.firstWhere((v) => v.userID == uInfo.userID) : null;
@@ -216,6 +218,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onClose() {
     OpenIMManager.removeListener(this);
     ImKitIsolateManager.removeListener(this);
+    contextMenuController.remove();
 
     /// 设置草稿
     if (textEditingController.text.trim().isNotEmpty) {
@@ -254,6 +257,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 内容区域点击
   void onTapBody() {
     fieldType.value = ImChatPageFieldType.none;
+    contextMenuController.remove();
   }
 
   @override
@@ -618,6 +622,20 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } else {
       selectList.removeWhere((v) => v.m.clientMsgID == msg.m.clientMsgID);
     }
+  }
+
+  /// 消息撤回
+  void onRevokeMessage(MessageExt message) {
+    Utils.exceptionCapture(() async {
+      int index = data.indexWhere((v) => v.m.clientMsgID == message.m.clientMsgID);
+
+      if (index != -1) {
+        data.removeAt(index);
+        await OpenIM.iMManager.messageManager.revokeMessage(message: message.m);
+        MessageExt revMsg = await Message(contentType: MessageType.revoke, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt(secretKey);
+        data.insert(0, revMsg);
+      }
+    });
   }
 
   void onMoreSelectShare() {}

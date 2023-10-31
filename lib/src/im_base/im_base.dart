@@ -20,6 +20,8 @@ class ImBase extends StatelessWidget {
 
   final MessageExt message;
 
+  final ContextMenuController contextMenuController;
+
   final void Function(MenuItemProvider, MessageExt)? onClickMenu;
 
   ImExtModel get ext => message.ext;
@@ -59,10 +61,14 @@ class ImBase extends StatelessWidget {
   /// 点击多选
   final void Function(MessageExt message)? onMultiSelectTap;
 
+  /// 点击撤回
+  final void Function(MessageExt message)? onRevokeTap;
+
   const ImBase({
     super.key,
     required this.isMe,
     required this.message,
+    required this.contextMenuController,
     this.onClickMenu,
     this.onTap,
     this.onTapUrl,
@@ -75,6 +81,7 @@ class ImBase extends StatelessWidget {
     this.onForwardTap,
     this.onQuoteTap,
     this.onMultiSelectTap,
+    this.onRevokeTap,
   });
 
   @override
@@ -103,6 +110,7 @@ class MessageExt {
   factory MessageExt.fromJson(Map<String, dynamic> json) {
     return MessageExt(
       ext: ImExtModel(
+        key: GlobalKey(),
         progress: json['ext']?['progress'] as double?,
         path: json['ext']?['path'] as String?,
         isPlaying: json['ext']?['isPlaying'] as bool? ?? false,
@@ -126,6 +134,8 @@ String _getSecretKey(Message message, String currentSecretKey) {
 class ImExtModel {
   /// 创建时间
   final DateTime createTime;
+
+  final GlobalKey key;
 
   double? progress;
 
@@ -178,6 +188,7 @@ class ImExtModel {
     this.isDownloading = false,
     this.canDelete = true,
     required this.createTime,
+    required this.key,
     this.preview,
     this.previewPath,
     this.secretKey = '',
@@ -264,7 +275,7 @@ class ImCore {
           return (false, null);
         }
       }
-      return (true, ImExtModel(path: msg.fileElem!.filePath!, createTime: DateTime.now()));
+      return (true, ImExtModel(key: GlobalKey(), path: msg.fileElem!.filePath!, createTime: DateTime.now()));
     }
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl;
     if (url == null) return (false, null);
@@ -279,7 +290,7 @@ class ImCore {
         return (false, null);
       }
     }
-    return (true, ImExtModel(path: filePath, createTime: DateTime.now()));
+    return (true, ImExtModel(key: GlobalKey(), path: filePath, createTime: DateTime.now()));
   }
 
   /// 播放音频

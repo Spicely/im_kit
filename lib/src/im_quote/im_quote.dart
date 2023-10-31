@@ -19,11 +19,13 @@ class ImQuote extends ImBase {
   final EdgeInsetsGeometry? padding;
 
   const ImQuote({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
+    super.key,
+    required super.isMe,
+    required super.message,
     this.padding,
-  }) : super(key: key, isMe: isMe, message: message);
+    required super.contextMenuController,
+    super.onRevokeTap,
+  });
 
   @override
   Widget build(BuildContext context) {

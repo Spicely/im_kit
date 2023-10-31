@@ -6,6 +6,8 @@ class ImFile extends ImBase {
     required super.isMe,
     required super.message,
     super.onTap,
+    required super.contextMenuController,
+    super.onRevokeTap,
   });
 
   @override

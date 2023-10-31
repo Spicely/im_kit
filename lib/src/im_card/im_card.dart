@@ -18,11 +18,13 @@ part of im_kit;
 
 class ImCard extends ImBase {
   const ImCard({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
+    super.key,
+    required super.isMe,
+    required super.message,
+    required super.contextMenuController,
     super.onTap,
-  }) : super(key: key, isMe: isMe, message: message);
+    super.onRevokeTap,
+  });
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;

@@ -49,6 +49,8 @@ class ImListItem extends StatelessWidget {
 
   final List<MenuItemProvider>? textMenuItems;
 
+  final ContextMenuController contextMenuController;
+
   /// 网址点击事件
   final void Function(String)? onTapUrl;
 
@@ -142,6 +144,7 @@ class ImListItem extends StatelessWidget {
     this.onQuoteMessage,
     this.onResend,
     this.onMessageSelect,
+    required this.contextMenuController,
   });
 
   @override
@@ -190,7 +193,7 @@ class ImListItem extends StatelessWidget {
       case MessageType.custom:
         switch (message.ext.data['contentType']) {
           case 81:
-            return ImRedEnv(isMe: isMe, message: message);
+            return ImRedEnv(isMe: isMe, message: message, contextMenuController: contextMenuController);
           case 82:
             return Center(
               child: Text.rich(
@@ -342,7 +345,7 @@ class ImListItem extends StatelessWidget {
                                           textDirection: TextDirection.ltr,
                                           child: Wrap(
                                             children: [
-                                              ImQuoteItem(isMe: isMe, message: message),
+                                              ImQuoteItem(isMe: isMe, message: message, contextMenuController: contextMenuController),
                                             ],
                                           ),
                                         ),
@@ -407,23 +410,75 @@ class ImListItem extends StatelessWidget {
           onForwardTap: onForwardMessage,
           onMultiSelectTap: onMultiSelectTap,
           onQuoteTap: onQuoteMessage,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
         );
       case MessageType.picture:
-        return ImImage(message: message, isMe: isMe, onTap: onPictureTap);
+        return ImImage(
+          message: message,
+          isMe: isMe,
+          onTap: onPictureTap,
+          contextMenuController: contextMenuController,
+          onDeleteTap: onDeleteMessage,
+          onForwardTap: onForwardMessage,
+          onMultiSelectTap: onMultiSelectTap,
+          onQuoteTap: onQuoteMessage,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.file:
-        return ImFile(message: message, isMe: isMe, onTap: onFileTap);
+        return ImFile(
+          message: message,
+          isMe: isMe,
+          onTap: onFileTap,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.voice:
-        return ImVoice(message: message, isMe: isMe);
+        return ImVoice(
+          message: message,
+          isMe: isMe,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.video:
-        return ImVideo(message: message, isMe: isMe, onTapDownFile: onTapDownFile, onTapPlayVideo: onTapPlayVideo);
+        return ImVideo(
+          message: message,
+          isMe: isMe,
+          onTapDownFile: onTapDownFile,
+          onTapPlayVideo: onTapPlayVideo,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.card:
-        return ImCard(message: message, isMe: isMe, onTap: onCardTap);
+        return ImCard(
+          message: message,
+          isMe: isMe,
+          onTap: onCardTap,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.location:
-        return ImLocation(message: message, isMe: isMe, onTap: onLocationTap);
+        return ImLocation(
+          message: message,
+          isMe: isMe,
+          onTap: onLocationTap,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case MessageType.merger:
-        return ImMerge(message: message, isMe: isMe);
+        return ImMerge(
+          message: message,
+          isMe: isMe,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       case 300:
-        return ImCustomFace(message: message, isMe: isMe);
+        return ImCustomFace(
+          message: message,
+          isMe: isMe,
+          contextMenuController: contextMenuController,
+          onRevokeTap: onRevokeMessage,
+        );
       default:
         return const Text('暂不支持的消息');
     }

@@ -7,6 +7,8 @@ class ImVideo extends ImBase {
     required super.message,
     super.onTapDownFile,
     super.onTapPlayVideo,
+    required super.contextMenuController,
+    super.onRevokeTap,
   });
 
   (double w, double h) get size {

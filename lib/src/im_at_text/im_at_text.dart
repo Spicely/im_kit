@@ -44,6 +44,7 @@ class ImAtText extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
+    required super.contextMenuController,
     super.onClickMenu,
     this.textMenuItems,
     super.onTapUrl,
@@ -55,6 +56,7 @@ class ImAtText extends ImBase {
     super.onForwardTap,
     super.onQuoteTap,
     super.onMultiSelectTap,
+    super.onRevokeTap,
   });
 
   @override
@@ -81,7 +83,6 @@ class ImAtText extends ImBase {
               style: TextStyle(color: atTypeColor(e, chatTheme)),
               recognizer: TapGestureRecognizer()
                 ..onTap = () {
-                  print(111);
                   switch (e.type) {
                     case ImAtType.url:
                       onTapUrl?.call(e.text);

@@ -2,10 +2,12 @@ part of im_kit;
 
 class ImRedEnv extends ImBase {
   const ImRedEnv({
-    Key? key,
-    required bool isMe,
-    required MessageExt message,
-  }) : super(key: key, isMe: isMe, message: message);
+    super.key,
+    required super.isMe,
+    required super.message,
+    required super.contextMenuController,
+    super.onRevokeTap,
+  });
 
   @override
   Widget build(BuildContext context) {

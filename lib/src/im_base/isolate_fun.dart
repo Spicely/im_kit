@@ -31,7 +31,7 @@ class _IsolateFun {
 
   /// 转成MessageExt
   static Future<MessageExt> toMessageExt(Message msg, String secretKey) async {
-    final ext = ImExtModel(createTime: DateTime.now());
+    final ext = ImExtModel(key: GlobalKey(), createTime: DateTime.now());
 
     /// 阅后即焚
     ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;

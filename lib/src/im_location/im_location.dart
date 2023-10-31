@@ -5,7 +5,9 @@ class ImLocation extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
+    required super.contextMenuController,
     super.onTap,
+    super.onRevokeTap,
   });
 
   @override

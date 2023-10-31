@@ -1,13 +1,13 @@
 part of im_kit;
 
 class ImVoice extends ImBase {
-  final void Function(MessageExt message)? onTapDownFile;
-
   const ImVoice({
     super.key,
     required super.isMe,
     required super.message,
-    this.onTapDownFile,
+    super.onTapDownFile,
+    required super.contextMenuController,
+    super.onRevokeTap,
   });
 
   @override
