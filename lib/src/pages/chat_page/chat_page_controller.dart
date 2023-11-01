@@ -270,6 +270,17 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     // logger.e(progress);
   }
 
+  Future<void> setGroupInfo({String? groupName, String? notification, String? introduction, String? faceUrl, String? ex}) async {
+    await OpenIM.iMManager.groupManager.setGroupInfo(
+      groupID: gId!,
+      introduction: introduction,
+      notification: notification,
+      faceUrl: faceUrl,
+      groupName: groupName,
+      ex: ex,
+    );
+  }
+
   @override
   void onDownloadSuccess(String id, List<String> paths) async {
     try {
@@ -413,6 +424,30 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         groupMembers[index] = info;
       }
     }
+  }
+
+  ///用户是否被禁言
+  bool userIsMuted(num? muteEndTime) {
+    if (muteEndTime == null || muteEndTime == 0 || muteEndTime < (DateTime.now().millisecondsSinceEpoch / 1000)) {
+      return false;
+    }
+    return true;
+  }
+
+  ///用户被禁言剩余的时间
+  int userMutedTime(num? muteEndTime) {
+    if (muteEndTime == null || muteEndTime == 0 || muteEndTime < (DateTime.now().millisecondsSinceEpoch / 1000)) {
+      return 0;
+    }
+    return (muteEndTime - DateTime.now().millisecondsSinceEpoch / 1000) ~/ 3600;
+  }
+
+  Future<void> setGroupVerification(int needVerification) async {
+    await OpenIM.iMManager.groupManager.setGroupVerification(groupID: gId!, needVerification: needVerification);
+  }
+
+  Future<void> changeGroupMute(bool mute) async {
+    await OpenIM.iMManager.groupManager.changeGroupMute(groupID: gId!, mute: mute);
   }
 
   /// 发送消息

@@ -25,15 +25,17 @@ dependencies:
   photo_view: 
   image: 
   html:
+  saver_gallery:
   lottie:
   uuid:
   encrypt: 
+  flutter_oss_aliyun: 
   pointycastle:
   popup_menu: 
   chinese_font_library: 
-  media_kit:
-  media_kit_video:
-  media_kit_libs_video:
+  media_kit: 1.1.10
+  media_kit_video: 1.2.4
+  media_kit_libs_video: 1.0.4
   extended_text_field:
   bubble_tab_indicator: 
   intl:

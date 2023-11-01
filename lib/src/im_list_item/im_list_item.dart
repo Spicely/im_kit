@@ -211,13 +211,7 @@ class ImListItem extends StatelessWidget {
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         );
-      case MessageType.memberEnterNotification:
-        return Center(
-          child: Text.rich(
-            _getMemberEnterNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        );
+
       case MessageType.memberKickedNotification:
         return Center(
           child: Text.rich(
@@ -234,9 +228,13 @@ class ImListItem extends StatelessWidget {
         );
 
       case MessageType.groupInfoSetNotification:
+      case MessageType.groupCreatedNotification:
+      case MessageType.groupMemberCancelMutedNotification:
+      case MessageType.groupMemberMutedNotification:
+      case MessageType.memberEnterNotification:
         return Center(
           child: Text.rich(
-            _getGroupInfoSetNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            _getNotification(message.ext.data, message.m.contentType!, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
@@ -247,44 +245,7 @@ class ImListItem extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
-      case MessageType.groupMemberMutedNotification:
-        return Center(
-          child: Text.rich(
-            _getGroupMemberMutedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        );
-      case MessageType.groupMemberCancelMutedNotification:
-        return Center(
-          child: Text.rich(
-            _getGroupMemberCancelMutedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        );
-      case MessageType.groupCreatedNotification:
-        return Center(
-          child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${message.m.senderNickname} ',
-                    style: const TextStyle(color: Colors.blue),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        if (OpenIM.iMManager.uid == message.m.sendID) {
-                          onNotificationUserTap?.call(OpenIM.iMManager.uInfo!);
-                        } else {
-                          OpenIM.iMManager.friendshipManager.getFriendsInfo(uidList: [message.m.sendID!]).then((v) {
-                            onNotificationUserTap?.call(v.first);
-                          });
-                        }
-                      },
-                  ),
-                  const TextSpan(text: '创建群聊'),
-                ],
-              ),
-              style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        );
+
       default:
         return GestureDetector(
           onTap: onSelectTap,
@@ -327,12 +288,11 @@ class ImListItem extends StatelessWidget {
                                   children: [
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        // color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                        //     ? null
-                                        //     : isMe
-                                        //         ? chatTheme.messageTheme.meBackgroundColor
-                                        //         : chatTheme.messageTheme.backgroundColor,
+                                        color: ImCore.noBgMsgType.contains(message.m.contentType)
+                                            ? null
+                                            : isMe
+                                                ? chatTheme.messageTheme.meBackgroundColor
+                                                : chatTheme.messageTheme.backgroundColor,
                                         borderRadius: chatTheme.messageTheme.borderRadius,
                                       ),
                                       padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,

@@ -36,6 +36,9 @@ enum _PortMethod {
 
   /// 转成MessageExt
   toMessageExt,
+
+  /// 上传文件
+  uploadFile,
 }
 
 /// 下载进度
@@ -106,6 +109,28 @@ class ImKitIsolateManager {
 
   /// openIm 通信端口
   static late final SendPort _isolateSendPort;
+
+  static Future<bool> saveFileToAlbumByU8List(Uint8List pngBytes, String name, {String androidRelativePath = 'Pictures'}) async {
+    SaveResult res = await SaverGallery.saveImage(
+      pngBytes,
+      name: name,
+      androidRelativePath: androidRelativePath,
+    );
+    return res.isSuccess;
+  }
+
+  /// 保存文件到相册
+  static Future<bool> saveFileToAlbum(String path) async {
+    SaveResult res = await SaverGallery.saveFile(path);
+    return res.isSuccess;
+  }
+
+  ///保存文件
+  static File writeFileByU8Async(String path, Uint8List data) {
+    File file = File(path);
+    file.writeAsBytesSync(data, flush: true);
+    return file;
+  }
 
   /// 初始化
   static Future<void> init(String dirPath) async {
@@ -314,6 +339,8 @@ class ImKitIsolateManager {
               IsolateMethod.saveImageByUint8List(msg);
             case _PortMethod.toMessageExt:
               IsolateMethod.toMessageExt(msg);
+            case _PortMethod.uploadFile:
+              IsolateMethod.uploadFile(msg);
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
@@ -340,7 +367,30 @@ class ImKitIsolateManager {
         if (msg.data != null) {
           completer.complete(msg.data);
         } else {
-          print(msg.error);
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
+  }
+
+  /// 上传文件
+  static Future<String> uploadFile(String path, String token, String hostUrl) async {
+    var completer = Completer<String>();
+
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.uploadFile,
+      data: {'filePath': path, 'token': token, 'hostUrl': hostUrl},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
           completer.completeError(msg.error!);
         }
         port.close();

@@ -2,29 +2,6 @@ part of im_kit;
 
 typedef UserNotificationCallback = void Function(UserInfo user);
 
-/// 禁言通知
-TextSpan _getGroupMemberMutedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
-  return TextSpan(
-    children: [
-      TextSpan(
-        text: detail['mutedUser']['userID'] == OpenIM.iMManager.uid ? '你' : detail['mutedUser']['nickname'],
-        style: TextStyle(color: userColor),
-        recognizer: TapGestureRecognizer()
-          ..onTap = () async {
-            if (detail['mutedUser']['userID'] == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
-            } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [detail['mutedUser']['userID']]).then((users) {
-                onTap?.call(users.first);
-              });
-            }
-          },
-      ),
-      const TextSpan(text: '被禁言'),
-    ],
-  );
-}
-
 /// 踢出群组
 TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
   List<dynamic> kickedUserList = detail['kickedUserList'];
@@ -49,30 +26,6 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
           )
           .toList(),
       const TextSpan(text: '被踢出群组'),
-    ],
-  );
-}
-
-/// 成员进群
-TextSpan _getMemberEnterNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
-  var entrantUser = detail['entrantUser'];
-  return TextSpan(
-    children: [
-      TextSpan(
-        text: entrantUser['userID'] == OpenIM.iMManager.uid ? '你' : entrantUser['nickname'],
-        style: TextStyle(color: userColor),
-        recognizer: TapGestureRecognizer()
-          ..onTap = () async {
-            if (entrantUser['userID'] == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
-            } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [entrantUser['userID']]).then((users) {
-                onTap?.call(users.first);
-              });
-            }
-          },
-      ),
-      const TextSpan(text: '进入群组'),
     ],
   );
 }
@@ -127,49 +80,39 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
   );
 }
 
-/// 取消禁言
-TextSpan _getGroupMemberCancelMutedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
-  return TextSpan(
-    children: [
-      TextSpan(
-        text: detail['mutedUser']['userID'] == OpenIM.iMManager.uid ? '你' : detail['mutedUser']['nickname'],
-        style: TextStyle(color: userColor),
-        recognizer: TapGestureRecognizer()
-          ..onTap = () async {
-            if (detail['mutedUser']['userID'] == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
-            } else {
-              List<UserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [detail['mutedUser']['userID']]);
-              onTap?.call(users[0]);
-            }
-          },
-      ),
-      const TextSpan(text: '被取消禁言'),
-    ],
-  );
-}
-
 /// 修改了群组资料
-TextSpan _getGroupInfoSetNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap}) {
+  String? userId = detail['opUser']?['userID'] ?? detail['mutedUser']?['userID'] ?? detail['entrantUser']?['userID'];
+  String? nickname = detail['opUser']?['nickname'] ?? detail['mutedUser']?['nickname'] ?? detail['entrantUser']?['nickname'];
   return TextSpan(
     children: [
       TextSpan(
-        text: detail['opUser']['userID'] == OpenIM.iMManager.uid ? '你' : detail['opUser']['nickname'],
+        text: userId == OpenIM.iMManager.uid ? '你' : nickname,
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
           ..onTap = () async {
-            if (detail['opUser']['userID'] == OpenIM.iMManager.uid) {
+            if (userId == OpenIM.iMManager.uid) {
               onTap?.call(OpenIM.iMManager.uInfo!);
             } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [detail['opUser']['userID']]).then((users) {
+              OpenIM.iMManager.userManager.getUsersInfo(uidList: [userId!]).then((users) {
                 onTap?.call(users.first);
               });
             }
           },
       ),
-      const TextSpan(text: '修改了群组资料'),
+      TextSpan(text: _getTypeText(type)),
     ],
   );
+}
+
+String _getTypeText(int type) {
+  return switch (type) {
+    MessageType.groupCreatedNotification => '创建了群组',
+    MessageType.groupMemberCancelMutedNotification => '被取消禁言',
+    MessageType.groupMemberMutedNotification => '被禁言',
+    MessageType.memberEnterNotification => '进入群组',
+    _ => '暂不支持的消息',
+  };
 }
 
 /// 修改了群组资料

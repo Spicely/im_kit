@@ -180,6 +180,15 @@ class ImExtModel {
   /// 是否为红包消息
   bool isRedEnvelope;
 
+  /// 是否开启阅后即焚
+  bool isSnapchat;
+
+  /// 双向清除消息
+  bool isBothDelete;
+
+  /// 群双向清除消息
+  bool isGroupBothDelete;
+
   ImExtModel({
     this.progress,
     this.path,
@@ -198,6 +207,9 @@ class ImExtModel {
     this.quoteMessage,
     this.isPrivateChat = false,
     this.isRedEnvelope = false,
+    this.isSnapchat = false,
+    this.isBothDelete = false,
+    this.isGroupBothDelete = false,
   });
 
   Map<String, dynamic> toJson() {

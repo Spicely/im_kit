@@ -25,10 +25,9 @@ extension ExtensionMessage on Message {
         MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
         MessageType.revoke => TextSpan(text: '$senderNickname撤回了一条消息'),
         300 => TextSpan(text: isSingleChat ? '[表情]' : '$senderNickname: [表情]'),
-        MessageType.groupMemberMutedNotification => _getGroupMemberMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
-        MessageType.groupMemberCancelMutedNotification => _getGroupMemberCancelMutedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
         MessageType.memberInvitedNotification => _getMemberInvitedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
-        MessageType.memberEnterNotification => _getMemberEnterNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.memberKickedNotification => _getMemberKickedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
+        MessageType.memberEnterNotification || MessageType.groupMemberMutedNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification => _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
         MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
             81 => const TextSpan(text: '[红包消息]'),
             82 => TextSpan(text: '$senderNickname领取了你的红包'),
@@ -61,5 +60,13 @@ extension ExtensionConversationInfo on ConversationInfo {
         return showName ?? '';
       }
     }
+  }
+
+  /// 群是否已解散
+  bool get isGroupDissolution {
+    if (latestMsg?.contentType == MessageType.dismissGroupNotification) {
+      return true;
+    }
+    return false;
   }
 }

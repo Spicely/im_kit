@@ -133,6 +133,58 @@ class IsolateMethod {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
   }
+
+  /// 上传文件
+  static Future<void> uploadFile(_PortModel params) async {
+    try {
+      String filePath = params.data['filePath'];
+      String token = params.data['token'];
+      String hostUrl = params.data['hostUrl'];
+      String filename = filePath.split('/').last;
+
+      /// 获取文件类型
+      final fileType = filename.split('.').last;
+
+      Response<dynamic> res = await Dio().post(
+        '$hostUrl/third/face_ali_oss_credential',
+        data: {
+          'OperationID': DateTime.now().millisecondsSinceEpoch.toString(),
+          'Filename': filename,
+          'FileType': fileType,
+        },
+        options: Options(headers: {'token': token}),
+      );
+      aliyun.Client.init(
+        ossEndpoint: res.data['data']['Endpoint'],
+        bucketName: res.data['data']['Bucket'],
+        authGetter: () => aliyun.Auth(
+          accessKey: res.data['data']['AccessKeyId'],
+          accessSecret: res.data['data']['AccessKeySecret'],
+          secureToken: res.data['data']['Token'],
+          expire: '2034-02-23T14:02:46Z',
+        ),
+        dio: Dio(
+          BaseOptions(
+            connectTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 10),
+          ),
+        ),
+      );
+
+      /// 获取文件名后缀
+      String suffix = filePath.split('.').last;
+      String uuid = const Uuid().v4();
+      String fileKey = 'avatar/$uuid.$suffix';
+
+      /// 开始上传文件
+
+      await aliyun.Client().putObjectFile(filePath, fileKey: fileKey);
+      final String url = await aliyun.Client().getSignedUrl(fileKey);
+      params.sendPort?.send(PortResult(data: url.split('?').first));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
 }
 
 class DecDataRes {
@@ -327,6 +379,15 @@ class EncryptExtends {
     } else {
       return plaintext;
     }
+  }
+
+  ///钱包相关加解密
+  static String Wallet_Enc(Map<dynamic, dynamic> data, String keyStr) {
+    String jsonStr = jsonEncode(data);
+    Uint8List plainText = Uint8List.fromList(utf8.encode(jsonStr));
+    final key = enc.Key.fromUtf8(keyStr);
+    final encrypter = Encrypter(AES(key, mode: AESMode.cbc));
+    return encrypter.encryptBytes(plainText, iv: IV.fromUtf8(keyStr)).base64;
   }
 
   /// PKCS7加解密字符串

@@ -114,6 +114,12 @@ class ConversationController extends GetxController with OpenIMListener {
     );
   }
 
+  Future<void> loadConversation() async {
+    List<ConversationInfo> list = await OpenIM.iMManager.conversationManager.getAllConversationList();
+    data.value = OpenIM.iMManager.conversationManager.simpleSort(list);
+    data.refresh();
+  }
+
   /// 删除会话
   Future<void> deleteConversation(ConversationInfo info) async {
     Get.dialog(

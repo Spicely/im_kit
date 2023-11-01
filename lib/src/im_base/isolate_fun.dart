@@ -131,6 +131,8 @@ class _IsolateFun {
             SignalingType.CustomSignalingTimeoutType
           ].contains(data['contentType']);
           ext.isRedEnvelope = [81, 82, 83].contains(data['contentType']);
+          ext.isBothDelete = [27].contains(data['contentType']);
+          ext.isGroupBothDelete = [77].contains(data['contentType']);
           break;
 
         case MessageType.groupMemberMutedNotification:
@@ -139,8 +141,10 @@ class _IsolateFun {
         case MessageType.groupInfoSetNotification:
         case MessageType.memberEnterNotification:
         case MessageType.memberKickedNotification:
+        case MessageType.groupCreatedNotification:
           var data = json.decode(msg.notificationElem?.detail ?? '{}');
           ext.data = data;
+          ext.isSnapchat = data['isPrivate'] ?? false;
           break;
         case MessageType.voice:
         case MessageType.file:

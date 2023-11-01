@@ -140,3 +140,64 @@ Widget _getEmoji(String text, {TextStyle? style, double? fontSize, int? maxLines
     ),
   );
 }
+
+class Emoji {
+  String? emoticonsId;
+  String? name;
+  String? introduce;
+  String? sampleDiagramUrl;
+  String? url;
+  int? size;
+
+  List<EmojiItemModel>? emojiList;
+
+  Emoji({this.emoticonsId, this.name, this.introduce, this.sampleDiagramUrl, this.url, this.size});
+
+  Emoji.fromJson(Map<String, dynamic> json) {
+    emoticonsId = json['emoticons_id'];
+    name = json['name'];
+    introduce = json['introduce'];
+    sampleDiagramUrl = json['sample_diagram_url'];
+    url = json['url'];
+    size = json['size'];
+    emojiList = (json['emojiList'] as List?)?.map((e) => EmojiItemModel.fromJson(e)).toList();
+  }
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data['emoticons_id'] = emoticonsId;
+    data['name'] = name;
+    data['introduce'] = introduce;
+    data['sample_diagram_url'] = sampleDiagramUrl;
+    data['url'] = url;
+    data['size'] = size;
+    data['emojiList'] = emojiList?.map((e) => e.toJson()).toList();
+    return data;
+  }
+}
+
+class EmojiItemModel {
+  final String name;
+
+  final double w;
+
+  final double h;
+
+  EmojiItemModel({
+    required this.name,
+    required this.w,
+    required this.h,
+  });
+
+  factory EmojiItemModel.fromJson(Map<String, dynamic> json) => EmojiItemModel(
+        name: json['name'],
+        w: (json['w'] as num).toDouble(),
+        h: (json['h'] as num).toDouble(),
+      );
+
+  toJson() => {
+        'name': name,
+        'w': w,
+        'h': h,
+      };
+}
