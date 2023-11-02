@@ -49,7 +49,7 @@ class _IsolateFun {
             /// 匹配艾特用户
             String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
 
-            var regexEmoji = _emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
+            var regexEmoji = ImCore.emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
 
             /// 匹配电话号码
             String phoneReg = r"\b\d{5,}\b";
@@ -72,7 +72,7 @@ class _IsolateFun {
                 if (RegExp(urlRge).hasMatch(value)) {
                   list.add(ImAtTextType(type: ImAtType.url, text: value.trimRight()));
                 } else if (RegExp(regexEmoji).hasMatch(value)) {
-                  String emoji = _emojiFaces[value]!;
+                  String emoji = ImCore.emojiFaces[value]!;
                   list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
                 } else if (RegExp(email).hasMatch(value)) {
                   list.add(ImAtTextType(type: ImAtType.email, text: value));
@@ -86,7 +86,7 @@ class _IsolateFun {
                       list.add(ImAtTextType(type: ImAtType.text, text: value));
                     }
                   } else {
-                    if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
+                    if (atUserInfo.atUserID == ImCore._uid) {
                       list.add(ImAtTextType(type: ImAtType.at, text: '@你 ', userInfo: atUserInfo));
                     } else {
                       list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
@@ -142,35 +142,17 @@ class _IsolateFun {
         case MessageType.memberEnterNotification:
         case MessageType.memberKickedNotification:
         case MessageType.groupCreatedNotification:
+        case MessageType.burnAfterReadingNotification:
           var data = json.decode(msg.notificationElem?.detail ?? '{}');
           ext.data = data;
           ext.isSnapchat = data['isPrivate'] ?? false;
           break;
-        case MessageType.voice:
-        case MessageType.file:
         case MessageType.picture:
-
-          /// 优先判断本地文件
-          // String? filePath = soundElem?.soundPath ?? videoElem?.videoPath ?? fileElem?.filePath ?? pictureElem?.sourcePath;
-          // if (filePath != null && File(filePath).existsSync()) {
-          //   ImKitIsolateManager.decryptFile(secretKey, filePath);
-          //   ext.path = filePath;
-          // } else {
-          //   filePath = ImCore.getSavePath(this);
-          //   if (File(filePath).existsSync()) {
-          //     ImKitIsolateManager.decryptFile(secretKey, filePath);
-          //     ext.path = filePath;
-          //   }
-          // }
-          String? filePath = ImCore.getSavePath(msg);
-          if (File(filePath).existsSync()) {
-            await decryptFile(secretKey, filePath);
-            ext.path = filePath;
-          }
           ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: msg.pictureElem?.sourcePicture?.width?.toDouble(), height: msg.pictureElem?.sourcePicture?.height?.toDouble());
           ext.width = width;
           ext.height = height;
+
           break;
         case 300:
           Map<String, dynamic> map = jsonDecode(msg.content ?? '{}');
@@ -182,7 +164,7 @@ class _IsolateFun {
           /// 优先判断本地文件
           String? filePath = '${ImCore.dirPath}/emoji/${ext.data['emoticons_id']}/$fileName';
           if (File(filePath).existsSync()) {
-            ext.path = filePath;
+            ext.file = File(filePath);
           }
           ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: map['w'] ?? 120, height: map['h'] ?? 120);
@@ -190,25 +172,6 @@ class _IsolateFun {
           ext.height = height;
           break;
         case MessageType.video:
-          String? url = msg.videoElem?.snapshotUrl;
-
-          if (url != null) {
-            String fileName = url.split('/').last;
-            String previewPath = join(ImCore.saveDir, fileName);
-            if (File(previewPath).existsSync()) {
-              await decryptFile(secretKey, previewPath);
-              ext.previewPath = previewPath;
-            }
-          }
-          String? videoUrl = msg.videoElem?.videoUrl;
-          if (videoUrl != null) {
-            String fileName = videoUrl.split('/').last;
-            String videoPath = join(ImCore.saveDir, fileName);
-            if (File(videoPath).existsSync()) {
-              await decryptFile(secretKey, videoPath);
-              ext.path = videoPath;
-            }
-          }
           ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: msg.videoElem?.snapshotWidth?.toDouble(), height: msg.videoElem?.snapshotHeight?.toDouble());
           ext.width = width;

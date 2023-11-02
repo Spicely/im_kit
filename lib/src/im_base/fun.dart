@@ -14,7 +14,6 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
               style: TextStyle(color: userColor),
               recognizer: TapGestureRecognizer()
                 ..onTap = () async {
-                  print(v);
                   if (v['userID'] == OpenIM.iMManager.uid) {
                     onTap?.call(OpenIM.iMManager.uInfo!);
                   } else {
@@ -115,7 +114,7 @@ String _getTypeText(int type) {
   };
 }
 
-/// 修改了群组资料
+/// 领取红包
 TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
   return TextSpan(
     children: [
@@ -149,7 +148,7 @@ TextSpan _getAtText(Message msg) {
   /// 匹配艾特用户
   String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
 
-  var regexEmoji = _emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
+  var regexEmoji = ImCore.emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
 
   String regExp;
   if (atUsersInfo.isEmpty) {
@@ -162,7 +161,7 @@ TextSpan _getAtText(Message msg) {
     onMatch: (Match m) {
       String value = m.group(0)!;
       if (RegExp(regexEmoji).hasMatch(value)) {
-        String emoji = _emojiFaces[value]!;
+        String emoji = ImCore.emojiFaces[value]!;
         list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
       } else if (RegExp(atReg).hasMatch(value)) {
         String id = value.replaceAll('@', '').trim();

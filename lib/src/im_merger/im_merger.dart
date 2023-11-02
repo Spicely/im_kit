@@ -5,7 +5,8 @@ class ImMerge extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    required super.contextMenuController,  super.onRevokeTap,
+    required super.contextMenuController,
+    super.onRevokeTap,
   });
 
   @override
@@ -22,7 +23,7 @@ class ImMerge extends ImBase {
         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 12),
-          Text(_fixAutoLines(msg.mergeElem?.title ?? ''), softWrap: true, maxLines: 1, textAlign: TextAlign.left, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
+          Text(ImCore.fixAutoLines(msg.mergeElem?.title ?? ''), softWrap: true, maxLines: 1, textAlign: TextAlign.left, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14)),
           const SizedBox(height: 4),
           ...msg.mergeElem?.abstractList
                   ?.map((e) => Directionality(

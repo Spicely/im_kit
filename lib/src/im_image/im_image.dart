@@ -80,7 +80,7 @@ class ImImage extends ImBase {
           );
         },
         child: CachedImage(
-          file: ext.path != null ? File(ext.path!) : null,
+          file: ext.file,
           width: message.ext.width,
           height: message.ext.height,
           circular: 5,

@@ -53,7 +53,7 @@ class ExtendSpecialTextSpanBuilder extends SpecialTextSpanBuilder {
     // }
     final List<InlineSpan> children = <InlineSpan>[];
 
-    var regexEmoji = _emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
+    var regexEmoji = ImCore.emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
 
     /// 匹配@100010#ac @100011#qa @100022#~♧^O^♤☞  的字符串
     List<dynamic> list = [];
@@ -74,7 +74,7 @@ class ExtendSpecialTextSpanBuilder extends SpecialTextSpanBuilder {
         String value = m.group(0)!;
         try {
           if (emojiReg.hasMatch(value)) {
-            String emoji = _emojiFaces[value]!;
+            String emoji = ImCore.emojiFaces[value]!;
             inlineSpan = ImageSpan(
               AssetImage('assets/emoji/$emoji.webp', package: 'im_kit'),
               imageWidth: 20,

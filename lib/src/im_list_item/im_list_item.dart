@@ -154,35 +154,41 @@ class ImListItem extends StatelessWidget {
     }
     return Directionality(
       textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
-      child: Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showSelect)
-                Checkbox(
-                  value: selected,
-                  shape: const CircleBorder(),
-                  side: BorderSide(
-                    width: 1.2,
-                    color: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope ? const Color.fromRGBO(175, 175, 175, 0.2) : const Color.fromRGBO(175, 175, 175, 1),
+      child: Column(
+        children: [
+          ImTime(message: message.m),
+          Padding(
+            padding: const EdgeInsets.only(top: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (showSelect)
+                  Checkbox(
+                    value: selected,
+                    shape: const CircleBorder(),
+                    side: BorderSide(
+                      width: 1.2,
+                      color: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope ? const Color.fromRGBO(175, 175, 175, 0.2) : const Color.fromRGBO(175, 175, 175, 1),
+                    ),
+                    fillColor: MaterialStateProperty.resolveWith((states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Theme.of(context).primaryColor;
+                      } else {
+                        return Colors.transparent;
+                      }
+                    }),
+                    onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
+                        ? null
+                        : (value) {
+                            onMessageSelect?.call(message, !selected);
+                          },
                   ),
-                  fillColor: MaterialStateProperty.resolveWith((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return Theme.of(context).primaryColor;
-                    } else {
-                      return Colors.transparent;
-                    }
-                  }),
-                  onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
-                      ? null
-                      : (value) {
-                          onMessageSelect?.call(message, !selected);
-                        },
-                ),
-              Expanded(child: getContentType(context)),
-            ],
-          )),
+                Expanded(child: getContentType(context)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -192,6 +198,20 @@ class ImListItem extends StatelessWidget {
     switch (message.m.contentType) {
       case MessageType.custom:
         switch (message.ext.data['contentType']) {
+          case 27:
+            return const Center(
+              child: Text.rich(
+                TextSpan(text: '双方聊天记录已清空'),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            );
+          case 77:
+            return const Center(
+              child: Text.rich(
+                TextSpan(text: '群主清除了聊天记录'),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            );
           case 81:
             return ImRedEnv(isMe: isMe, message: message, contextMenuController: contextMenuController);
           case 82:
@@ -211,11 +231,36 @@ class ImListItem extends StatelessWidget {
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         );
-
+      case MessageType.encryptedNotification:
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 50),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset('assets/icons/lock.png', width: 16, height: 16),
+                const Expanded(
+                  child: Text(
+                    '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       case MessageType.memberKickedNotification:
         return Center(
           child: Text.rich(
             _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        );
+      case MessageType.burnAfterReadingNotification:
+        return Center(
+          child: Text(
+            message.ext.data?['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
@@ -273,10 +318,10 @@ class ImListItem extends StatelessWidget {
                               child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                             ),
                           Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  print(111);
                                   onSelectTap();
                                   onTap?.call(message);
                                 },
@@ -313,13 +358,13 @@ class ImListItem extends StatelessWidget {
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 10),
+                              SizedBox(child: getStatusWidget()),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    // SizedBox(child: getStatusWidget()),
                   ],
                 ),
               ),
@@ -339,6 +384,14 @@ class ImListItem extends StatelessWidget {
   }
 
   Widget? getStatusWidget() {
+    if (message.m.status == MessageStatus.succeeded && message.ext.isPrivateChat && message.m.isRead!) {
+      return SizedBox(
+        child: Text(
+          '${message.ext.seconds}s',
+          style: const TextStyle(fontSize: 10, color: Colors.grey),
+        ),
+      );
+    }
     if (message.m.status == MessageStatus.sending) return sendLoadingWidget;
     if (message.m.status == MessageStatus.failed) {
       return GestureDetector(

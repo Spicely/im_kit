@@ -62,6 +62,7 @@ class _ImPreviewState extends State<ImPreview> {
 
   @override
   Widget build(BuildContext context) {
+    ImLanguage language = ImKitTheme.of(context).language;
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: Stack(
@@ -71,15 +72,14 @@ class _ImPreviewState extends State<ImPreview> {
             builder: (BuildContext context, int index) {
               MessageExt message = messages[index];
               final (w, h) = getSize(message);
-
               return PhotoViewGalleryPageOptions(
-                imageProvider: FileImage(File(message.ext.path!)),
+                imageProvider: FileImage(message.ext.file!),
                 initialScale: PhotoViewComputedScale.contained,
                 minScale: PhotoViewComputedScale.contained * 0.5,
                 maxScale: PhotoViewComputedScale.contained * 2,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
-                  return CachedImage(file: File(message.ext.path!), width: w, height: h, circular: 5, fit: BoxFit.cover);
+                  return CachedImage(file: message.ext.file!, width: w, height: h, circular: 5, fit: BoxFit.cover);
                 },
               );
             },
@@ -88,54 +88,33 @@ class _ImPreviewState extends State<ImPreview> {
             pageController: pageController,
             onPageChanged: onPageChanged,
           ),
-          // Positioned(
-          //   top: 0,
-          //   left: 0,
-          //   right: 0,
-          //   child: AppBar(
-          //     backgroundColor: Colors.transparent,
-          //     iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
-          //     systemOverlayStyle: const SystemUiOverlayStyle(
-          //       statusBarColor: Colors.transparent,
-          //       systemStatusBarContrastEnforced: false,
-          //     ),
-          //     leading: IconButton(
-          //       icon: const Icon(Icons.close_outlined, color: Colors.white),
-          //       onPressed: Get.back,
-          //     ),
-          //   ),
-          // ),
+          _buildBackBtn(),
           Positioned(
-            bottom: 20,
+            bottom: 80,
             left: 0,
             right: 0,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Wrap(
                 spacing: 10,
-                alignment: WrapAlignment.end,
+                alignment: WrapAlignment.center,
                 children: [
                   GestureDetector(
                     onTap: saveImage,
                     child: Container(
-                      width: 30,
+                      width: 100,
                       height: 30,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.black87.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
+                      child: Text(
+                        language.download,
+                        style: const TextStyle(fontSize: 14, color: Colors.white),
+                      ),
                     ),
                   ),
-                  // Container(
-                  //   width: 30,
-                  //   height: 30,
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.grey.withOpacity(0.8),
-                  //     borderRadius: BorderRadius.circular(15),
-                  //   ),
-                  //   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
-                  // ),
                 ],
               ),
             ),
@@ -144,6 +123,25 @@ class _ImPreviewState extends State<ImPreview> {
       ),
     );
   }
+
+  Widget _buildBackBtn() => Positioned(
+        top: 50,
+        left: 20,
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: Get.back,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.black87.withOpacity(0.4),
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.close, color: Colors.white),
+          ),
+        ),
+      );
 
   void onPageChanged(int index) {
     currentIndex = index;
@@ -166,28 +164,10 @@ class _ImPreviewState extends State<ImPreview> {
   Future<void> saveImage() async {
     try {
       MessageExt message = messages[currentIndex];
-      String url = message.m.pictureElem!.sourcePicture!.url!;
-
-      /// 检测文件是否存在
-      final result = await ImCore.checkFileExist(message.m, false);
-      if (result.$1) {
-        String suffix = url.substring(url.lastIndexOf('.'));
-        String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-        if (widget.onSaveBefore != null) {
-          await widget.onSaveBefore!(result.$2!.path!);
-        }
-        await ImageGallerySaver.saveFile(result.$2!.path!, isReturnPathOfIOS: true, name: fileName);
-      } else {
-        String savePath = ImCore.getSavePath(message.m);
-        await Dio().download(url, savePath);
-
-        String suffix = url.substring(url.lastIndexOf('.'));
-        String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-        if (widget.onSaveBefore != null) {
-          await widget.onSaveBefore!(savePath);
-        }
-        await ImageGallerySaver.saveFile(savePath, isReturnPathOfIOS: true, name: fileName);
+      if (widget.onSaveBefore != null) {
+        await widget.onSaveBefore!(message.ext.file!.path);
       }
+      await ImKitIsolateManager.saveFileToAlbum(message.ext.file!.path);
       widget.onSaveSuccess?.call();
     } catch (e) {
       debugPrint('保存图片失败: $e');

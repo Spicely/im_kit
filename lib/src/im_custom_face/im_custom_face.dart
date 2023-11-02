@@ -12,7 +12,7 @@ class ImCustomFace extends ImBase {
   @override
   Widget build(BuildContext context) {
     return CachedImage(
-      file: ext.path != null ? File(ext.path!) : null,
+      file: ext.file,
       width: message.ext.width,
       height: message.ext.height,
       fit: BoxFit.cover,

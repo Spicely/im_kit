@@ -53,7 +53,7 @@ class ImVideo extends ImBase {
               child: GestureDetector(
                 onTap: () {
                   if (ext.isDownloading) return;
-                  if (ext.path == null) {
+                  if (ext.file == null) {
                     onTapDownFile?.call(message);
                   } else {
                     onTapPlayVideo?.call(message);
@@ -73,7 +73,7 @@ class ImVideo extends ImBase {
                                   '${((ext.progress ?? 0) * 100).toStringAsFixed(1)}%',
                                   style: const TextStyle(color: Colors.white),
                                 )
-                              : ext.path == null
+                              : ext.file == null
                                   ? Transform.rotate(
                                       angle: -pi / 2,
                                       child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.white),

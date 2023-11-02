@@ -34,6 +34,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   Rx<GroupInfo>? groupInfo;
 
+  int loadNum = 40;
+
   /// 自己的信息
   UserInfo get uInfo => OpenIM.iMManager.uInfo!;
 
@@ -85,6 +87,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     this.tabs = const [],
   }) {
     data = RxList(messages.reversed.toList());
+    if (data.length < loadNum) {
+      noMore.value = true;
+    }
     this.conversationInfo = Rx(conversationInfo);
     if (groupInfo != null) {
       this.groupInfo = Rx(groupInfo);
@@ -195,12 +200,19 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         messageIds.add(v.m.clientMsgID!);
       }
       ImCore.downloadFile(v);
+
+      startTimer(v);
     }
+    markMessageAsRead(messageIds);
+  }
+
+  /// 标记已读消息
+  Future<void> markMessageAsRead(List<String> ids) async {
     if (isGroupChat) {
-      OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
+      await OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
     } else {
-      OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: messageIds);
-      OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
+      await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: ids);
+      await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
     }
   }
 
@@ -219,6 +231,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     OpenIMManager.removeListener(this);
     ImKitIsolateManager.removeListener(this);
     contextMenuController.remove();
+    for (var i in data) {
+      if (i.ext.isPrivateChat) {
+        OpenIM.iMManager.messageManager.deleteMessageFromLocalAndSvr(message: i.m);
+      }
+    }
 
     /// 设置草稿
     if (textEditingController.text.trim().isNotEmpty) {
@@ -248,9 +265,27 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
           extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt(secretKey);
         }
         data.insert(0, extMsg);
-        // markMessageRead([extMsg]);
+        markMessageAsRead([extMsg.m.clientMsgID!]).then((_) {
+          startTimer(extMsg);
+        });
         ImCore.downloadFile(extMsg);
       });
+    }
+  }
+
+  @override
+  void onRecvC2CMessageReadReceipt(List<ReadReceiptInfo> list) {
+    for (var readInfo in list) {
+      for (var msgID in (readInfo.msgIDList ?? [])) {
+        /// 依据 msgID 查找到data里的消息
+        int index = data.indexWhere((v) => v.m.clientMsgID == msgID);
+        if (index != -1) {
+          data[index].m.isRead = true;
+          data[index].m.createTime = readInfo.readTime;
+          updateMessage(data[index]);
+          startTimer(data[index]);
+        }
+      }
     }
   }
 
@@ -290,9 +325,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         msg.ext.isDownloading = false;
         if (msg.m.contentType == MessageType.video) {
           msg.ext.previewPath = paths.first;
-          msg.ext.path = paths[1];
+          msg.ext.file = File(paths[1]);
         } else {
-          msg.ext.path = paths.first;
+          msg.ext.file = File(paths.first);
         }
         updateMessage(msg);
       }
@@ -316,11 +351,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   Future<void> updateMessage(MessageExt ext) async {
     int index = data.indexWhere((v) => v.m.clientMsgID == ext.m.clientMsgID);
     if (index != -1) {
-      String? path = data[index].ext.path;
+      File? file = data[index].ext.file;
       data[index] = ext;
-      if (path != null && ext.m.contentType != MessageType.video) {
+      if (file != null && ext.m.contentType != MessageType.video) {
         /// 路径还原避免闪烁
-        data[index].ext.path = path;
+        data[index].ext.file = file;
       }
     }
   }
@@ -562,10 +597,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   Future<void> onLoad() async {
     List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
       conversationID: conversationInfo.value.conversationID,
-      count: 40,
+      count: loadNum,
       startMsg: data.last.m,
     );
-    if (list.length < 40) {
+    if (list.length < loadNum) {
       noMore.value = true;
       easyRefreshController.finishLoad(IndicatorResult.noMore);
     } else {
@@ -573,6 +608,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     }
     List<MessageExt> newExts = await Future.wait(list.reversed.map((e) => e.toExt(secretKey)));
     data.addAll(newExts);
+    if (list.length < loadNum) {
+      MessageExt encryptedNotification = await Message(
+        contentType: MessageType.encryptedNotification,
+        createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
+      ).toExt(secretKey);
+      data.insert(0, encryptedNotification);
+    }
     for (var v in newExts) {
       ImCore.downloadFile(v);
     }
@@ -676,4 +718,31 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onMoreSelectShare() {}
 
   void onMoreSelectDelete() {}
+
+  /// 开始计时
+  void startTimer(MessageExt extMsg) {
+    if (extMsg.ext.isPrivateChat) {
+      extMsg.ext.timer?.cancel();
+      int seconds = (extMsg.m.attachedInfoElem?.burnDuration == 0 ? 30 : Utils.getValue(extMsg.m.attachedInfoElem?.burnDuration, extMsg.ext.seconds));
+      extMsg.ext.timer = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (seconds == 0) {
+          t.cancel();
+          onTimerEnd(extMsg);
+          return;
+        }
+        seconds -= 1;
+        extMsg.ext.seconds = seconds;
+        updateMessage(extMsg);
+        if (seconds == 0) {
+          t.cancel();
+          onTimerEnd(extMsg);
+        }
+      });
+    }
+  }
+
+  void onTimerEnd(MessageExt extMsg) {
+    data.removeWhere((v) => v.m.clientMsgID == extMsg.m.clientMsgID);
+    OpenIM.iMManager.messageManager.deleteMessageFromLocalAndSvr(message: extMsg.m);
+  }
 }

@@ -35,7 +35,6 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:record/record.dart';
-import 'package:saver_gallery/saver_gallery.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -73,6 +72,7 @@ part 'src/im_video/im_video.dart';
 part 'src/im_voice/im_voice.dart';
 part 'src/im_red_env/im_red_env.dart';
 part 'src/im_merger/im_merger.dart';
+part 'src/im_time/im_time.dart';
 part 'src/im_location/im_location.dart';
 part 'src/im_base/fun.dart';
 

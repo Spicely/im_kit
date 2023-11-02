@@ -33,7 +33,7 @@ class ImLocation extends ImBase {
                         children: [
                           Text(
                             // des['name'] ?? '',
-                            _fixAutoLines(message.ext.data?['name'] ?? ''),
+                            ImCore.fixAutoLines(message.ext.data?['name'] ?? ''),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 13, color: Color(0xFF333333), fontWeight: FontWeight.w500),

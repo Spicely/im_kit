@@ -25,7 +25,6 @@ dependencies:
   photo_view: 
   image: 
   html:
-  saver_gallery:
   lottie:
   uuid:
   encrypt: 

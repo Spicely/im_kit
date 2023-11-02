@@ -20,7 +20,7 @@ class ImVoice extends ImBase {
           color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.backgroundColor,
           borderRadius: chatTheme.messageTheme.borderRadius,
         ),
-        child: ext.path == null
+        child: ext.file == null
             ? const ImLoading()
             : Row(
                 mainAxisSize: MainAxisSize.min,

@@ -112,7 +112,7 @@ class MessageExt {
       ext: ImExtModel(
         key: GlobalKey(),
         progress: json['ext']?['progress'] as double?,
-        path: json['ext']?['path'] as String?,
+        file: json['ext']?['path'] != null ? File(json['ext']?['path']) : null,
         isPlaying: json['ext']?['isPlaying'] as bool? ?? false,
         isDownloading: json['ext']?['isDownloading'] as bool? ?? false,
         canDelete: json['ext']?['canDelete'] as bool? ?? true,
@@ -139,7 +139,7 @@ class ImExtModel {
 
   double? progress;
 
-  String? path;
+  File? file;
 
   /// 语音播放
   bool isPlaying;
@@ -189,9 +189,15 @@ class ImExtModel {
   /// 群双向清除消息
   bool isGroupBothDelete;
 
+  /// 计时器
+  Timer? timer;
+
+  /// 倒计时
+  int seconds;
+
   ImExtModel({
     this.progress,
-    this.path,
+    this.file,
     this.isVoice = false,
     this.isPlaying = false,
     this.isDownloading = false,
@@ -210,12 +216,14 @@ class ImExtModel {
     this.isSnapchat = false,
     this.isBothDelete = false,
     this.isGroupBothDelete = false,
+    this.timer,
+    this.seconds = 30,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'progress': progress,
-      'path': path,
+      'path': file?.path,
       'isPlaying': isPlaying,
       'isDownloading': isDownloading,
       'canDelete': canDelete,
@@ -287,7 +295,7 @@ class ImCore {
           return (false, null);
         }
       }
-      return (true, ImExtModel(key: GlobalKey(), path: msg.fileElem!.filePath!, createTime: DateTime.now()));
+      return (true, ImExtModel(key: GlobalKey(), file: File(msg.fileElem!.filePath!), createTime: DateTime.now()));
     }
     String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl;
     if (url == null) return (false, null);
@@ -302,7 +310,7 @@ class ImCore {
         return (false, null);
       }
     }
-    return (true, ImExtModel(key: GlobalKey(), path: filePath, createTime: DateTime.now()));
+    return (true, ImExtModel(key: GlobalKey(), file: File(filePath), createTime: DateTime.now()));
   }
 
   /// 播放音频
@@ -376,6 +384,113 @@ class ImCore {
 
   /// 没有背景颜色的消息
   static List<int> noBgMsgType = [300, MessageType.picture, MessageType.video];
+
+  static String fixAutoLines(String data) {
+    return Characters(data).join('\u{200B}');
+  }
+
+  static const Map<String, String> emojiFaces = <String, String>{
+    '[00]': 'ic_face_10000',
+    '[01]': 'ic_face_10001',
+    '[02]': 'ic_face_10002',
+    '[03]': 'ic_face_10003',
+    '[04]': 'ic_face_10004',
+    '[05]': 'ic_face_10005',
+    '[06]': 'ic_face_10006',
+    '[07]': 'ic_face_10007',
+    '[08]': 'ic_face_10008',
+    '[09]': 'ic_face_10009',
+    '[10]': 'ic_face_10010',
+    '[11]': 'ic_face_10011',
+    '[12]': 'ic_face_10012',
+    '[13]': 'ic_face_10013',
+    '[14]': 'ic_face_10014',
+    '[15]': 'ic_face_10015',
+    '[16]': 'ic_face_10016',
+    '[17]': 'ic_face_10017',
+    '[18]': 'ic_face_10018',
+    '[19]': 'ic_face_10019',
+    '[20]': 'ic_face_10020',
+    '[21]': 'ic_face_10021',
+    '[22]': 'ic_face_10022',
+    '[23]': 'ic_face_10023',
+    '[24]': 'ic_face_10024',
+    '[25]': 'ic_face_10025',
+    '[26]': 'ic_face_10026',
+    '[27]': 'ic_face_10027',
+    '[28]': 'ic_face_10028',
+    '[29]': 'ic_face_10029',
+    '[30]': 'ic_face_10030',
+    '[31]': 'ic_face_10031',
+    '[32]': 'ic_face_10032',
+    '[33]': 'ic_face_10033',
+    '[34]': 'ic_face_10034',
+    '[35]': 'ic_face_10035',
+    '[36]': 'ic_face_10036',
+    '[37]': 'ic_face_10037',
+    '[38]': 'ic_face_10038',
+    '[39]': 'ic_face_10039',
+    '[40]': 'ic_face_10040',
+    '[41]': 'ic_face_10041',
+    '[42]': 'ic_face_10042',
+    '[43]': 'ic_face_10043',
+    '[44]': 'ic_face_10044',
+    '[45]': 'ic_face_10045',
+    '[46]': 'ic_face_10046',
+    '[47]': 'ic_face_10047',
+    '[48]': 'ic_face_10048',
+    '[49]': 'ic_face_10049',
+    '[50]': 'ic_face_10050',
+    '[51]': 'ic_face_10051',
+    '[52]': 'ic_face_10052',
+    '[53]': 'ic_face_10053',
+    '[54]': 'ic_face_10054',
+    '[55]': 'ic_face_10055',
+    '[56]': 'ic_face_10056',
+    '[57]': 'ic_face_10057',
+    '[58]': 'ic_face_10058',
+    '[59]': 'ic_face_10059',
+    '[60]': 'ic_face_10060',
+    '[61]': 'ic_face_10061',
+    '[62]': 'ic_face_10062',
+    '[63]': 'ic_face_10063',
+    '[64]': 'ic_face_10064',
+    '[65]': 'ic_face_10065',
+    '[66]': 'ic_face_10066',
+    '[67]': 'ic_face_10067',
+    '[68]': 'ic_face_10068',
+    '[69]': 'ic_face_10069',
+    '[70]': 'ic_face_10070',
+    '[71]': 'ic_face_10071',
+    '[72]': 'ic_face_10072',
+    '[73]': 'ic_face_10073',
+    '[74]': 'ic_face_10074',
+    '[75]': 'ic_face_10075',
+    '[76]': 'ic_face_10076',
+    '[77]': 'ic_face_10077',
+    '[78]': 'ic_face_10078',
+    '[79]': 'ic_face_10079',
+    '[80]': 'ic_face_10080',
+    '[81]': 'ic_face_10081',
+    '[82]': 'ic_face_10082',
+    '[83]': 'ic_face_10083',
+    '[85]': 'ic_face_10085',
+    '[86]': 'ic_face_10086',
+    '[87]': 'ic_face_10087',
+    '[88]': 'ic_face_10088',
+    '[89]': 'ic_face_10089',
+    '[90]': 'ic_face_10090',
+    '[91]': 'ic_face_10091',
+    '[92]': 'ic_face_10092',
+    '[93]': 'ic_face_10093',
+    '[94]': 'ic_face_10094',
+    '[95]': 'ic_face_10095',
+    '[96]': 'ic_face_10096',
+    '[97]': 'ic_face_10097',
+    '[98]': 'ic_face_10098',
+    '[99]': 'ic_face_10099',
+    '[100]': 'ic_face_10100',
+  };
 }
 
 (double width, double height) _computedSize({double? width, double? height}) {
@@ -400,10 +515,6 @@ class ImCore {
     w = h * ratio;
   }
   return (w, h);
-}
-
-String _fixAutoLines(String data) {
-  return Characters(data).join('\u{200B}');
 }
 
 mixin ImKitListen {

@@ -1,6 +1,6 @@
 part of im_kit;
 
-List<String> _keys = _emojiFaces.keys.toList();
+List<String> _keys = ImCore.emojiFaces.keys.toList();
 
 class ChatPage extends StatelessWidget {
   final ChatPageController controller;
@@ -134,7 +134,7 @@ class ChatPage extends StatelessWidget {
                             onRevokeMessage: controller.onRevokeMessage,
                             sendSuccessWidget: Text(
                               controller.data[index].m.isRead == true ? '已读' : '未读',
-                              // style: TextStyle(fontSize: 10, color: gray),
+                              style: const TextStyle(fontSize: 10, color: Colors.grey),
                             ),
                           ),
                         ),
@@ -365,7 +365,7 @@ class ChatPage extends StatelessWidget {
                               },
                               child: Center(
                                 child: CachedImage(
-                                  assetUrl: 'assets/emoji/${_emojiFaces[_keys[index]]}.webp',
+                                  assetUrl: 'assets/emoji/${ImCore.emojiFaces[_keys[index]]}.webp',
                                   width: 27,
                                   height: 27,
                                   package: 'im_kit',

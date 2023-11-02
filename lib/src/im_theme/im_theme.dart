@@ -75,9 +75,16 @@ class ImLanguage {
   /// 取消
   final String cancel;
 
+  /// 下载
+  final String download;
+
+  /// 昨天
+  final String yesterday;
+
   const ImLanguage({
     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
     this.longPressRecordVoice = '长按录制语音',
+    this.download = '下载',
     this.downloaded = '已下载',
     this.unDownload = '未下载',
     this.revoke = '撤回',
@@ -95,6 +102,7 @@ class ImLanguage {
     this.file = '文件',
     this.location = '位置',
     this.cancel = '取消',
+    this.yesterday = '昨天',
   });
 }
 

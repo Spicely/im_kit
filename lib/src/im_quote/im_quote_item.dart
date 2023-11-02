@@ -171,7 +171,7 @@ class ImQuoteItem extends ImBase {
 
       case MessageType.merger:
         return Text(
-          _fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: [${language.chatRecord}] ${quoteMsg.m.mergeElem?.title ?? ''}'),
+          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: [${language.chatRecord}] ${quoteMsg.m.mergeElem?.title ?? ''}'),
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -195,7 +195,7 @@ class ImQuoteItem extends ImBase {
       case MessageType.card:
         var data = quoteMsg.ext.data;
         return Text(
-          _fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${data['nickname']}'),
+          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${data['nickname']}'),
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -203,7 +203,7 @@ class ImQuoteItem extends ImBase {
 
       case MessageType.file:
         return Text(
-          _fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${quoteMsg.m.fileElem?.fileName ?? ''}'),
+          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${quoteMsg.m.fileElem?.fileName ?? ''}'),
           style: TextStyle(fontSize: 12, color: gray),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -211,7 +211,7 @@ class ImQuoteItem extends ImBase {
       case MessageType.location:
         Map<String, dynamic> des = quoteMsg.ext.data;
         return Text(
-          _fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${des['addr']}'),
+          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${des['addr']}'),
           style: TextStyle(fontSize: 12, color: gray),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,

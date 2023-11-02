@@ -39,7 +39,7 @@ class _ImPlayerState extends State<ImPlayer> {
   }
 
   Future<void> init() async {
-    player.open(Media('file://${widget.message.ext.path!}'));
+    player.open(Media('file://${widget.message.ext.file!.path}'));
   }
 
   @override
@@ -128,7 +128,7 @@ class _ImPlayerState extends State<ImPlayer> {
 
       String suffix = url.substring(url.lastIndexOf('.'));
       String fileName = '${DateTime.now().millisecondsSinceEpoch}$suffix';
-      await ImageGallerySaver.saveFile(message.ext.path!, isReturnPathOfIOS: true, name: fileName);
+      await ImageGallerySaver.saveFile(message.ext.file!.path, isReturnPathOfIOS: true, name: fileName);
       widget.onSaveSuccess?.call();
     } catch (e) {
       debugPrint('保存图片失败: $e');

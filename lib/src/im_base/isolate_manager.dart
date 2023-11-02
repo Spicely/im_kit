@@ -111,18 +111,22 @@ class ImKitIsolateManager {
   static late final SendPort _isolateSendPort;
 
   static Future<bool> saveFileToAlbumByU8List(Uint8List pngBytes, String name, {String androidRelativePath = 'Pictures'}) async {
-    SaveResult res = await SaverGallery.saveImage(
-      pngBytes,
-      name: name,
-      androidRelativePath: androidRelativePath,
-    );
-    return res.isSuccess;
+    try {
+      await ImageGallerySaver.saveImage(pngBytes, name: name, isReturnImagePathOfIOS: true);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 保存文件到相册
   static Future<bool> saveFileToAlbum(String path) async {
-    SaveResult res = await SaverGallery.saveFile(path);
-    return res.isSuccess;
+    try {
+      await ImageGallerySaver.saveFile(path);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   ///保存文件
