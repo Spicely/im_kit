@@ -147,7 +147,7 @@ class ChatPage extends StatelessWidget {
             Obx(
               () => Visibility(
                 visible: controller.showSelect.value,
-                replacement: _buildBottomInput(chatTheme),
+                replacement: _buildBottomInput(context),
                 child: _buildMoreBottomView(),
               ),
             ),
@@ -231,7 +231,9 @@ class ChatPage extends StatelessWidget {
   }
 
   /// 绘制输入框
-  Widget _buildBottomInput(ImChatTheme chatTheme) {
+  Widget _buildBottomInput(BuildContext context) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
+    ImLanguage language = ImKitTheme.of(context).language;
     int count = (actions.length / 8).ceil();
     return Column(
       children: [
@@ -259,7 +261,7 @@ class ChatPage extends StatelessWidget {
           child: Row(
             children: [
               IconButton(
-                onPressed: () {},
+                onPressed: controller.isMute.value ? null : () {},
                 icon: const CachedImage(assetUrl: 'assets/icons/chat_voice.png', package: 'im_kit', width: 24, height: 24),
               ),
               Expanded(
@@ -280,8 +282,10 @@ class ChatPage extends StatelessWidget {
                           focusNode: controller.focusNode,
                           maxLines: null,
                           maxLength: null,
+                          textAlign: controller.isMute.value ? TextAlign.center : TextAlign.start,
+                          readOnly: controller.isMute.value,
                           decoration: InputDecoration(
-                            hintText: chatTheme.textFieldTheme.hintText,
+                            hintText: controller.isMute.value ? language.groupMutedNotification : chatTheme.textFieldTheme.hintText,
                           ),
                           specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
                             allAtMap: controller.atUserMap,
@@ -294,9 +298,11 @@ class ChatPage extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: controller.onShowEmoji,
-                icon: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 24, height: 24),
+              Obx(
+                () => IconButton(
+                  onPressed: controller.isMute.value ? null : controller.onShowEmoji,
+                  icon: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 24, height: 24),
+                ),
               ),
               Obx(
                 () => Offstage(
@@ -311,7 +317,7 @@ class ChatPage extends StatelessWidget {
                 () => Offstage(
                   offstage: controller.hasInput.value,
                   child: IconButton(
-                    onPressed: controller.onShowActions,
+                    onPressed: controller.isMute.value ? null : controller.onShowActions,
                     icon: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 24, height: 24),
                   ),
                 ),

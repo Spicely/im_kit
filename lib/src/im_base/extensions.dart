@@ -21,6 +21,8 @@ extension ExtensionMessage on Message {
         MessageType.card => TextSpan(text: isSingleChat ? '[用户名片]' : '$senderNickname: [用户名片]'),
         MessageType.quote => TextSpan(text: isSingleChat ? '[引用消息]' : '$senderNickname: [引用消息]'),
         MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
+        MessageType.groupMutedNotification => const TextSpan(text: '群组开启禁言'),
+        MessageType.groupCancelMutedNotification => const TextSpan(text: '群组取消禁言'),
         MessageType.advancedRevoke => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
         MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
         MessageType.revoke => TextSpan(text: '$senderNickname撤回了一条消息'),
@@ -28,7 +30,7 @@ extension ExtensionMessage on Message {
         MessageType.burnAfterReadingNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭'),
         MessageType.memberInvitedNotification => _getMemberInvitedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
         MessageType.memberKickedNotification => _getMemberKickedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
-        MessageType.memberEnterNotification || MessageType.groupMemberMutedNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification => _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
+        MessageType.memberEnterNotification || MessageType.groupMemberMutedNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification || MessageType.groupInfoSetNotification => _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
         MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
             10 => const TextSpan(text: '[邀请通知]'),
             11 => const TextSpan(text: '[同意通话]'),

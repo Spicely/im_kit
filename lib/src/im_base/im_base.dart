@@ -195,6 +195,8 @@ class ImExtModel {
   /// 倒计时
   int seconds;
 
+  bool showTime;
+
   ImExtModel({
     this.progress,
     this.file,
@@ -218,6 +220,7 @@ class ImExtModel {
     this.isGroupBothDelete = false,
     this.timer,
     this.seconds = 30,
+    this.showTime = false,
   });
 
   Map<String, dynamic> toJson() {

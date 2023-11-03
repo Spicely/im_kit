@@ -156,9 +156,9 @@ class ImListItem extends StatelessWidget {
       textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
       child: Column(
         children: [
-          ImTime(message: message.m),
+          if (message.ext.showTime) ImTime(message: message),
           Padding(
-            padding: const EdgeInsets.only(top: 20),
+            padding: const EdgeInsets.symmetric(vertical: 2),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -227,6 +227,14 @@ class ImListItem extends StatelessWidget {
               child: Text('暂不支持的消息', style: TextStyle(fontSize: 12, color: Colors.grey)),
             );
         }
+      case MessageType.groupMutedNotification:
+        return const Center(
+          child: Text('群组开启禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        );
+      case MessageType.groupCancelMutedNotification:
+        return const Center(
+          child: Text('群组取消禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        );
       case MessageType.friendApplicationApprovedNotification:
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -401,7 +409,7 @@ class ImListItem extends StatelessWidget {
         },
       );
     }
-    if (message.m.status == MessageStatus.succeeded && OpenIM.iMManager.uid == message.m.sendID) return sendSuccessWidget;
+    if (message.m.isSingleChat && message.m.status == MessageStatus.succeeded && OpenIM.iMManager.uid == message.m.sendID) return sendSuccessWidget;
     return null;
   }
 

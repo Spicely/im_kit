@@ -91,10 +91,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       noMore.value = true;
     }
     this.conversationInfo = Rx(conversationInfo);
+    this.groupMembers = RxList(groupMembers ?? []);
     if (groupInfo != null) {
       this.groupInfo = Rx(groupInfo);
+      if (isMember && this.groupInfo?.value.status == 3) {
+        isMute.value = true;
+      }
     }
-    this.groupMembers = RxList(groupMembers ?? []);
   }
   ScrollController scrollController = ScrollController();
 
@@ -123,6 +126,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   final EasyRefreshController easyRefreshController = EasyRefreshController(controlFinishLoad: true);
 
   final ItemScrollController itemScrollController = ItemScrollController();
+
+  /// 是否全体禁言
+  RxBool isMute = false.obs;
 
   /// 记录输入框的历史记录
   String historyText = '';
@@ -170,6 +176,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         fieldType.value = ImChatPageFieldType.none;
       }
     });
+    computeTime();
   }
 
   @override
@@ -265,11 +272,19 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
           extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt(secretKey);
         }
         data.insert(0, extMsg);
+        computeTime();
         markMessageAsRead([extMsg.m.clientMsgID!]).then((_) {
           startTimer(extMsg);
         });
         ImCore.downloadFile(extMsg);
       });
+    }
+    if (isGroupChat && msg.isGroupChat && conversationInfo.value.groupID == msg.groupID) {
+      if (msg.ext.isGroupBothDelete) {
+        msg.toExt(secretKey).then((v) {
+          onGroupBothMessageDelete(v);
+        });
+      }
     }
   }
 
@@ -334,6 +349,40 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } catch (e) {
       logger.e(e);
     }
+  }
+
+  @override
+  void onGroupInfoChanged(GroupInfo info) {
+    groupInfo = Rx(info);
+    if (isMember && info.status == 3) {
+      isMute.value = true;
+      fieldType.value = ImChatPageFieldType.none;
+    } else {
+      isMute.value = false;
+    }
+  }
+
+  /// 聊天页面时间展示的最小差
+  bool _check2TimeGap(int t1, int t2) {
+    if ((t1 - t2).abs() > 1000 * 60 * 3) return true;
+    return false;
+  }
+
+  /// 计算时间
+  void computeTime() {
+    for (int i = 0; i < data.length; i++) {
+      MessageExt message = data[i];
+      if (i == 0) {
+        continue;
+      }
+      MessageExt lastMessage = data[i - 1];
+      if (_check2TimeGap(message.m.sendTime ?? message.m.createTime!, lastMessage.m.sendTime ?? lastMessage.m.createTime!)) {
+        message.ext.showTime = true;
+      } else {
+        message.ext.showTime = false;
+      }
+    }
+    data.refresh();
   }
 
   /// 引用消息删除事件
@@ -461,7 +510,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     }
   }
 
-  ///用户是否被禁言
+  /// 用户是否被禁言
   bool userIsMuted(num? muteEndTime) {
     if (muteEndTime == null || muteEndTime == 0 || muteEndTime < (DateTime.now().millisecondsSinceEpoch / 1000)) {
       return false;
@@ -469,7 +518,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     return true;
   }
 
-  ///用户被禁言剩余的时间
+  /// 用户被禁言剩余的时间
   int userMutedTime(num? muteEndTime) {
     if (muteEndTime == null || muteEndTime == 0 || muteEndTime < (DateTime.now().millisecondsSinceEpoch / 1000)) {
       return 0;
@@ -613,7 +662,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         contentType: MessageType.encryptedNotification,
         createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
       ).toExt(secretKey);
-      data.insert(0, encryptedNotification);
+      data.add(encryptedNotification);
     }
     for (var v in newExts) {
       ImCore.downloadFile(v);
@@ -713,7 +762,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         data.insert(0, revMsg);
       }
     });
+    computeTime();
   }
+
+  void onGroupBothMessageDelete(MessageExt extMsg) {}
 
   void onMoreSelectShare() {}
 

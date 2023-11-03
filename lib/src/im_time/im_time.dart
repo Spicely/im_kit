@@ -17,7 +17,7 @@ part of im_kit;
 
 class ImTime extends StatelessWidget {
   /// 当前消息
-  final Message message;
+  final MessageExt message;
 
   const ImTime({
     super.key,
@@ -43,11 +43,11 @@ class ImTime extends StatelessWidget {
   /// 对时间处理
   String formatDate(BuildContext context) {
     ImLanguage language = ImKitTheme.of(context).language;
-    DateTime now = DateTime.now();
-    if (message.clientMsgID == null) {
+    if (message.m.clientMsgID == null) {
       return '';
     }
-    DateTime messageTime = DateTime.fromMillisecondsSinceEpoch(message.sendTime ?? message.createTime!);
+    DateTime now = DateTime.now();
+    DateTime messageTime = DateTime.fromMillisecondsSinceEpoch(message.m.sendTime ?? message.m.createTime!);
     if (now.year == messageTime.year) {
       if (now.month == messageTime.month) {
         if (now.day == messageTime.day) {

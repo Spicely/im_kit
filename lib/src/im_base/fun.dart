@@ -81,8 +81,8 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
 
 /// 修改了群组资料
 TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap}) {
-  String? userId = detail['opUser']?['userID'] ?? detail['mutedUser']?['userID'] ?? detail['entrantUser']?['userID'];
-  String? nickname = detail['opUser']?['nickname'] ?? detail['mutedUser']?['nickname'] ?? detail['entrantUser']?['nickname'];
+  String? userId = detail['mutedUser']?['userID'] ?? detail['opUser']?['userID'] ?? detail['entrantUser']?['userID'];
+  String? nickname = detail['mutedUser']?['nickname'] ?? detail['opUser']?['nickname'] ?? detail['entrantUser']?['nickname'];
   return TextSpan(
     children: [
       TextSpan(
@@ -110,6 +110,7 @@ String _getTypeText(int type) {
     MessageType.groupMemberCancelMutedNotification => '被取消禁言',
     MessageType.groupMemberMutedNotification => '被禁言',
     MessageType.memberEnterNotification => '进入群组',
+    MessageType.groupInfoSetNotification => '修改了群组资料',
     _ => '暂不支持的消息',
   };
 }

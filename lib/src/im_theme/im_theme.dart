@@ -81,6 +81,9 @@ class ImLanguage {
   /// 昨天
   final String yesterday;
 
+  /// 全体禁言
+  final String groupMutedNotification;
+
   const ImLanguage({
     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
     this.longPressRecordVoice = '长按录制语音',
@@ -103,6 +106,7 @@ class ImLanguage {
     this.location = '位置',
     this.cancel = '取消',
     this.yesterday = '昨天',
+    this.groupMutedNotification = '全体禁言',
   });
 }
 
