@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_openim_sdk_ffi:
-    path: ../../../../im/flutter_openim_sdk_ffi
+    path: ../flutter_openim_sdk_ffi
   flutter_muka:
     git:
       url: https://github.com/Spicely/flutter_muka.git
@@ -53,3 +53,4 @@ flutter:
     - assets/json/
     - assets/emoji/
     - assets/icons/
+    - assets/images/

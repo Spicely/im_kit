@@ -10,36 +10,61 @@ class IsolateMethod {
   static Future<void> downloadFiles(_PortModel params) async {
     try {
       Map<String, dynamic> progressMap = {};
-      List<Map<String, String>> urls = params.data;
-      bool status = urls.every((v) {
-        File file = File(v['savePath']!);
-        if (file.existsSync()) {
-          return true;
-        } else {
-          return false;
-        }
-      });
+      List<DownloadItem> items = params.data['data'];
+      String id = params.data['id'];
 
+      /// 先判断本地文件是否存在
+      bool status = items.every((v) => File(v.path).existsSync());
       if (status) {
-        params.sendPort?.send(PortResult(data: urls.map((e) => e['savePath']!).toList()));
+        await Future.wait(items.map((v) => _IsolateFun.decryptFile(v.secretKey, v.path)));
+        params.sendPort?.send(PortResult(data: items.map((e) => e.path).toList()));
         return;
       }
-      await Future.wait(urls.map((e) {
-        progressMap[e['url']!] = {'count': 0, 'total': 0};
-        return Dio().download(e['url']!, e['savePath'], onReceiveProgress: (count, total) {
-          progressMap[e['url']!] = {'count': count, 'total': total};
-          double progress = 0;
-          progressMap.forEach((key, value) {
-            if (value['total'] == 0) return;
-            progress += value['count'] / value['total'];
-          });
-          params.sendPort?.send(PortProgress(progress / progressMap.length));
+
+      /// 判断下载文件是否存在
+      status = items.every((v) => File(v.savePath).existsSync());
+      if (status) {
+        await Future.wait(items.map((v) => _IsolateFun.decryptFile(v.secretKey, v.savePath)));
+        params.sendPort?.send(PortResult(data: items.map((e) => e.savePath).toList()));
+        return;
+      }
+      await Future.wait(items.map((e) {
+        progressMap[id] = {'count': 0, 'total': 0};
+        return Dio().get(
+          e.url,
+          options: Options(responseType: ResponseType.bytes),
+          onReceiveProgress: (count, total) {
+            progressMap[id] = {'count': count, 'total': total};
+            double progress = 0;
+            progressMap.forEach((key, value) {
+              if (value['total'] == 0) return;
+              progress += value['count'] / value['total'];
+            });
+            params.sendPort?.send(PortProgress(progress / progressMap.length));
+          },
+        ).then((res) {
+          Uint8List u = Uint8List.fromList(res.data);
+          ImKitIsolateManager.writeFileByU8Async(e.savePath, ImKitIsolateManager.decFileNoPath(keyStr: e.secretKey, fileByte: Uint8List.fromList(u)));
         });
       }).toList());
-
-      params.sendPort?.send(PortResult(data: urls.map((e) => e['savePath']!).toList()));
+      progressMap.remove(id);
+      params.sendPort?.send(PortResult(data: items.map((e) => e.savePath).toList()));
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
+
+  /// 复制文件为下载文件
+  static Future<void> copyFileToDownload(_PortModel params) async {
+    try {
+      String path = params.data['path'];
+      String savePath = params.data['savePath'];
+
+      /// 复制文件
+      await File(path).copy(savePath);
+      params.sendPort?.send(PortResult(data: savePath));
+    } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
   }
@@ -74,33 +99,14 @@ class IsolateMethod {
     }
   }
 
-  /// 获取图片信息
-  static void getImageInfo(_PortModel params) async {
-    String path = params.data['path'];
-
-    /// 获取图片宽高
-    final List<int> bytes = await File(path).readAsBytes();
-    final img.Image? decodedImage = img.decodeImage(Uint8List.fromList(bytes));
-
-    /// 获取文件后缀名
-    String fileType = File(path).path.split('.').last;
-    if (decodedImage != null) {
-      final int width = decodedImage.width;
-      final int height = decodedImage.height;
-
-      params.sendPort?.send(PortResult(data: (fileType, width, height)));
-    } else {
-      params.sendPort?.send(PortResult(data: (fileType, 0, 0)));
-    }
-  }
-
   /// 复制文件
   static void copyFile(_PortModel params) async {
     String path = params.data['path'];
     String savePath = params.data['savePath'];
+    String desPath = params.data['desPath'];
     try {
-      await File(path).copy(savePath);
-      params.sendPort?.send(PortResult(data: savePath));
+      await Future.wait([File(path).copy(savePath), File(path).copy(desPath)]);
+      params.sendPort?.send(PortResult(data: desPath));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
@@ -184,6 +190,75 @@ class IsolateMethod {
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
+  }
+
+  /// 下载表情包
+  static downEmoji(_PortModel params) async {
+    try {
+      final data = params.data;
+      final url = data['url'];
+      final path = data['path'];
+      final id = data['id'];
+      String fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+      String savePath = '${ImCore.dirPath}/$path';
+      await Dio().download(url, '$savePath/$fileName');
+      String jsonStr = File('$savePath/$fileName').readAsStringSync();
+
+      /// 读取json内容
+      final emojiList = json.decode(jsonStr);
+
+      Map<String, dynamic> progressMap = {};
+
+      List<EmojiItemModel> dataList = (emojiList['dataList'] as List).map((e) => EmojiItemModel.fromJson(e)).toList();
+
+      /// 检测文件是否存在
+      dataList.removeWhere((v) {
+        if (File('$savePath/${v.name}').existsSync()) {
+          return true;
+        }
+        return false;
+      });
+
+      await Future.wait(dataList.map((e) {
+        progressMap[e.name] = {'count': 0, 'total': 0};
+        return Dio().download(
+          'https://feiyin-face-file.oss-cn-hangzhou.aliyuncs.com/emoticons/$id/${e.name}',
+          '$savePath/${e.name}',
+          onReceiveProgress: (int count, int total) {
+            progressMap[e.name] = {'count': count, 'total': total};
+            double progress = 0;
+            progressMap.forEach((key, value) {
+              if (value['total'] == 0) return;
+              progress += value['count'] / value['total'];
+            });
+            params.sendPort?.send(PortProgress(progress / progressMap.length));
+          },
+        );
+      }));
+      dataList = (emojiList['dataList'] as List).map((e) => EmojiItemModel.fromJson(e)).toList();
+      params.sendPort?.send(PortResult(data: dataList));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
+
+  static checkEmoji(_PortModel msg) async {
+    /// 检测文件是否存在
+    await downEmoji(msg);
+
+    /// 检测表情包是否存在
+    final data = msg.data;
+
+    final url = data['url'];
+    final path = data['path'];
+    String savePath = '${ImCore.dirPath}/$path';
+    String fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+
+    /// 读取json内容
+    String jsonStr = File('$savePath/$fileName').readAsStringSync();
+    final emojiList = json.decode(jsonStr);
+    List<EmojiItemModel> dataList = (emojiList['dataList'] as List).map((e) => EmojiItemModel.fromJson(e)).toList();
+    msg.sendPort?.send(PortResult(data: dataList));
   }
 }
 

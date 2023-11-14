@@ -66,7 +66,7 @@ class ConversationController extends GetxController with OpenIMListener {
       secretKey = keyMap[msg.groupID] ?? '';
     }
     msg.toExt(secretKey).then((extMsg) {
-      ImCore.downloadFile(extMsg);
+      ImCore.downloadFile(extMsg, secretKey);
     });
   }
 

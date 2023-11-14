@@ -25,9 +25,6 @@ enum _PortMethod {
   /// 解密文件
   decryptFile,
 
-  /// 获取图片信息
-  getImageInfo,
-
   /// 复制文件
   copyFile,
 
@@ -39,6 +36,12 @@ enum _PortMethod {
 
   /// 上传文件
   uploadFile,
+
+  /// 复制文件为下载文件
+  copyFileToDownload,
+
+  downEmoji,
+  checkEmoji,
 }
 
 /// 下载进度
@@ -92,12 +95,24 @@ class _PortModel {
   }
 }
 
+class DownloadItem {
+  final String path;
+  final String url;
+  final String secretKey;
+  final String savePath;
+
+  DownloadItem({
+    required this.path,
+    required this.url,
+    required this.secretKey,
+    required this.savePath,
+  });
+}
+
 class ImKitIsolateManager {
   static bool _isInit = false;
 
   static final ObserverList<ImKitListen> _listeners = ObserverList<ImKitListen>();
-
-  static final List<String> _downloadIds = [];
 
   static void addListener(ImKitListen listener) {
     _listeners.add(listener);
@@ -136,10 +151,20 @@ class ImKitIsolateManager {
     return file;
   }
 
+  static Uint8List decFileNoPath({
+    required String keyStr,
+    required Uint8List fileByte,
+  }) {
+    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, keyStr, decIV: IV.fromUtf8("abcd1234abcd1234"));
+    if (res2.isEncData == 0) return fileByte;
+    Uint8List decData = res2.decFile;
+    return decData;
+  }
+
   /// 初始化
   static Future<void> init(String dirPath) async {
     if (_isInit) return;
-    MediaKit.ensureInitialized();
+    // MediaKit.ensureInitialized();
     ImCore.dirPath = dirPath;
     _isInit = true;
     IsolateTask task = await Utils.createIsolate(
@@ -156,50 +181,54 @@ class ImKitIsolateManager {
   }
 
   /// 下载多文件
-  static void downloadFiles(String id, List<String> urls) {
-    if (_downloadIds.contains(id)) return;
-
+  static void downloadFiles(String id, List<DownloadItem> data) {
     /// 获取保存路径
-    List<Map<String, String>> list = [];
-    for (var v in urls) {
-      list.add({'url': v, 'savePath': ImCore.getSaveForUrlPath(v)});
-    }
     ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: list, sendPort: port.sendPort));
+    _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: {'id': id, 'data': data}, sendPort: port.sendPort));
     port.listen((msg) {
       if (msg is PortProgress) {
         for (ImKitListen listener in _listeners) {
           listener.onDownloadProgress(id, msg.progress);
         }
-      } else if (msg is PortResult<List<String>>) {
-        _downloadIds.remove(id);
+      } else {
         if (msg.data != null) {
           for (ImKitListen listener in _listeners) {
-            listener.onDownloadSuccess(id, msg.data!);
+            listener.onDownloadSuccess(id, (msg as PortResult).data!);
           }
-        }
-        port.close();
-      } else {
-        for (ImKitListen listener in _listeners) {
-          listener.onDownloadFailure(id, msg.error!);
+        } else {
+          for (ImKitListen listener in _listeners) {
+            listener.onDownloadFailure(id, (msg as PortResult).error!);
+          }
         }
         port.close();
       }
     });
   }
 
-  /// 获取图片信息
-  static Future<(String, String, int, int)> getImageInfo(String path) {
-    var completer = Completer<(String, String, int, int)>();
-    String savePath = ImCore.getSavePathForFilePath(path);
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(method: _PortMethod.getImageInfo, data: {'path': path}, sendPort: port.sendPort));
+  /// 下载压缩包
+  ///
+  /// [url] 下载地址
+  ///
+  /// [path] 保存路径
+  ///
+  /// [id] 表情包id
+  static Future<List<EmojiItemModel>> downEmoji(String id, String url, String path) async {
+    var completer = Completer<List<EmojiItemModel>>();
+    final port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.downEmoji,
+      data: {'url': url, 'path': path, 'id': id},
+      sendPort: port.sendPort,
+    ));
 
     port.listen((msg) {
-      if (msg is PortResult<(String, int, int)>) {
+      if (msg is PortProgress) {
+        for (ImKitListen listener in _listeners) {
+          listener.onDownloadProgress(id, msg.progress);
+        }
+      } else if (msg is PortResult<List<EmojiItemModel>>) {
         if (msg.data != null) {
-          completer.complete((savePath, msg.data!.$1, msg.data!.$2, msg.data!.$3));
+          completer.complete(msg.data);
         } else {
           completer.completeError(msg.error!);
         }
@@ -212,12 +241,12 @@ class ImKitIsolateManager {
   /// 复制文件
   static Future<String> copyFile(String path) {
     var completer = Completer<String>();
-    String savePath = ImCore.getSavePathForFilePath(path);
+    var savePath = ImCore.getSavePathForFilePath(path);
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
       method: _PortMethod.copyFile,
-      data: {'path': path, 'savePath': savePath},
+      data: {'path': path, 'savePath': savePath.$1, 'desPath': savePath.$2},
       sendPort: port.sendPort,
     ));
 
@@ -225,6 +254,37 @@ class ImKitIsolateManager {
       if (msg is PortResult<String>) {
         if (msg.data != null) {
           completer.complete(msg.data);
+        } else {
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
+  }
+
+  /// 复制为下载文件
+  static Future<void> copyFileToDownload(MessageExt extMsg) {
+    String? filePath;
+    String? savePath;
+    if ([MessageType.picture, MessageType.voice, MessageType.file, MessageType.video].contains(extMsg.m.contentType)) {
+      filePath = extMsg.m.pictureElem?.sourcePath ?? extMsg.m.videoElem?.videoPath ?? extMsg.m.fileElem?.filePath ?? extMsg.m.soundElem?.soundPath;
+      savePath = ImCore.getSavePath(extMsg.m);
+    }
+    if (filePath == null || savePath == null) return Future.value();
+    var completer = Completer<void>();
+
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.copyFileToDownload,
+      data: {'path': filePath, 'savePath': savePath},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult<String>) {
+        if (msg.data != null) {
+          completer.complete();
         } else {
           completer.completeError(msg.error!);
         }
@@ -331,12 +391,16 @@ class ImKitIsolateManager {
             case _PortMethod.downloadFiles:
               IsolateMethod.downloadFiles(msg);
               break;
+            case _PortMethod.downEmoji:
+              IsolateMethod.downEmoji(msg);
+              break;
+            case _PortMethod.checkEmoji:
+              IsolateMethod.checkEmoji(msg);
+              break;
             case _PortMethod.encryptFile:
               IsolateMethod.encryptFile(msg);
             case _PortMethod.decryptFile:
               IsolateMethod.decryptFile(msg);
-            case _PortMethod.getImageInfo:
-              IsolateMethod.getImageInfo(msg);
             case _PortMethod.copyFile:
               IsolateMethod.copyFile(msg);
             case _PortMethod.saveImageByUint8List:
@@ -345,6 +409,8 @@ class ImKitIsolateManager {
               IsolateMethod.toMessageExt(msg);
             case _PortMethod.uploadFile:
               IsolateMethod.uploadFile(msg);
+            case _PortMethod.copyFileToDownload:
+              IsolateMethod.copyFileToDownload(msg);
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
@@ -392,6 +458,34 @@ class ImKitIsolateManager {
 
     port.listen((msg) {
       if (msg is PortResult) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
+    return completer.future;
+  }
+
+  /// 检测表情包是否下载
+  ///
+  /// [url] 下载地址
+  ///
+  /// [path] 保存路径
+  ///
+  /// [id] 表情包id
+  static Future<List<EmojiItemModel>> checkEmoji(String url, String path, String id) async {
+    var completer = Completer<List<EmojiItemModel>>();
+    final port = ReceivePort();
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.checkEmoji,
+      data: {'url': url, 'path': path, 'id': id},
+      sendPort: port.sendPort,
+    ));
+    port.listen((msg) {
+      if (msg is PortResult<List<EmojiItemModel>>) {
         if (msg.data != null) {
           completer.complete(msg.data);
         } else {

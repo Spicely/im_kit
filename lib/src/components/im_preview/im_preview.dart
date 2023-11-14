@@ -106,11 +106,11 @@ class _ImPreviewState extends State<ImPreview> {
                       height: 30,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.black87.withOpacity(0.4),
+                        color: Colors.grey.withOpacity(0.4),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        language.download,
+                        language.save,
                         style: const TextStyle(fontSize: 14, color: Colors.white),
                       ),
                     ),

@@ -22,49 +22,53 @@ class ChatPage extends StatelessWidget {
     ImLanguage language = ImKitTheme.of(context).language;
 
     return GetBuilder(
+      key: ValueKey(controller.conversationInfo.value.conversationID),
       init: controller,
+      tag: controller.conversationInfo.value.conversationID,
       builder: (controller) => Scaffold(
         backgroundColor: chatTheme.backgroundColor,
-        appBar: AppBar(
-          backgroundColor: chatTheme.appBarTheme.backgroundColor,
-          iconTheme: chatTheme.appBarTheme.iconTheme,
-          leading: Obx(
-            () => Visibility(
-              visible: controller.showSelect.value,
-              replacement: TextButton(
-                onPressed: Get.back,
-                child: const Icon(Icons.arrow_back_ios, color: Colors.black),
-              ),
-              child: TextButton(
-                onPressed: () {
-                  controller.selectList.clear();
-                  controller.showSelect.value = false;
-                },
-                child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
-              ),
-            ),
-          ),
-          title: Column(
-            children: [
-              Obx(
-                () => Text(
-                  controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
-                  style: chatTheme.appBarTheme.style,
+        appBar: Utils.isDesktop
+            ? null
+            : AppBar(
+                backgroundColor: chatTheme.appBarTheme.backgroundColor,
+                iconTheme: chatTheme.appBarTheme.iconTheme,
+                leading: Obx(
+                  () => Visibility(
+                    visible: controller.showSelect.value,
+                    replacement: TextButton(
+                      onPressed: Get.back,
+                      child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                    ),
+                    child: TextButton(
+                      onPressed: () {
+                        controller.selectList.clear();
+                        controller.showSelect.value = false;
+                      },
+                      child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
+                    ),
+                  ),
                 ),
+                title: Column(
+                  children: [
+                    Obx(
+                      () => Text(
+                        controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
+                        style: chatTheme.appBarTheme.style,
+                      ),
+                    ),
+                    // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
+                  ],
+                ),
+                centerTitle: chatTheme.appBarTheme.centerTitle,
+                actions: appBarActions,
               ),
-              // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
-            ],
-          ),
-          centerTitle: chatTheme.appBarTheme.centerTitle,
-          actions: appBarActions,
-        ),
         body: Column(
           children: [
             Expanded(
-              child: GestureDetector(
-                onTap: controller.onTapBody,
-                child: Obx(
-                  () => EasyRefresh.builder(
+              child: Obx(
+                () => PageInit(
+                  onPageTap: controller.onTapBody,
+                  child: EasyRefresh.builder(
                     controller: controller.easyRefreshController,
                     clipBehavior: Clip.none,
                     footer: BuilderFooter(
@@ -101,7 +105,7 @@ class ChatPage extends StatelessWidget {
                     childBuilder: (context, physics) => Obx(
                       () => ScrollablePositionedList.builder(
                         itemCount: controller.data.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                        padding: const EdgeInsets.symmetric(vertical: 5),
                         physics: physics,
                         reverse: true,
                         shrinkWrap: true,
@@ -113,7 +117,12 @@ class ChatPage extends StatelessWidget {
                             selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
                             // onTap: controller.onTap,
                             // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
-                            sendErrorWidget: const Icon(Icons.error, color: Colors.red),
+                            sendErrorWidget: GestureDetector(
+                              onTap: () {
+                                controller.onResend(controller.data[index]);
+                              },
+                              child: const Icon(Icons.error, color: Colors.red),
+                            ),
                             showSelect: controller.showSelect.value,
                             onTapDownFile: controller.onTapDownFile,
                             onTapPlayVideo: controller.onTapPlayVideo,
@@ -132,6 +141,11 @@ class ChatPage extends StatelessWidget {
                             onQuoteMessage: controller.onQuoteMessage,
                             onMessageSelect: controller.onMessageSelect,
                             onRevokeMessage: controller.onRevokeMessage,
+                            onQuoteMessageTap: controller.onQuoteMessageTap,
+                            onVoiceTap: controller.onVoiceTap,
+                            onAvatarTap: controller.onAvatarTap,
+                            onAvatarLongPress: controller.onAvatarLongPress,
+                            highlight: controller.currentIndex.value == index,
                             sendSuccessWidget: Text(
                               controller.data[index].m.isRead == true ? '已读' : '未读',
                               style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -144,13 +158,14 @@ class ChatPage extends StatelessWidget {
                 ),
               ),
             ),
-            Obx(
-              () => Visibility(
-                visible: controller.showSelect.value,
-                replacement: _buildBottomInput(context),
-                child: _buildMoreBottomView(),
+            if (!Utils.isDesktop)
+              Obx(
+                () => Visibility(
+                  visible: controller.showSelect.value,
+                  replacement: _buildBottomInput(context),
+                  child: _buildMoreBottomView(),
+                ),
               ),
-            ),
           ],
         ),
         resizeToAvoidBottomInset: true,
@@ -182,7 +197,7 @@ class ChatPage extends StatelessWidget {
           const SizedBox(width: 10),
           GestureDetector(
             onTap: controller.onQuoteMessageDelete,
-            child: Image.asset('assets/icons/close.png', width: 12, height: 12),
+            child: Image.asset('assets/icons/close.png', width: 12, height: 12, package: 'im_kit'),
           ),
         ],
       ),
@@ -235,6 +250,9 @@ class ChatPage extends StatelessWidget {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImLanguage language = ImKitTheme.of(context).language;
     int count = (actions.length / 8).ceil();
+
+    double gap = 10;
+
     return Column(
       children: [
         Obx(
@@ -255,15 +273,18 @@ class ChatPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: chatTheme.textFieldTheme.backgroundColor,
           ),
+          padding: EdgeInsets.symmetric(horizontal: gap),
           constraints: BoxConstraints(
             minHeight: chatTheme.textFieldTheme.height,
           ),
           child: Row(
             children: [
-              IconButton(
-                onPressed: controller.isMute.value ? null : () {},
-                icon: const CachedImage(assetUrl: 'assets/icons/chat_voice.png', package: 'im_kit', width: 24, height: 24),
-              ),
+              GestureDetector(
+                  onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onVoiceChanged,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: gap),
+                    child: controller.fieldType.value == ImChatPageFieldType.voice ? const CachedImage(assetUrl: 'assets/icons/keyboard.png', package: 'im_kit', width: 28, height: 28) : const CachedImage(assetUrl: 'assets/icons/chat_voice.png', package: 'im_kit', width: 28, height: 28),
+                  )),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -273,19 +294,31 @@ class ChatPage extends StatelessWidget {
                         color: chatTheme.textFieldTheme.textFieldColor,
                         borderRadius: chatTheme.textFieldTheme.textFieldBorderRadius,
                       ),
+                      clipBehavior: Clip.hardEdge,
                       constraints: const BoxConstraints(maxHeight: 230),
-                      margin: const EdgeInsets.symmetric(vertical: 10),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
                       child: Obx(
                         () => ExtendedTextField(
                           controller: controller.textEditingController,
                           focusNode: controller.focusNode,
                           maxLines: null,
                           maxLength: null,
-                          textAlign: controller.isMute.value ? TextAlign.center : TextAlign.start,
-                          readOnly: controller.isMute.value,
+                          textAlign: controller.isMute.value || controller.isMuteUser.value ? TextAlign.center : TextAlign.start,
+                          readOnly: controller.isMute.value || controller.isMuteUser.value,
                           decoration: InputDecoration(
-                            hintText: controller.isMute.value ? language.groupMutedNotification : chatTheme.textFieldTheme.hintText,
+                            filled: true,
+                            isCollapsed: true,
+                            fillColor: chatTheme.textFieldTheme.textFieldColor,
+                            // border:OutlineInputBorder(
+                            //   gapPadding: 0,
+                            //   borderRadius: BorderRadius.circular(30)
+                            // ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                            hintText: controller.isMute.value
+                                ? language.groupMutedNotification
+                                : controller.isMuteUser.value
+                                    ? language.personalMutedNotification
+                                    : chatTheme.textFieldTheme.hintText,
                           ),
                           specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
                             allAtMap: controller.atUserMap,
@@ -299,27 +332,35 @@ class ChatPage extends StatelessWidget {
                 ),
               ),
               Obx(
-                () => IconButton(
-                  onPressed: controller.isMute.value ? null : controller.onShowEmoji,
-                  icon: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 24, height: 24),
+                () => GestureDetector(
+                  onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowEmoji,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: gap),
+                    child: const CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 28, height: 28),
+                  ),
                 ),
               ),
               Obx(
                 () => Offstage(
                   offstage: !controller.hasInput.value,
-                  child: IconButton(
-                    onPressed: controller.onSendMessage,
-                    icon: const CachedImage(assetUrl: 'assets/icons/chat_send.png', package: 'im_kit', width: 24, height: 24),
+                  child: GestureDetector(
+                    onTap: controller.onSendMessage,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: gap),
+                      child: const CachedImage(assetUrl: 'assets/icons/chat_send.png', package: 'im_kit', width: 28, height: 28),
+                    ),
                   ),
                 ),
               ),
               Obx(
                 () => Offstage(
                   offstage: controller.hasInput.value,
-                  child: IconButton(
-                    onPressed: controller.isMute.value ? null : controller.onShowActions,
-                    icon: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 24, height: 24),
-                  ),
+                  child: GestureDetector(
+                      onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowActions,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: gap),
+                        child: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 28, height: 28),
+                      )),
                 ),
               ),
             ],
@@ -426,6 +467,15 @@ class ChatPage extends StatelessWidget {
                 itemCount: count,
                 pagination: count <= 1 ? null : const SwiperPagination(),
               ),
+            ),
+          ),
+        ),
+        Obx(
+          () => Offstage(
+            offstage: !(controller.fieldType.value == ImChatPageFieldType.voice),
+            child: ImBottomVoice(
+              onVoiceSend: controller.onRecordSuccess,
+              isMute: controller.fieldType.value != ImChatPageFieldType.voice || controller.isMute.value || controller.isMuteUser.value,
             ),
           ),
         ),

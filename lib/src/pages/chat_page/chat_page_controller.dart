@@ -32,12 +32,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 群成员信息
   late RxList<GroupMembersInfo> groupMembers;
 
+  /// 群信息
   Rx<GroupInfo>? groupInfo;
 
   int loadNum = 40;
 
   /// 自己的信息
   UserInfo get uInfo => OpenIM.iMManager.uInfo!;
+
+  RxInt currentIndex = (-1).obs;
 
   final TextEditingController textEditingController = TextEditingController();
 
@@ -133,6 +136,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   /// 记录输入框的历史记录
   String historyText = '';
 
+  /// 是否个人禁言
+  RxBool isMuteUser = false.obs;
+
+  final List<int> _types = [1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1514, 1515, 1201, 1202, 1203, 1204, 1205, 27, 77, 1512, 1513, 2023, 2024, 2025, 1701];
+
   /// at用户映射表
   RxList<GroupMembersInfo> atUserMap = RxList<GroupMembersInfo>([]);
 
@@ -169,6 +177,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       historyText = textEditingController.text;
     });
 
+    ImCore.onPlayerStateChanged(onPlayerStateChanged);
     super.onInit();
     tabController = TabController(length: 1 + tabs.length, vsync: this);
     focusNode.addListener(() {
@@ -176,6 +185,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         fieldType.value = ImChatPageFieldType.none;
       }
     });
+    isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
     computeTime();
   }
 
@@ -186,6 +196,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     textEditingController.addListener(() {
       hasInput.value = textEditingController.text.isNotEmpty;
     });
+    if (Utils.isNotEmpty(conversationInfo.value.draftText)) {
+      textEditingController.text = conversationInfo.value.draftText!;
+    }
   }
 
   void onAtDeleteCallback(String id) {
@@ -203,10 +216,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
     /// 下载文件
     for (var v in data) {
-      if (!v.m.isRead!) {
+      if (!v.m.isRead! && !_types.contains(v.m.contentType)) {
         messageIds.add(v.m.clientMsgID!);
       }
-      ImCore.downloadFile(v);
+      ImCore.downloadFile(v, secretKey);
 
       startTimer(v);
     }
@@ -215,11 +228,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 标记已读消息
   Future<void> markMessageAsRead(List<String> ids) async {
-    if (isGroupChat) {
-      await OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
-    } else {
-      await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: ids);
-      await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
+    try {
+      if (isGroupChat) {
+        await OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
+      } else {
+        await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: ids);
+        await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
+      }
+    } catch (e) {
+      logger.e(e);
     }
   }
 
@@ -273,19 +290,47 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         }
         data.insert(0, extMsg);
         computeTime();
-        markMessageAsRead([extMsg.m.clientMsgID!]).then((_) {
-          startTimer(extMsg);
-        });
-        ImCore.downloadFile(extMsg);
+        if (!_types.contains(extMsg.m.contentType)) {
+          markMessageAsRead([extMsg.m.clientMsgID!]).then((_) {
+            startTimer(extMsg);
+          });
+        }
+
+        ImCore.downloadFile(extMsg, secretKey);
       });
     }
     if (isGroupChat && msg.isGroupChat && conversationInfo.value.groupID == msg.groupID) {
-      if (msg.ext.isGroupBothDelete) {
-        msg.toExt(secretKey).then((v) {
+      msg.toExt(secretKey).then((v) {
+        if (v.ext.isGroupBothDelete) {
           onGroupBothMessageDelete(v);
-        });
+        }
+      });
+    }
+  }
+
+  @override
+  void onGroupMemberInfoChanged(GroupMembersInfo info) {
+    if (isGroupChat && groupMembers.isNotEmpty) {
+      if (info.userID == uInfo.userID) {
+        updateGroupMemberInfo(info);
+      } else {
+        /// 更新群成员信息
+        int index = groupMembers.indexWhere((v) => v.userID == info.userID);
+        if (index != -1) {
+          groupMembers[index] = info;
+        }
       }
     }
+  }
+
+  @override
+  void onGroupMemberDeleted(GroupMembersInfo info) {
+    groupMembers.removeWhere((v) => v.userID == info.userID);
+  }
+
+  @override
+  void onGroupMemberAdded(GroupMembersInfo info) {
+    groupMembers.add(info);
   }
 
   @override
@@ -336,13 +381,21 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     try {
       MessageExt? msg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
       if (msg != null) {
-        await Future.wait(paths.map((e) => ImKitIsolateManager.decryptFile(Utils.getValue(msg.ext.secretKey, secretKey), e)));
         msg.ext.isDownloading = false;
-        if (msg.m.contentType == MessageType.video) {
-          msg.ext.previewPath = paths.first;
-          msg.ext.file = File(paths[1]);
+        if (msg.m.contentType == MessageType.quote) {
+          if (msg.m.contentType == MessageType.video) {
+            msg.ext.quoteMessage?.ext.previewPath = paths.first;
+            msg.ext.quoteMessage?.ext.file = File(paths[1]);
+          } else {
+            msg.ext.quoteMessage?.ext.file = File(paths.first);
+          }
         } else {
-          msg.ext.file = File(paths.first);
+          if (msg.m.contentType == MessageType.video) {
+            msg.ext.previewPath = paths.first;
+            msg.ext.file = File(paths[1]);
+          } else {
+            msg.ext.file = File(paths.first);
+          }
         }
         updateMessage(msg);
       }
@@ -366,6 +419,41 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   bool _check2TimeGap(int t1, int t2) {
     if ((t1 - t2).abs() > 1000 * 60 * 3) return true;
     return false;
+  }
+
+  Future<void> onQuoteMessageTap(MessageExt msgExt) async {
+    int index = data.indexWhere((v) => v.m.clientMsgID == msgExt.ext.quoteMessage?.m.clientMsgID);
+    if (index != -1) {
+      currentIndex.value = index;
+      itemScrollController.jumpTo(index: index);
+    } else {
+      AdvancedMessage result = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
+        conversationID: conversationInfo.value.conversationID,
+        startMsg: msgExt.m,
+      );
+      List<MessageExt> newExts = (await Future.wait(result.messageList!.map((e) => e.toExt(secretKey)))).reversed.toList();
+
+      /// 移除已经有了的数据
+      newExts.removeWhere((v) => data.indexWhere((e) => e.m.clientMsgID == v.m.clientMsgID) != -1);
+      for (var v in newExts) {
+        ImCore.downloadFile(v, secretKey);
+      }
+      data.addAll(newExts);
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        int index = data.indexWhere((v) => v.m.clientMsgID == msgExt.ext.quoteMessage?.m.clientMsgID);
+        if (index != -1) {
+          currentIndex.value = index;
+          itemScrollController.jumpTo(index: index);
+        }
+      });
+
+      itemScrollController.jumpTo(index: data.length);
+    }
+
+    /// 2s 后清除引用消息
+    Future.delayed(const Duration(seconds: 2), () {
+      currentIndex.value = -1;
+    });
   }
 
   /// 计算时间
@@ -401,10 +489,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     int index = data.indexWhere((v) => v.m.clientMsgID == ext.m.clientMsgID);
     if (index != -1) {
       File? file = data[index].ext.file;
+      Uint8List? preview = data[index].ext.preview;
       data[index] = ext;
-      if (file != null && ext.m.contentType != MessageType.video) {
+      if (file != null) {
         /// 路径还原避免闪烁
         data[index].ext.file = file;
+      }
+      if (preview != null) {
+        /// 路径还原避免闪烁
+        data[index].ext.preview = preview;
       }
     }
   }
@@ -420,11 +513,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   }
 
   /// 点击图片
-  void onPictureTap(MessageExt ext) {
+  void onPictureTap(MessageExt extMsg) {
+    if (extMsg.ext.file == null) return;
+
     /// 获取所有图片
     List<MessageExt> messages = data.where((v) => v.m.contentType == MessageType.picture).toList();
     Get.to(
-      () => ImPreview(messages: messages, currentMessage: ext),
+      () => ImPreview(messages: messages, currentMessage: extMsg),
       transition: Transition.fadeIn,
     );
   }
@@ -472,25 +567,8 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         groupID: g_id,
         offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
       );
-      if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(newMsg.contentType)) {
-        /// 对文件解密
-        String path = newMsg.fileElem?.filePath ?? newMsg.pictureElem?.sourcePath ?? newMsg.videoElem?.videoPath ?? newMsg.soundElem?.soundPath ?? '';
-
-        await ImKitIsolateManager.decryptFile(secretKey, path);
-
-        /// 把文件重命名
-        await ImKitIsolateManager.renameFile(path, path);
-      } else if ([MessageType.video].contains(newMsg.contentType)) {
-        /// 对文件解密
-
-        await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.videoPath!);
-        await ImKitIsolateManager.decryptFile(secretKey, newMsg.videoElem!.snapshotPath!);
-
-        /// 把文件重命名
-        await ImKitIsolateManager.renameFile(newMsg.videoElem!.videoPath!, newMsg.videoElem!.videoUrl!);
-        await ImKitIsolateManager.renameFile(newMsg.videoElem!.snapshotPath!, newMsg.videoElem!.snapshotUrl!);
-      }
       MessageExt extMsg = await newMsg.toExt(secretKey);
+      ImKitIsolateManager.copyFileToDownload(extMsg);
       updateMessage(extMsg);
       return extMsg;
     } catch (e) {
@@ -506,6 +584,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       int index = groupMembers.indexWhere((v) => v.userID == info.userID);
       if (index != -1) {
         groupMembers[index] = info;
+        isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
       }
     }
   }
@@ -563,7 +642,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       }
       message = await sendMessage(message);
       updateMessage(message);
-      ImCore.downloadFile(message);
+      ImCore.downloadFile(message, secretKey);
     } catch (e) {
       if (message != null) {
         /// 发送失败 修改状态
@@ -597,8 +676,6 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     /// 匹配@100010#ac @100011#qa 的字符串
     var regexAt = atUserInfoList.map((e) => '@${e.atUserID}#${RegExp.escape(e.groupNickname!)} ').toList().join('|');
 
-    logger.e(regexAt);
-
     /// 替换text中的@字符串
     text = text.splitMapJoin(
       RegExp(regexAt),
@@ -624,6 +701,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onShowEmoji() {
     focusNode.unfocus();
     fieldType.value = ImChatPageFieldType.emoji;
+  }
+
+  void onVoiceChanged() {
+    if (fieldType.value == ImChatPageFieldType.voice) {
+      fieldType.value = ImChatPageFieldType.none;
+    } else {
+      focusNode.unfocus();
+      fieldType.value = ImChatPageFieldType.voice;
+    }
   }
 
   /// 设置为显示功能模块
@@ -665,7 +751,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       data.add(encryptedNotification);
     }
     for (var v in newExts) {
-      ImCore.downloadFile(v);
+      ImCore.downloadFile(v, secretKey);
     }
   }
 
@@ -676,6 +762,48 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onLocationTap(MessageExt extMsg) {}
 
   void onFileTap(MessageExt extMsg) {}
+
+  void onVoiceTap(MessageExt extMsg) {
+    if (extMsg.ext.isPlaying) {
+      ImCore.stop();
+    } else {
+      ImCore.play(extMsg.m.clientMsgID!, extMsg.ext.file!.path, onPlayerBeforePlay: onPlayerBeforePlay);
+    }
+    extMsg.ext.isPlaying = !extMsg.ext.isPlaying;
+    updateMessage(extMsg);
+  }
+
+  void onPlayerBeforePlay(String id) {
+    MessageExt? msg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
+    if (msg != null) {
+      msg.ext.isPlaying = false;
+      updateMessage(msg);
+    }
+  }
+
+  /// 播放回调
+  void onPlayerStateChanged(a.PlayerState state, String id) {
+    if (state == a.PlayerState.completed) {
+      MessageExt? msg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
+      if (msg != null) {
+        msg.ext.isPlaying = false;
+        updateMessage(msg);
+      }
+    }
+  }
+
+  /// 完成录制
+  void onRecordSuccess(String path, int duration) async {
+    ImKitIsolateManager.copyFile(path).then((savePath) {
+      OpenIM.iMManager.messageManager.createSoundMessageFromFullPath(soundPath: savePath, duration: duration).then((msg) {
+        msg.toExt(secretKey).then((extMsg) {
+          extMsg.ext.file = File(path);
+          data.insert(0, extMsg);
+          sendMessage(extMsg);
+        });
+      });
+    });
+  }
 
   void onCopyTip(String text) {
     Clipboard.setData(ClipboardData(text: text));
@@ -750,6 +878,10 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     }
   }
 
+  void onAvatarTap(UserInfo userInfo) {}
+
+  void onAvatarLongPress(UserInfo userInfo) {}
+
   /// 消息撤回
   void onRevokeMessage(MessageExt message) {
     Utils.exceptionCapture(() async {
@@ -770,6 +902,21 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onMoreSelectShare() {}
 
   void onMoreSelectDelete() {}
+
+  /// 重新发送
+  void onResend(MessageExt message) async {
+    try {
+      message.m.status = MessageStatus.sending;
+      await updateMessage(message);
+      message = await sendMessage(message);
+
+      updateMessage(message);
+    } catch (e) {
+      /// 发送失败 修改状态
+      message.m.status = MessageStatus.failed;
+      updateMessage(message);
+    }
+  }
 
   /// 开始计时
   void startTimer(MessageExt extMsg) {

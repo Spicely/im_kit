@@ -5,35 +5,28 @@ class ImVoice extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onTapDownFile,
+    super.onTap,
     required super.contextMenuController,
     super.onRevokeTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.backgroundColor,
-          borderRadius: chatTheme.messageTheme.borderRadius,
-        ),
-        child: ext.file == null
-            ? const ImLoading()
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Transform.rotate(
-                    angle: isMe ? -pi : 0,
-                    child: Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('${message.m.soundElem?.duration}"'),
-                ],
-              ),
-      ),
+      child: ext.file == null
+          ? const ImLoading()
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Transform.rotate(
+                  angle: isMe ? -pi : 0,
+                  child: Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
+                ),
+                const SizedBox(width: 8),
+                Text('${message.m.soundElem?.duration}"'),
+              ],
+            ),
     );
   }
 

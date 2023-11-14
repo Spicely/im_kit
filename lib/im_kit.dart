@@ -6,6 +6,10 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'src/components/im_selected/custom_selectable_region.dart' as csr;
+import 'src/components/im_selected/custom_selection_area.dart' as csa ;
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:easy_refresh/easy_refresh.dart';
@@ -43,14 +47,17 @@ import 'package:flutter_oss_aliyun/flutter_oss_aliyun.dart' as aliyun;
 
 export 'package:intl/intl.dart';
 export 'package:popup_menu/popup_menu.dart';
-export 'package:audioplayers/audioplayers.dart';
 
+
+part 'src/components/im_selected/selected_region.dart';
+part 'src/components/im_selected/selected_rich.dart';
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';
 part 'src/components/im_player/im_player.dart';
 part 'src/components/im_preview/im_preview.dart';
 part 'src/components/im_adaptive_text_selection/im_adaptive_text_selection.dart';
 part 'src/components/voice_record/voice_record.dart';
+part 'src/components/im_bottom_voice/im_bottom_voice.dart';
 part 'src/components/voice_record/voice_record_controller.dart';
 part 'src/im_at_text/im_at_text.dart';
 part 'src/im_base/im_base.dart';

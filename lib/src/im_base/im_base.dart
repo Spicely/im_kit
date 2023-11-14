@@ -64,6 +64,9 @@ class ImBase extends StatelessWidget {
   /// 点击撤回
   final void Function(MessageExt message)? onRevokeTap;
 
+  /// 引用消息点击
+  final void Function(MessageExt message)? onQuoteMessageTap;
+
   const ImBase({
     super.key,
     required this.isMe,
@@ -82,6 +85,7 @@ class ImBase extends StatelessWidget {
     this.onQuoteTap,
     this.onMultiSelectTap,
     this.onRevokeTap,
+    this.onQuoteMessageTap,
   });
 
   @override
@@ -136,6 +140,8 @@ class ImExtModel {
   final DateTime createTime;
 
   final GlobalKey key;
+
+  SelectionAreaWidgetController? controller;
 
   double? progress;
 
@@ -197,6 +203,9 @@ class ImExtModel {
 
   bool showTime;
 
+  /// 发送时间
+  String time;
+
   ImExtModel({
     this.progress,
     this.file,
@@ -221,6 +230,8 @@ class ImExtModel {
     this.timer,
     this.seconds = 30,
     this.showTime = false,
+    this.time = '',
+    this.controller,
   });
 
   Map<String, dynamic> toJson() {
@@ -251,6 +262,9 @@ class ImCore {
   /// 文件保存文件夹
   static String get saveDir => join(dirPath, 'FileRecv', _uid ?? OpenIM.iMManager.uid);
 
+  /// 文件加密保存文件夹
+  static String get saveDesDir => join(dirPath, 'DesRecv', _uid ?? OpenIM.iMManager.uid);
+
   /// 设置用户id
   static void setUid(String? uid) {
     _uid = uid;
@@ -276,11 +290,12 @@ class ImCore {
   }
 
   /// 文件保存地址
-  static String getSavePathForFilePath(String path) {
+  static (String, String) getSavePathForFilePath(String path) {
     /// 获取后缀名
     String ext = path.split('.').last;
     var uuid = const Uuid();
-    return join(saveDir, '${uuid.v4()}${ext.isEmpty ? '' : '.$ext'}');
+    String fileName = '${uuid.v4()}${ext.isEmpty ? '' : '.$ext'}';
+    return (join(saveDir, fileName), join(saveDesDir, fileName));
   }
 
   /// 检测文件是否存在
@@ -317,10 +332,10 @@ class ImCore {
   }
 
   /// 播放音频
-  static Future<void> play(String url, String id, {void Function(String)? onPlayerBeforePlay}) async {
+  static Future<void> play(String id, String url, {void Function(String)? onPlayerBeforePlay}) async {
     onPlayerBeforePlay?.call(_playID);
-    await _player.play(a.DeviceFileSource(url));
     _playID = id;
+    await _player.play(a.DeviceFileSource(url));
   }
 
   /// 暂停音频
@@ -368,22 +383,53 @@ class ImCore {
     );
   }
 
+  static String _getSecretKey(String key, Message message) {
+    String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
+    if (k == null) return key;
+    try {
+      json.decode(k);
+      return key;
+    } catch (e) {
+      return k;
+    }
+  }
+
   /// 文件下载
-  static void downloadFile(MessageExt extMsg) {
+  static void downloadFile(MessageExt extMsg, String secretKey) {
     if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
       if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
         if (extMsg.m.contentType == MessageType.video) {
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [extMsg.m.videoElem?.snapshotUrl ?? '', extMsg.m.videoElem?.videoUrl ?? '']);
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
+            DownloadItem(path: extMsg.m.videoElem?.snapshotPath ?? '', url: extMsg.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.snapshotUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+            DownloadItem(path: extMsg.m.videoElem?.videoPath ?? '', url: extMsg.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.videoUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+          ]);
         } else {
           String url = extMsg.m.fileElem?.sourceUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [url]);
+          String path = extMsg.m.fileElem?.filePath ?? extMsg.m.pictureElem?.sourcePath ?? extMsg.m.soundElem?.soundPath ?? '';
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url), secretKey: _getSecretKey(secretKey, extMsg.m))]);
+        }
+      }
+    } else if (MessageType.quote == extMsg.m.contentType) {
+      if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.ext.quoteMessage?.m.contentType)) {
+        if (extMsg.ext.quoteMessage?.m.contentType == MessageType.video) {
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
+            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.snapshotPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.videoPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+          ]);
+        } else {
+          String url = extMsg.ext.quoteMessage?.m.fileElem?.sourceUrl ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePicture?.url ?? extMsg.ext.quoteMessage?.m.soundElem?.sourceUrl ?? '';
+          String path = extMsg.ext.quoteMessage?.m.fileElem?.filePath ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePath ?? extMsg.ext.quoteMessage?.m.soundElem?.soundPath ?? '';
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url), secretKey: _getSecretKey(secretKey, extMsg.m))]);
         }
       }
     }
   }
 
   /// 没有内边距
-  static List<int> noPadMsgType = [MessageType.picture, MessageType.file, MessageType.card, MessageType.voice, MessageType.video, MessageType.location, MessageType.merger, 300];
+  static List<int> noPadMsgType = [MessageType.picture, MessageType.file, MessageType.card, MessageType.video, MessageType.location, MessageType.merger, 300];
+
+  /// 内显示
+  static List<int> padType = [MessageType.picture, MessageType.card, MessageType.video, MessageType.location];
 
   /// 没有背景颜色的消息
   static List<int> noBgMsgType = [300, MessageType.picture, MessageType.video];
@@ -504,7 +550,7 @@ class ImCore {
 
   // 获取宽高比例
   double ratio = w / h;
-  double maxWidth = 180;
+  double maxWidth = 140;
   // 最小高度
   double minHeight = 30;
 

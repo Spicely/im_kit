@@ -98,11 +98,29 @@ class ImMessageTheme {
   /// 间距
   final EdgeInsetsGeometry padding;
 
+  ///引用间距
+  final EdgeInsetsGeometry quotePadding;
+
+  ///内容按钮的高度
+  static final double ctxMenuH=70;
+  ///内容按钮的宽度
+  static final double ctxMenuW=50;
+  ///内容按钮的icon高度
+  static final double ctxMenuIconH=30;
+  ///内容按钮的icon宽度
+  static final double ctxMenuIconW=30;
+  ///内容按钮的icon下方的间隔
+  static final double ctxMenuGap=6;
+  ///内容按钮的文本样式
+  static final TextStyle ctxMenuStyle=const TextStyle(color:Colors.white, fontSize: 11);
+  // const TextStyle(color:Colors.white, fontSize: 11),
+
   const ImMessageTheme({
     this.backgroundColor = const Color.fromRGBO(247, 247, 247, 1),
     this.meBackgroundColor = const Color.fromRGBO(255, 214, 0, 1),
-    this.borderRadius = const BorderRadius.all(Radius.circular(20)),
-    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+    this.borderRadius = const BorderRadius.all(Radius.circular(6)),
+    this.padding =const EdgeInsets.only(left:6, right:6, top:8, bottom:11),
+    this.quotePadding =const EdgeInsets.only(left:6, right:6, top:6, bottom:6),
     this.style,
   });
 }
@@ -129,6 +147,6 @@ class ImTextFieldTheme {
     this.hintText = '请输入消息...',
     this.textFieldColor = Colors.white,
     this.textFieldHeight = 38,
-    this.textFieldBorderRadius = const BorderRadius.all(Radius.circular(38)),
+    this.textFieldBorderRadius = const BorderRadius.all(Radius.circular(6)),
   });
 }

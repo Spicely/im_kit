@@ -32,7 +32,17 @@ class _IsolateFun {
   /// 转成MessageExt
   static Future<MessageExt> toMessageExt(Message msg, String secretKey) async {
     final ext = ImExtModel(key: GlobalKey(), createTime: DateTime.now());
-
+    // SelectionAreaWidgetController controller=
+    ext.controller=SelectionAreaWidgetController(
+        globalKey:ext.key,
+        // ctxMenuctr:ctxcontroller,
+        screenHeight:770.0,
+        safeBot:56,
+        safeTop:56
+    );
+    if (msg.sendTime != null) {
+      ext.time = DateFormat('HH:mm').format(DateTime.fromMillisecondsSinceEpoch(msg.sendTime!));
+    }
     /// 阅后即焚
     ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;
     try {
@@ -143,6 +153,7 @@ class _IsolateFun {
         case MessageType.memberKickedNotification:
         case MessageType.groupCreatedNotification:
         case MessageType.burnAfterReadingNotification:
+        case MessageType.memberQuitNotification:
           var data = json.decode(msg.notificationElem?.detail ?? '{}');
           ext.data = data;
           ext.isSnapchat = data['isPrivate'] ?? false;

@@ -44,11 +44,15 @@ class _ImPlayerState extends State<ImPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    ImLanguage language = ImKitTheme.of(context).language;
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          Video(controller: videoController),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 30),
+            child: Video(controller: videoController),
+          ),
           Positioned(
             top: 0,
             left: 0,
@@ -68,36 +72,31 @@ class _ImPlayerState extends State<ImPlayer> {
           ),
           if (!Utils.isDesktop)
             Positioned(
-              bottom: 20,
+              bottom: 80,
               left: 0,
               right: 0,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Wrap(
                   spacing: 10,
-                  alignment: WrapAlignment.end,
+                  alignment: WrapAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: saveImage,
+                      onTap: saveVideo,
                       child: Container(
-                        width: 30,
+                        width: 100,
                         height: 30,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(15),
+                          color: Colors.grey.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
+                        child: Text(
+                          language.save,
+                          style: const TextStyle(fontSize: 14, color: Colors.white),
+                        ),
                       ),
                     ),
-                    // Container(
-                    //   width: 30,
-                    //   height: 30,
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.grey.withOpacity(0.8),
-                    //     borderRadius: BorderRadius.circular(15),
-                    //   ),
-                    //   child: const Icon(Icons.more_horiz, color: Colors.white, size: 20),
-                    // ),
                   ],
                 ),
               ),
@@ -120,8 +119,8 @@ class _ImPlayerState extends State<ImPlayer> {
     );
   }
 
-  /// 保存图片到相册
-  Future<void> saveImage() async {
+  /// 保存视频到相册
+  Future<void> saveVideo() async {
     try {
       MessageExt message = widget.message;
       String url = message.m.videoElem!.videoUrl!;
@@ -131,7 +130,7 @@ class _ImPlayerState extends State<ImPlayer> {
       await ImageGallerySaver.saveFile(message.ext.file!.path, isReturnPathOfIOS: true, name: fileName);
       widget.onSaveSuccess?.call();
     } catch (e) {
-      debugPrint('保存图片失败: $e');
+      debugPrint('保存视频失败: $e');
       widget.onSaveFailure?.call();
     }
   }

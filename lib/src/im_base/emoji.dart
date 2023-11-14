@@ -46,10 +46,19 @@ class Emoji {
   String? sampleDiagramUrl;
   String? url;
   int? size;
+  double? progress;
 
   List<EmojiItemModel>? emojiList;
 
-  Emoji({this.emoticonsId, this.name, this.introduce, this.sampleDiagramUrl, this.url, this.size});
+  Emoji({
+    this.emoticonsId,
+    this.name,
+    this.introduce,
+    this.sampleDiagramUrl,
+    this.url,
+    this.size,
+    this.progress,
+  });
 
   Emoji.fromJson(Map<String, dynamic> json) {
     emoticonsId = json['emoticons_id'];

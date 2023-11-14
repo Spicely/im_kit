@@ -84,9 +84,21 @@ class ImLanguage {
   /// 全体禁言
   final String groupMutedNotification;
 
+  /// 个人禁言
+  final String personalMutedNotification;
+
+  /// 保存
+  final String save;
+
+  /// 草稿
+  final String draft;
+
+  /// 正在录音
+  final String recording;
+
   const ImLanguage({
     this.releaseSendSlideCancel = '松开立即发送 上滑取消',
-    this.longPressRecordVoice = '长按录制语音',
+    this.longPressRecordVoice = '点击开始录制语音',
     this.download = '下载',
     this.downloaded = '已下载',
     this.unDownload = '未下载',
@@ -107,6 +119,10 @@ class ImLanguage {
     this.cancel = '取消',
     this.yesterday = '昨天',
     this.groupMutedNotification = '全体禁言',
+    this.personalMutedNotification = '您已被禁言',
+    this.save = '保存',
+    this.draft = '草稿',
+    this.recording = '正在录音',
   });
 }
 

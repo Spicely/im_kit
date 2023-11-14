@@ -30,7 +30,13 @@ extension ExtensionMessage on Message {
         MessageType.burnAfterReadingNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭'),
         MessageType.memberInvitedNotification => _getMemberInvitedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
         MessageType.memberKickedNotification => _getMemberKickedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
-        MessageType.memberEnterNotification || MessageType.groupMemberMutedNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification || MessageType.groupInfoSetNotification => _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
+        MessageType.memberEnterNotification ||
+        MessageType.groupMemberMutedNotification ||
+        MessageType.groupCreatedNotification ||
+        MessageType.groupMemberCancelMutedNotification ||
+        MessageType.groupInfoSetNotification ||
+        MessageType.memberQuitNotification =>
+          _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
         MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
             10 => const TextSpan(text: '[邀请通知]'),
             11 => const TextSpan(text: '[同意通话]'),
