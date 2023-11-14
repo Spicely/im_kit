@@ -33,7 +33,7 @@ class ImQuoteItem extends ImBase {
       },
       child: Container(
         // margin: const EdgeInsets.only(top: 4),
-        padding:chatTheme.messageTheme.quotePadding,
+        padding: chatTheme.messageTheme.quotePadding,
         decoration: BoxDecoration(
           color: const Color.fromRGBO(242, 242, 242, 1),
           borderRadius: chatTheme.messageTheme.borderRadius,
@@ -82,7 +82,7 @@ class ImQuoteItem extends ImBase {
               Row(
                 children: [
                   const SizedBox(width: 4),
-                  CachedImage(imageUrl: json.decode(quoteMsg.m.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
+                  CachedImage(imageUrl: json.decode(quoteMsg.m.textElem?.content ?? '')['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
                 ],
               ),
           ],
@@ -91,7 +91,7 @@ class ImQuoteItem extends ImBase {
     );
   }
 
-  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atElem?.atUsersInfo ?? [];
+  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atTextElem?.atUsersInfo ?? [];
 
   Widget getQuoteContent(BuildContext context) {
     Color gray = const Color.fromRGBO(126, 126, 126, 1);

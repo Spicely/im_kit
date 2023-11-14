@@ -228,16 +228,16 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 标记已读消息
   Future<void> markMessageAsRead(List<String> ids) async {
-    try {
-      if (isGroupChat) {
-        await OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
-      } else {
-        await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: ids);
-        await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
-      }
-    } catch (e) {
-      logger.e(e);
-    }
+    // try {
+    //   if (isGroupChat) {
+    //     await OpenIM.iMManager.messageManager.markGroupMessageAsRead(groupID: gId!, messageIDList: []);
+    //   } else {
+    //     await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: ids);
+    //     await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: uId!, messageIDList: []);
+    //   }
+    // } catch (e) {
+    //   logger.e(e);
+    // }
   }
 
   /// @触发事件
@@ -730,25 +730,25 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onForwardMessage(MessageExt extMsg) {}
 
   Future<void> onLoad() async {
-    List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
+    AdvancedMessage res = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: conversationInfo.value.conversationID,
       count: loadNum,
       startMsg: data.last.m,
     );
-    if (list.length < loadNum) {
+    if (res.messageList.length < loadNum) {
       noMore.value = true;
       easyRefreshController.finishLoad(IndicatorResult.noMore);
     } else {
       easyRefreshController.finishLoad(IndicatorResult.success);
     }
-    List<MessageExt> newExts = await Future.wait(list.reversed.map((e) => e.toExt(secretKey)));
+    List<MessageExt> newExts = await Future.wait(res.messageList.reversed.map((e) => e.toExt(secretKey)));
     data.addAll(newExts);
-    if (list.length < loadNum) {
-      MessageExt encryptedNotification = await Message(
-        contentType: MessageType.encryptedNotification,
-        createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
-      ).toExt(secretKey);
-      data.add(encryptedNotification);
+    if (res.messageList.length < loadNum) {
+      // MessageExt encryptedNotification = await Message(
+      //   contentType: MessageType.encryptedNotification,
+      //   createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
+      // ).toExt(secretKey);
+      // data.add(encryptedNotification);
     }
     for (var v in newExts) {
       ImCore.downloadFile(v, secretKey);
@@ -852,11 +852,6 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 转发消息
   Future<MessageExt> createForwardMessage(Message msg, String sessionID, int sessionType) async {
-    /// 获取所有回话Key
-    String key = await OpenIM.iMManager.conversationManager.getLocalKey(sessionID: sessionID, sessionType: sessionType);
-    if (Utils.isEmpty(msg.ex) || msg.isExJson()) {
-      msg.ex = key;
-    }
     return await (await OpenIM.iMManager.messageManager.createForwardMessage(message: msg)).toExt(secretKey);
   }
 
@@ -889,7 +884,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
       if (index != -1) {
         data.removeAt(index);
-        await OpenIM.iMManager.messageManager.revokeMessage(message: message.m);
+        await OpenIM.iMManager.messageManager.revokeMessageV2(message: message.m);
         MessageExt revMsg = await Message(contentType: MessageType.revoke, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt(secretKey);
         data.insert(0, revMsg);
       }

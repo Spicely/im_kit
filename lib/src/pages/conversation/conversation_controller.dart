@@ -8,9 +8,6 @@ class ConversationController extends GetxController with OpenIMListener {
   /// 未读消息
   RxInt unReadMsg = 0.obs;
 
-  /// 密钥列表
-  Map<String, String> keyMap = {};
-
   TapDownDetails? details;
 
   /// 当前选中的会话信息
@@ -59,32 +56,14 @@ class ConversationController extends GetxController with OpenIMListener {
 
   @override
   void onRecvNewMessage(Message msg) {
-    String secretKey;
-    if (msg.sessionType == 1) {
-      secretKey = keyMap[msg.sendID] ?? '';
-    } else {
-      secretKey = keyMap[msg.groupID] ?? '';
-    }
-    msg.toExt(secretKey).then((extMsg) {
-      ImCore.downloadFile(extMsg, secretKey);
-    });
+    // msg.toExt(secretKey).then((extMsg) {
+    //   ImCore.downloadFile(extMsg, secretKey);
+    // });
   }
 
   Future<void> getData() async {
     data.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
-    var keys = await OpenIM.iMManager.conversationManager.getAllLocalKey();
-    for (var value in keys) {
-      keyMap[value['sessionID']] = value['sessionKey'];
-    }
     OpenIM.iMManager.conversationManager.simpleSort(data);
-  }
-
-  String getKey(ConversationInfo info) {
-    if (info.conversationType == 1) {
-      return keyMap[info.userID] ?? '';
-    } else {
-      return keyMap[info.groupID] ?? '';
-    }
   }
 
   /// 跳转到聊天页面
@@ -99,12 +78,11 @@ class ConversationController extends GetxController with OpenIMListener {
       groupMembers = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: info.groupID!);
       groupInfo = (await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!])).first;
     }
-    String secretKey = getKey(info);
-    List<MessageExt> messages = await advancedMessage.toExt(secretKey);
+    List<MessageExt> messages = await advancedMessage.toExt('');
     Get.to(
       () => ChatPage(
         controller: ChatPageController(
-          secretKey: secretKey,
+          secretKey: '',
           messages: messages,
           conversationInfo: info,
           groupMembers: groupMembers,

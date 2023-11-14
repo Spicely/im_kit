@@ -203,10 +203,10 @@ class ImListItem extends StatelessWidget {
                       onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
                           ? null
                           : (value) {
-                        onMessageSelect?.call(message, !selected);
-                      },
+                              onMessageSelect?.call(message, !selected);
+                            },
                     ),
-                  Expanded(child:getContentType(context)),
+                  Expanded(child: getContentType(context)),
                 ],
               ),
             ),
@@ -270,25 +270,25 @@ class ImListItem extends StatelessWidget {
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         );
-      case MessageType.encryptedNotification:
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset('assets/icons/lock.png', width: 16, height: 16),
-                const Expanded(
-                  child: Text(
-                    '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+      // case MessageType.encryptedNotification:
+      //   return Center(
+      //     child: Padding(
+      //       padding: const EdgeInsets.symmetric(horizontal: 50),
+      //       child: Row(
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           Image.asset('assets/icons/lock.png', width: 16, height: 16),
+      //           const Expanded(
+      //             child: Text(
+      //               '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+      //               style: TextStyle(fontSize: 12, color: Colors.grey),
+      //               textAlign: TextAlign.center,
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   );
       case MessageType.memberKickedNotification:
         return Center(
           child: Text.rich(
@@ -356,10 +356,11 @@ class ImListItem extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (message.m.isGroupChat && !isMe)Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                          ),
+                          if (message.m.isGroupChat && !isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                            ),
                           GestureDetector(
                             onTap: _onTap,
                             onDoubleTap: () {
@@ -373,12 +374,12 @@ class ImListItem extends StatelessWidget {
                                     color: ImCore.noBgMsgType.contains(message.m.contentType)
                                         ? null
                                         : isMe
-                                        ? chatTheme.messageTheme.meBackgroundColor
-                                        : chatTheme.messageTheme.backgroundColor,
+                                            ? chatTheme.messageTheme.meBackgroundColor
+                                            : chatTheme.messageTheme.backgroundColor,
                                     borderRadius: chatTheme.messageTheme.borderRadius,
                                   ),
                                   padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                  child:getTypeWidget(),
+                                  child: getTypeWidget(),
                                 ),
                                 // Stack(
                                 //   children: [
@@ -423,7 +424,6 @@ class ImListItem extends StatelessWidget {
                               ],
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -477,7 +477,8 @@ class ImListItem extends StatelessWidget {
       case MessageType.text:
       case MessageType.at_text:
       case MessageType.quote:
-        return Padding(padding: EdgeInsets.only(left:7),
+        return Padding(
+          padding: EdgeInsets.only(left: 7),
           child: ImAtText(
             message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
             isMe: isMe,

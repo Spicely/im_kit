@@ -33,16 +33,16 @@ class _IsolateFun {
   static Future<MessageExt> toMessageExt(Message msg, String secretKey) async {
     final ext = ImExtModel(key: GlobalKey(), createTime: DateTime.now());
     // SelectionAreaWidgetController controller=
-    ext.controller=SelectionAreaWidgetController(
-        globalKey:ext.key,
+    ext.controller = SelectionAreaWidgetController(
+        globalKey: ext.key,
         // ctxMenuctr:ctxcontroller,
-        screenHeight:770.0,
-        safeBot:56,
-        safeTop:56
-    );
+        screenHeight: 770.0,
+        safeBot: 56,
+        safeTop: 56);
     if (msg.sendTime != null) {
       ext.time = DateFormat('HH:mm').format(DateTime.fromMillisecondsSinceEpoch(msg.sendTime!));
     }
+
     /// 阅后即焚
     ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;
     try {
@@ -51,8 +51,8 @@ class _IsolateFun {
         case MessageType.text:
         case MessageType.quote:
           {
-            String v = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: msg.atElem?.text ?? msg.atElem?.text ?? msg.quoteElem?.text ?? msg.content ?? '', keyStr: secretKey);
-            List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
+            String v = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: msg.atTextElem?.text ?? msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '', keyStr: secretKey);
+            List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
 
             List<ImAtTextType> list = [];
 
@@ -119,7 +119,7 @@ class _IsolateFun {
           }
           break;
         case MessageType.card:
-          var data = json.decode(msg.content ?? '{}');
+          var data = json.decode(msg.textElem?.content ?? '{}');
           ext.data = data;
           break;
         case MessageType.location:
@@ -166,7 +166,7 @@ class _IsolateFun {
 
           break;
         case 300:
-          Map<String, dynamic> map = jsonDecode(msg.content ?? '{}');
+          Map<String, dynamic> map = jsonDecode(msg.textElem?.content ?? '{}');
           ext.data = jsonDecode(map['data'] ?? '{}');
 
           /// 获取文件名

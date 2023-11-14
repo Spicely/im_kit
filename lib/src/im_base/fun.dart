@@ -142,8 +142,8 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
 }
 
 TextSpan _getAtText(Message msg) {
-  String v = msg.atElem?.text ?? msg.content ?? '';
-  List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
+  String v = msg.atTextElem?.text ?? msg.textElem?.content ?? '';
+  List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
 
   List<ImAtTextType> list = [];
 

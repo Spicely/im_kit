@@ -131,7 +131,7 @@ class MessageExt {
 }
 
 String _getSecretKey(Message message, String currentSecretKey) {
-  String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
+  String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atTextElem?.quoteMessage?.ex;
   return k ?? currentSecretKey;
 }
 
@@ -384,7 +384,7 @@ class ImCore {
   }
 
   static String _getSecretKey(String key, Message message) {
-    String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atElem?.quoteMessage?.ex;
+    String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atTextElem?.quoteMessage?.ex;
     if (k == null) return key;
     try {
       json.decode(k);
@@ -627,7 +627,7 @@ class SignalingType {
       return {"err": true};
     }
     try {
-      var data = jsonDecode(msg.content!);
+      var data = jsonDecode(msg.textElem?.content ?? '');
       data = jsonDecode(data["data"]);
       return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
     } catch (e) {
