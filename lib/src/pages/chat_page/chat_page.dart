@@ -356,11 +356,12 @@ class ChatPage extends StatelessWidget {
                 () => Offstage(
                   offstage: controller.hasInput.value,
                   child: GestureDetector(
-                      onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowActions,
-                      child: Padding(
-                        padding: EdgeInsets.only(left: gap),
-                        child: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 28, height: 28),
-                      )),
+                    onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowActions,
+                    child: Padding(
+                      padding: EdgeInsets.only(left: gap),
+                      child: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 28, height: 28),
+                    ),
+                  ),
                 ),
               ),
             ],

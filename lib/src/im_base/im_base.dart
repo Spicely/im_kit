@@ -383,43 +383,32 @@ class ImCore {
     );
   }
 
-  static String _getSecretKey(String key, Message message) {
-    String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atTextElem?.quoteMessage?.ex;
-    if (k == null) return key;
-    try {
-      json.decode(k);
-      return key;
-    } catch (e) {
-      return k;
-    }
-  }
-
   /// 文件下载
-  static void downloadFile(MessageExt extMsg, String secretKey) {
+  static void downloadFile(MessageExt extMsg) {
     if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
       if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
         if (extMsg.m.contentType == MessageType.video) {
           ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
-            DownloadItem(path: extMsg.m.videoElem?.snapshotPath ?? '', url: extMsg.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.snapshotUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
-            DownloadItem(path: extMsg.m.videoElem?.videoPath ?? '', url: extMsg.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.videoUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+            DownloadItem(path: extMsg.m.videoElem?.snapshotPath ?? '', url: extMsg.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.snapshotUrl ?? '')),
+            DownloadItem(path: extMsg.m.videoElem?.videoPath ?? '', url: extMsg.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.videoUrl ?? '')),
           ]);
         } else {
           String url = extMsg.m.fileElem?.sourceUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '';
           String path = extMsg.m.fileElem?.filePath ?? extMsg.m.pictureElem?.sourcePath ?? extMsg.m.soundElem?.soundPath ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url), secretKey: _getSecretKey(secretKey, extMsg.m))]);
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url))]);
         }
       }
     } else if (MessageType.quote == extMsg.m.contentType) {
       if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.ext.quoteMessage?.m.contentType)) {
         if (extMsg.ext.quoteMessage?.m.contentType == MessageType.video) {
           ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
-            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.snapshotPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
-            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.videoPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? ''), secretKey: _getSecretKey(secretKey, extMsg.m)),
+            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.snapshotPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '')),
+            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.videoPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '')),
           ]);
         } else {
           String url = extMsg.ext.quoteMessage?.m.fileElem?.sourceUrl ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePicture?.url ?? extMsg.ext.quoteMessage?.m.soundElem?.sourceUrl ?? '';
           String path = extMsg.ext.quoteMessage?.m.fileElem?.filePath ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePath ?? extMsg.ext.quoteMessage?.m.soundElem?.soundPath ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url), secretKey: _getSecretKey(secretKey, extMsg.m))]);
+          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url))]);
         }
       }
     }

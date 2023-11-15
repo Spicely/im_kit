@@ -23,8 +23,6 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   late RxList<MessageExt> data;
 
-  final String secretKey;
-
   late TabController tabController;
 
   final List<ChatPageItem> tabs;
@@ -82,7 +80,6 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   RxList<MessageExt> selectList = RxList([]);
 
   ChatPageController({
-    required this.secretKey,
     required List<MessageExt> messages,
     required ConversationInfo conversationInfo,
     GroupInfo? groupInfo,
@@ -214,15 +211,15 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
     List<String> messageIds = [];
 
-    /// 下载文件
-    for (var v in data) {
-      if (!v.m.isRead! && !_types.contains(v.m.contentType)) {
-        messageIds.add(v.m.clientMsgID!);
-      }
-      ImCore.downloadFile(v, secretKey);
+    // /// 下载文件
+    // for (var v in data) {
+    //   if (!v.m.isRead! && !_types.contains(v.m.contentType)) {
+    //     messageIds.add(v.m.clientMsgID!);
+    //   }
+    //   ImCore.downloadFile(v, );
 
-      startTimer(v);
-    }
+    //   startTimer(v);
+    // }
     markMessageAsRead(messageIds);
   }
 
@@ -284,9 +281,9 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onRecvNewMessage(Message msg) {
     String? id = Utils.getValue(msg.groupID, msg.sendID);
     if (id == userID || id == groupID || userID == msg.recvID) {
-      msg.toExt(secretKey).then((extMsg) async {
+      msg.toExt().then((extMsg) async {
         if (msg.contentType == MessageType.quote) {
-          extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt(secretKey);
+          extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt();
         }
         data.insert(0, extMsg);
         computeTime();
@@ -296,11 +293,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
           });
         }
 
-        ImCore.downloadFile(extMsg, secretKey);
+        ImCore.downloadFile(extMsg);
       });
     }
     if (isGroupChat && msg.isGroupChat && conversationInfo.value.groupID == msg.groupID) {
-      msg.toExt(secretKey).then((v) {
+      msg.toExt().then((v) {
         if (v.ext.isGroupBothDelete) {
           onGroupBothMessageDelete(v);
         }
@@ -431,12 +428,12 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
         conversationID: conversationInfo.value.conversationID,
         startMsg: msgExt.m,
       );
-      List<MessageExt> newExts = (await Future.wait(result.messageList!.map((e) => e.toExt(secretKey)))).reversed.toList();
+      List<MessageExt> newExts = (await Future.wait(result.messageList.map((e) => e.toExt()))).reversed.toList();
 
       /// 移除已经有了的数据
       newExts.removeWhere((v) => data.indexWhere((e) => e.m.clientMsgID == v.m.clientMsgID) != -1);
       for (var v in newExts) {
-        ImCore.downloadFile(v, secretKey);
+        ImCore.downloadFile(v);
       }
       data.addAll(newExts);
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -553,22 +550,13 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       g_id = gId;
     }
     try {
-      /// 先对文件加密
-      if ([MessageType.file, MessageType.picture, MessageType.voice].contains(msg.m.contentType)) {
-        String path = msg.m.fileElem?.filePath ?? msg.m.pictureElem?.sourcePath ?? msg.m.videoElem?.videoPath ?? msg.m.soundElem?.soundPath ?? '';
-        await ImKitIsolateManager.encryptFile(secretKey, path);
-      } else if ([MessageType.video].contains(msg.m.contentType)) {
-        await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.videoPath!);
-        await ImKitIsolateManager.encryptFile(secretKey, msg.m.videoElem!.snapshotPath!);
-      }
       Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
         message: msg.m,
         userID: u_id,
         groupID: g_id,
         offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
       );
-      MessageExt extMsg = await newMsg.toExt(secretKey);
-      ImKitIsolateManager.copyFileToDownload(extMsg);
+      MessageExt extMsg = await newMsg.toExt();
       updateMessage(extMsg);
       return extMsg;
     } catch (e) {
@@ -626,11 +614,11 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       List<AtUserInfo> list = atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList();
       textEditingController.clear();
       if (atUserMap.isNotEmpty) {
-        message = await createTextAtMessage(list, '$value ', secretKey, quoteMessage: quoteMsg?.m);
+        message = await createTextAtMessage(list, value, quoteMessage: quoteMsg?.m);
       } else if (quoteMsg != null) {
-        message = await createQuoteMessage('$value ', quoteMsg.m, secretKey);
+        message = await createQuoteMessage(value, quoteMsg.m);
       } else {
-        message = await createTextMessage('$value ', secretKey);
+        message = await createTextMessage(value);
       }
       quoteMessage.value = null;
       atUserMap.clear();
@@ -642,7 +630,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       }
       message = await sendMessage(message);
       updateMessage(message);
-      ImCore.downloadFile(message, secretKey);
+      ImCore.downloadFile(message);
     } catch (e) {
       if (message != null) {
         /// 发送失败 修改状态
@@ -653,26 +641,24 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   }
 
   /// 创建文本消息
-  Future<MessageExt> createTextMessage(String val, String secretKey) async {
+  Future<MessageExt> createTextMessage(String val) async {
     /// 对< > 转成html
     val = val.replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-    String text = EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: val, keyStr: secretKey).base64;
-    Message msg = await OpenIM.iMManager.messageManager.createTextMessage(text: text);
-    return await msg.toExt(secretKey);
+    Message msg = await OpenIM.iMManager.messageManager.createTextMessage(text: val);
+    return await msg.toExt();
   }
 
   /// 创建引用
-  Future<MessageExt> createQuoteMessage(String text, Message quoteMsg, String secretKey) async {
-    quoteMsg.quoteElem?.text = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: quoteMsg.quoteElem?.text ?? '', keyStr: secretKey);
+  Future<MessageExt> createQuoteMessage(String text, Message quoteMsg) async {
     return await (await OpenIM.iMManager.messageManager.createQuoteMessage(
-      text: EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: text, keyStr: secretKey).base64,
+      text: text,
       quoteMsg: quoteMsg,
     ))
-        .toExt(secretKey);
+        .toExt();
   }
 
   /// 创建@消息
-  Future<MessageExt> createTextAtMessage(List<AtUserInfo> atUserInfoList, String text, String secretKey, {Message? quoteMessage}) async {
+  Future<MessageExt> createTextAtMessage(List<AtUserInfo> atUserInfoList, String text, {Message? quoteMessage}) async {
     /// 匹配@100010#ac @100011#qa 的字符串
     var regexAt = atUserInfoList.map((e) => '@${e.atUserID}#${RegExp.escape(e.groupNickname!)} ').toList().join('|');
 
@@ -689,12 +675,12 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     );
 
     return await (await OpenIM.iMManager.messageManager.createTextAtMessage(
-      text: EncryptExtends.ENC_STR_AES_UTF8_ZP(plainText: text, keyStr: secretKey).base64,
+      text: text,
       atUserIDList: atUserInfoList.map((e) => e.atUserID ?? '').toList(),
       atUserInfoList: atUserInfoList,
       quoteMessage: quoteMessage,
     ))
-        .toExt(secretKey);
+        .toExt();
   }
 
   /// 设置为显示表情
@@ -741,7 +727,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
     } else {
       easyRefreshController.finishLoad(IndicatorResult.success);
     }
-    List<MessageExt> newExts = await Future.wait(res.messageList.reversed.map((e) => e.toExt(secretKey)));
+    List<MessageExt> newExts = await Future.wait(res.messageList.reversed.map((e) => e.toExt()));
     data.addAll(newExts);
     if (res.messageList.length < loadNum) {
       // MessageExt encryptedNotification = await Message(
@@ -751,7 +737,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       // data.add(encryptedNotification);
     }
     for (var v in newExts) {
-      ImCore.downloadFile(v, secretKey);
+      ImCore.downloadFile(v);
     }
   }
 
@@ -796,7 +782,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
   void onRecordSuccess(String path, int duration) async {
     ImKitIsolateManager.copyFile(path).then((savePath) {
       OpenIM.iMManager.messageManager.createSoundMessageFromFullPath(soundPath: savePath, duration: duration).then((msg) {
-        msg.toExt(secretKey).then((extMsg) {
+        msg.toExt().then((extMsg) {
           extMsg.ext.file = File(path);
           data.insert(0, extMsg);
           sendMessage(extMsg);
@@ -852,7 +838,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
 
   /// 转发消息
   Future<MessageExt> createForwardMessage(Message msg, String sessionID, int sessionType) async {
-    return await (await OpenIM.iMManager.messageManager.createForwardMessage(message: msg)).toExt(secretKey);
+    return await (await OpenIM.iMManager.messageManager.createForwardMessage(message: msg)).toExt();
   }
 
   void onMultiSelectTap(MessageExt extMsg) async {
@@ -885,7 +871,7 @@ class ChatPageController extends GetxController with OpenIMListener, ImKitListen
       if (index != -1) {
         data.removeAt(index);
         await OpenIM.iMManager.messageManager.revokeMessageV2(message: message.m);
-        MessageExt revMsg = await Message(contentType: MessageType.revoke, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt(secretKey);
+        MessageExt revMsg = await Message(contentType: MessageType.revoke, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt();
         data.insert(0, revMsg);
       }
     });

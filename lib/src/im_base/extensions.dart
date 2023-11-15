@@ -2,13 +2,13 @@ part of im_kit;
 
 extension ExtensionAdvancedMessage on AdvancedMessage {
   Future<List<MessageExt>> toExt(String secretKey) async {
-    return Future.wait((messageList ?? []).map((e) => e.toExt(secretKey)));
+    return Future.wait(messageList.map((e) => e.toExt()));
   }
 }
 
 extension ExtensionMessage on Message {
-  Future<MessageExt> toExt(String secretKey) async {
-    return await ImKitIsolateManager.toMessageExt(OpenIM.iMManager.uid!, this, secretKey);
+  Future<MessageExt> toExt() async {
+    return await ImKitIsolateManager.toMessageExt(OpenIM.iMManager.uid!, this);
   }
 
   /// 消息类型

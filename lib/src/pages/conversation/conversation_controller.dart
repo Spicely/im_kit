@@ -82,7 +82,6 @@ class ConversationController extends GetxController with OpenIMListener {
     Get.to(
       () => ChatPage(
         controller: ChatPageController(
-          secretKey: '',
           messages: messages,
           conversationInfo: info,
           groupMembers: groupMembers,

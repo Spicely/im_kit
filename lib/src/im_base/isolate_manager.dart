@@ -98,13 +98,11 @@ class _PortModel {
 class DownloadItem {
   final String path;
   final String url;
-  final String secretKey;
   final String savePath;
 
   DownloadItem({
     required this.path,
     required this.url,
-    required this.secretKey,
     required this.savePath,
   });
 }
@@ -352,13 +350,13 @@ class ImKitIsolateManager {
   }
 
   /// 转成MessageExt
-  static Future<MessageExt> toMessageExt(String uid, Message msg, String secretKey) async {
+  static Future<MessageExt> toMessageExt(String uid, Message msg) async {
     var completer = Completer<MessageExt>();
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
       method: _PortMethod.toMessageExt,
-      data: {'msg': msg, 'secretKey': secretKey, 'uid': uid},
+      data: {'msg': msg, 'uid': uid},
       sendPort: port.sendPort,
     ));
 

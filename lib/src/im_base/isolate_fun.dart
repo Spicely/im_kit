@@ -30,7 +30,7 @@ class _IsolateFun {
   }
 
   /// 转成MessageExt
-  static Future<MessageExt> toMessageExt(Message msg, String secretKey) async {
+  static Future<MessageExt> toMessageExt(Message msg) async {
     final ext = ImExtModel(key: GlobalKey(), createTime: DateTime.now());
     // SelectionAreaWidgetController controller=
     ext.controller = SelectionAreaWidgetController(
@@ -51,7 +51,7 @@ class _IsolateFun {
         case MessageType.text:
         case MessageType.quote:
           {
-            String v = EncryptExtends.DEC_STR_AES_UTF8_ZP(plainText: msg.atTextElem?.text ?? msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '', keyStr: secretKey);
+            String v = msg.atTextElem?.text ?? msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '';
             List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
 
             List<ImAtTextType> list = [];
@@ -113,7 +113,7 @@ class _IsolateFun {
               },
             );
             if (msg.contentType == MessageType.quote) {
-              ext.quoteMessage = await toMessageExt(msg.quoteElem!.quoteMessage!, secretKey);
+              ext.quoteMessage = await toMessageExt(msg.quoteElem!.quoteMessage!);
             }
             ext.data = list;
           }
@@ -159,7 +159,6 @@ class _IsolateFun {
           ext.isSnapchat = data['isPrivate'] ?? false;
           break;
         case MessageType.picture:
-          ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: msg.pictureElem?.sourcePicture?.width?.toDouble(), height: msg.pictureElem?.sourcePicture?.height?.toDouble());
           ext.width = width;
           ext.height = height;
@@ -177,13 +176,11 @@ class _IsolateFun {
           if (File(filePath).existsSync()) {
             ext.file = File(filePath);
           }
-          ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: map['w'] ?? 120, height: map['h'] ?? 120);
           ext.width = width;
           ext.height = height;
           break;
         case MessageType.video:
-          ext.secretKey = _getSecretKey(msg, secretKey);
           var (width, height) = _computedSize(width: msg.videoElem?.snapshotWidth?.toDouble(), height: msg.videoElem?.snapshotHeight?.toDouble());
           ext.width = width;
           ext.height = height;

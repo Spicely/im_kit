@@ -16,7 +16,6 @@ class IsolateMethod {
       /// 先判断本地文件是否存在
       bool status = items.every((v) => File(v.path).existsSync());
       if (status) {
-        await Future.wait(items.map((v) => _IsolateFun.decryptFile(v.secretKey, v.path)));
         params.sendPort?.send(PortResult(data: items.map((e) => e.path).toList()));
         return;
       }
@@ -24,7 +23,6 @@ class IsolateMethod {
       /// 判断下载文件是否存在
       status = items.every((v) => File(v.savePath).existsSync());
       if (status) {
-        await Future.wait(items.map((v) => _IsolateFun.decryptFile(v.secretKey, v.savePath)));
         params.sendPort?.send(PortResult(data: items.map((e) => e.savePath).toList()));
         return;
       }
@@ -43,8 +41,7 @@ class IsolateMethod {
             params.sendPort?.send(PortProgress(progress / progressMap.length));
           },
         ).then((res) {
-          Uint8List u = Uint8List.fromList(res.data);
-          ImKitIsolateManager.writeFileByU8Async(e.savePath, ImKitIsolateManager.decFileNoPath(keyStr: e.secretKey, fileByte: Uint8List.fromList(u)));
+          ImKitIsolateManager.writeFileByU8Async(e.savePath, Uint8List.fromList(res.data));
         });
       }).toList());
       progressMap.remove(id);
@@ -128,11 +125,10 @@ class IsolateMethod {
   static Future<void> toMessageExt(_PortModel params) async {
     try {
       Message msg = params.data['msg'];
-      String secretKey = params.data['secretKey'];
       String uid = params.data['uid'];
       ImCore.setUid(uid);
 
-      MessageExt extMsg = await _IsolateFun.toMessageExt(msg, secretKey);
+      MessageExt extMsg = await _IsolateFun.toMessageExt(msg);
 
       params.sendPort?.send(PortResult(data: extMsg));
     } catch (e) {
