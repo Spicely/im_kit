@@ -81,6 +81,7 @@ class ImImage extends ImBase {
         },
         child: CachedImage(
           file: ext.file,
+          imageUrl: msg.pictureElem?.sourcePicture?.url,
           width: message.ext.width,
           height: message.ext.height,
           circular: 5,

@@ -5,6 +5,8 @@ class ConversationController extends GetxController with OpenIMListener {
 
   RxList<ConversationInfo> data = RxList([]);
 
+  late Rx<UserInfo> userInfo;
+
   /// 未读消息
   RxInt unReadMsg = 0.obs;
 
@@ -16,6 +18,7 @@ class ConversationController extends GetxController with OpenIMListener {
   @override
   void onInit() {
     OpenIMManager.addListener(this);
+    userInfo = Rx(OpenIM.iMManager.uInfo!);
     super.onInit();
     ever(data, (v) {
       // 统计未读数
@@ -56,9 +59,14 @@ class ConversationController extends GetxController with OpenIMListener {
 
   @override
   void onRecvNewMessage(Message msg) {
-    // msg.toExt(secretKey).then((extMsg) {
-    //   ImCore.downloadFile(extMsg, secretKey);
+    // msg.toExt().then((extMsg) {
+    //   ImCore.downloadFile(extMsg);
     // });
+  }
+
+  @override
+  void onSelfInfoUpdated(UserInfo info) {
+    userInfo.value = info;
   }
 
   Future<void> getData() async {
