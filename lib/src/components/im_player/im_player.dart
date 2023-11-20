@@ -22,9 +22,9 @@ class ImPlayer extends StatefulWidget {
 }
 
 class _ImPlayerState extends State<ImPlayer> {
-  late final player = Player();
+  // late final player = Player();
 
-  late final videoController = VideoController(player);
+  // late final videoController = VideoController(player);
 
   @override
   void initState() {
@@ -34,12 +34,12 @@ class _ImPlayerState extends State<ImPlayer> {
 
   @override
   void dispose() {
-    player.dispose();
+    // player.dispose();
     super.dispose();
   }
 
   Future<void> init() async {
-    player.open(Media('file://${widget.message.ext.file!.path}'));
+    // player.open(Media('file://${widget.message.ext.file!.path}'));
   }
 
   @override
@@ -51,7 +51,7 @@ class _ImPlayerState extends State<ImPlayer> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 30),
-            child: Video(controller: videoController),
+            // child: Video(controller: videoController),
           ),
           Positioned(
             top: 0,

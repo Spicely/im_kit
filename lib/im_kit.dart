@@ -5,49 +5,46 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
-
-import 'src/components/im_selected/custom_selectable_region.dart' as csr;
-import 'src/components/im_selected/custom_selection_area.dart' as csa ;
 import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart';
-import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
-import 'package:card_swiper/card_swiper.dart';
-import 'package:easy_refresh/easy_refresh.dart';
-import 'package:encrypt/encrypt.dart';
-import 'package:extended_text_field/extended_text_field.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audioplayers/audioplayers.dart' as a;
+import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
+import 'package:card_swiper/card_swiper.dart';
+import 'package:chinese_font_library/chinese_font_library.dart';
+import 'package:easy_refresh/easy_refresh.dart';
+import 'package:encrypt/encrypt.dart';
 import 'package:encrypt/encrypt.dart' as enc;
+import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
+import 'package:flutter_oss_aliyun/flutter_oss_aliyun.dart' as aliyun;
 import 'package:get/get.dart' hide Response;
 import 'package:html/parser.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:lottie/lottie.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:path/path.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:popup_menu/popup_menu.dart';
-import 'package:chinese_font_library/chinese_font_library.dart';
-import 'package:record/record.dart';
+// import 'package:record/record.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:sprintf/sprintf.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_oss_aliyun/flutter_oss_aliyun.dart' as aliyun;
+
+import 'src/components/im_selected/custom_selectable_region.dart' as csr;
+import 'src/components/im_selected/custom_selection_area.dart' as csa;
 
 export 'package:intl/intl.dart';
 export 'package:popup_menu/popup_menu.dart';
-
 
 part 'src/components/im_selected/selected_region.dart';
 part 'src/components/im_selected/selected_rich.dart';

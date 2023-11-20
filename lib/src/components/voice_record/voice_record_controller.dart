@@ -16,7 +16,7 @@ class VoiceRecordController extends GetxController {
   RxBool isShowing = false.obs;
 
   /// 录音实例
-  final AudioRecorder record = AudioRecorder();
+  // final AudioRecorder record = AudioRecorder();
 
   /// 保存文件路径
   final String _path = join(ImCore.dirPath, 'FileRecv', OpenIM.iMManager.uid);
@@ -33,7 +33,7 @@ class VoiceRecordController extends GetxController {
 
   @override
   void dispose() {
-    record.dispose();
+    // record.dispose();
     super.dispose();
   }
 
@@ -51,7 +51,7 @@ class VoiceRecordController extends GetxController {
     startTime = DateTime.now();
     fileName = startTime.millisecondsSinceEpoch.toString();
     _filePath = '$_path/$fileName.m4a';
-    await record.start(const RecordConfig(), path: _filePath);
+    // await record.start(const RecordConfig(), path: _filePath);
   }
 
   void onPanUpdate(DragUpdateDetails details) {
@@ -66,7 +66,7 @@ class VoiceRecordController extends GetxController {
 
     /// 判断手指距离
     if (panY > 200) {
-      await record.stop();
+      // await record.stop();
       File(_filePath).delete();
       onCancelRecord?.call();
     } else {
@@ -83,7 +83,7 @@ class VoiceRecordController extends GetxController {
 
   /// 结束录制
   void _stopRecord() async {
-    await record.stop();
+    // await record.stop();
     DateTime time = DateTime.now();
     if (time.difference(startTime).inSeconds < 1) {
       onRecordTimeShort?.call();
