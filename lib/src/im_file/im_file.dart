@@ -1,13 +1,17 @@
 part of im_kit;
 
 class ImFile extends ImBase {
+  // 双击点击消息体
+  final void Function(MessageExt message)? onDoubleTap;
+
   const ImFile({
     super.key,
     required super.isMe,
     required super.message,
     super.onTap,
-    required super.contextMenuController,
     super.onRevokeTap,
+    this.onDoubleTap,
+    super.contextMenuBuilder,
   });
 
   @override
@@ -19,74 +23,87 @@ class ImFile extends ImBase {
       onTap: () {
         onTap?.call(message);
       },
+      onDoubleTap: () {
+        onDoubleTap?.call(message);
+      },
       child: Directionality(
         textDirection: TextDirection.ltr,
         child: Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-                borderRadius: chatTheme.messageTheme.borderRadius,
-              ),
-              width: 220,
-              height: 80,
-              padding: const EdgeInsets.all(12),
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 40,
-                              child: Text(
-                                ImCore.fixAutoLines(filename ?? ''),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                style: const TextStyle(fontSize: 14),
+            getSelectableView(
+              context,
+              Container(
+                decoration: BoxDecoration(
+                  color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+                  borderRadius: chatTheme.messageTheme.borderRadius,
+                ),
+                width: 220,
+                height: 80,
+                padding: const EdgeInsets.all(12),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 40,
+                                child: Text(
+                                  ImCore.fixAutoLines(filename ?? ''),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
                               ),
                             ),
+                            // 文件大小
+                            Text(
+                              formatBytes(msg.fileElem?.fileSize ?? 0),
+                              style: const TextStyle(fontSize: 10, color: Color.fromRGBO(175, 175, 175, 1)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Stack(
+                        children: [
+                          const CachedImage(width: 40, height: 49, assetUrl: 'assets/icons/msg_default.png', package: 'im_kit'),
+                          Positioned(
+                            top: 0,
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Center(
+                              child: suffix == null
+                                  ? const CachedImage(
+                                      width: 20,
+                                      height: 20,
+                                      assetUrl: 'assets/icons/query.png',
+                                      package: 'im_kit',
+                                    )
+                                  : Text(suffix, style: const TextStyle(fontSize: 12, color: Colors.white)),
+                            ),
                           ),
-                          // 文件大小
-                          Text(
-                            formatBytes(msg.fileElem?.fileSize ?? 0),
-                            style: const TextStyle(fontSize: 10, color: Color.fromRGBO(175, 175, 175, 1)),
-                          ),
+                          if (ext.progress != null)
+                            Positioned(
+                              top: 0,
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                color: Colors.black.withOpacity(0.3),
+                                alignment: Alignment.center,
+                                child: CircularProgressIndicator(value: ext.progress),
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Stack(
-                      children: [
-                        const CachedImage(
-                          width: 40,
-                          height: 49,
-                          assetUrl: 'assets/icons/msg_default.png',
-                          package: 'im_kit',
-                        ),
-                        Positioned(
-                          top: 0,
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: suffix == null
-                                ? const CachedImage(
-                                    width: 20,
-                                    height: 20,
-                                    assetUrl: 'assets/icons/query.png',
-                                    package: 'im_kit',
-                                  )
-                                : Text(suffix, style: const TextStyle(fontSize: 12, color: Colors.white)),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 10),
-                  ],
+                      const SizedBox(width: 10),
+                    ],
+                  ),
                 ),
               ),
             ),

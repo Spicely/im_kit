@@ -22,76 +22,74 @@ class VoiceRecord extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      child: GetBuilder(
-        init: VoiceRecordController(onRecordTimeShort: onRecordTimeShort, onStopRecord: onStopRecord, onCancelRecord: onCancelRecord),
-        builder: (controller) => GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onPanUpdate: controller.onPanUpdate,
-          onPanEnd: controller.onPanEnd,
-          child: Stack(
-            children: [
-              child(controller),
-              Obx(
-                () => Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Offstage(
-                    offstage: !controller.isShowing.value,
-                    child: Container(
-                      color: Colors.black.withOpacity(0.3),
-                      child: Column(
-                        children: [
-                          const Expanded(child: SizedBox()),
-                          // 裁切的控件
-                          // Text(ImCore.theme.language.releaseSendSlideCancel, style: const TextStyle(color: Colors.white)),
-                          Stack(
-                            children: [
-                              ClipPath(
-                                // 只裁切底部的方法
-                                clipper: ArcClipper(),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 200,
-                                  color: Colors.white,
-                                ),
+    return GetBuilder(
+      init: VoiceRecordController(onRecordTimeShort: onRecordTimeShort, onStopRecord: onStopRecord, onCancelRecord: onCancelRecord),
+      builder: (controller) => GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanUpdate: controller.onPanUpdate,
+        onPanEnd: controller.onPanEnd,
+        child: Stack(
+          children: [
+            child(controller),
+            Obx(
+              () => Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Offstage(
+                  offstage: !controller.isShowing.value,
+                  child: Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: Column(
+                      children: [
+                        const Expanded(child: SizedBox()),
+                        // 裁切的控件
+                        // Text(ImCore.theme.language.releaseSendSlideCancel, style: const TextStyle(color: Colors.white)),
+                        Stack(
+                          children: [
+                            ClipPath(
+                              // 只裁切底部的方法
+                              clipper: ArcClipper(),
+                              child: Container(
+                                width: double.infinity,
+                                height: 200,
+                                color: Colors.white,
                               ),
-                              ClipPath(
-                                // 只裁切底部的方法
-                                clipper: ArcClipper(),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 200,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.black.withOpacity(0.1),
-                                        Colors.white,
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      stops: const [0.1, 1],
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(top: 60),
-                                    // child: Text(ImCore.theme.language.longPressRecordVoice, style: const TextStyle(color: Colors.black)),
+                            ),
+                            ClipPath(
+                              // 只裁切底部的方法
+                              clipper: ArcClipper(),
+                              child: Container(
+                                width: double.infinity,
+                                height: 200,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.black.withOpacity(0.1),
+                                      Colors.white,
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    stops: const [0.1, 1],
                                   ),
                                 ),
+                                alignment: Alignment.center,
+                                child: const Padding(
+                                  padding: EdgeInsets.only(top: 60),
+                                  // child: Text(ImCore.theme.language.longPressRecordVoice, style: const TextStyle(color: Colors.black)),
+                                ),
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              )
-            ],
-          ),
+              ),
+            )
+          ],
         ),
       ),
     );

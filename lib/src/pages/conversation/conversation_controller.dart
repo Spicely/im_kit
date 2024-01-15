@@ -1,11 +1,9 @@
 part of im_kit;
 
-class ConversationController extends GetxController with OpenIMListener {
+class ConversationController extends GetxController with OpenIMListener, ImKitListen {
   String get title => unReadMsg.value == 0 ? 'MOYO' : 'MOYO(${unReadMsg.value})';
 
   RxList<ConversationInfo> data = RxList([]);
-
-  late Rx<UserInfo> userInfo;
 
   /// 未读消息
   RxInt unReadMsg = 0.obs;
@@ -18,14 +16,14 @@ class ConversationController extends GetxController with OpenIMListener {
   @override
   void onInit() {
     OpenIMManager.addListener(this);
-    userInfo = Rx(OpenIM.iMManager.uInfo!);
+    ImKitIsolateManager.addListener(this);
     super.onInit();
     ever(data, (v) {
       // 统计未读数
       int count = 0;
       for (var info in v) {
         if (info.recvMsgOpt == 0) {
-          count += info.unreadCount ?? 0;
+          count += info.unreadCount;
         }
       }
       unReadMsg.value = count;
@@ -35,6 +33,7 @@ class ConversationController extends GetxController with OpenIMListener {
   @override
   void onClose() {
     OpenIMManager.removeListener(this);
+    ImKitIsolateManager.removeListener(this);
     super.onClose();
   }
 
@@ -57,18 +56,6 @@ class ConversationController extends GetxController with OpenIMListener {
     OpenIM.iMManager.conversationManager.simpleSort(data);
   }
 
-  @override
-  void onRecvNewMessage(Message msg) {
-    // msg.toExt().then((extMsg) {
-    //   ImCore.downloadFile(extMsg);
-    // });
-  }
-
-  @override
-  void onSelfInfoUpdated(UserInfo info) {
-    userInfo.value = info;
-  }
-
   Future<void> getData() async {
     data.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
     OpenIM.iMManager.conversationManager.simpleSort(data);
@@ -76,25 +63,16 @@ class ConversationController extends GetxController with OpenIMListener {
 
   /// 跳转到聊天页面
   Future<void> toChatPage(ConversationInfo info) async {
+    currentConversationInfo = info;
     AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: info.conversationID,
       count: 40,
     );
-    List<GroupMembersInfo> groupMembers = [];
-    GroupInfo? groupInfo;
-    if (info.isGroupChat) {
-      groupMembers = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: info.groupID!);
-      groupInfo = (await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!])).first;
-    }
-    List<MessageExt> messages = await advancedMessage.toExt('');
+
+    List<MessageExt> messages = await advancedMessage.toExt();
     Get.to(
       () => ChatPage(
-        controller: ChatPageController(
-          messages: messages,
-          conversationInfo: info,
-          groupMembers: groupMembers,
-          groupInfo: groupInfo,
-        ),
+        controller: ChatPageController(messages: messages, conversation: info),
       ),
     );
   }
@@ -122,8 +100,52 @@ class ConversationController extends GetxController with OpenIMListener {
 
   void onTapDown(TapDownDetails dragDownDetails, ConversationInfo info) {
     details = dragDownDetails;
-    currentConversationInfo = info;
   }
 
   void onLongPress() {}
+
+  /// 鼠标按下
+  void _onPointerDown(ConversationInfo conversationInfo, PointerDownEvent event) {
+    /// 判断鼠标右键按下
+    if (event.buttons == 2) {
+      onPointerRightDown(conversationInfo, event);
+    }
+  }
+
+  /// 鼠标右键按下
+  void onPointerRightDown(ConversationInfo conversationInfo, PointerDownEvent event) {}
+
+  /// 消息置顶设置
+  Future<void> pinConversation(ConversationInfo conversation, bool status) async {
+    await OpenIM.iMManager.conversationManager.pinConversation(
+      conversationID: conversation.conversationID,
+      isPinned: status,
+    );
+  }
+
+  /// copy群号
+  Future<void> copyGroupID(ConversationInfo conversation) async {
+    Clipboard.setData(ClipboardData(text: conversation.groupID ?? ''));
+  }
+
+  /// copyID
+  Future<void> copyID(ConversationInfo conversation) async {
+    Clipboard.setData(ClipboardData(text: conversation.userID ?? ''));
+  }
+
+  /// 删除会话
+  Future<void> removeConversation(ConversationInfo conversation) async {
+    await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversation.conversationID);
+    data.removeWhere((v) => v.conversationID == conversation.conversationID);
+  }
+
+  /// 标记已读
+  Future<void> markConversationRead(ConversationInfo conversation) async {
+    await OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversation.conversationID, messageIDList: []);
+  }
+
+  /// 免打扰
+  Future<void> setConversationRecvMessageOpt(ConversationInfo conversation, int status) async {
+    await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
+  }
 }

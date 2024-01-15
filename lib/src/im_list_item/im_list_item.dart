@@ -3,7 +3,7 @@ part of im_kit;
 class ImListItem extends StatelessWidget {
   final MessageExt message;
 
-  final void Function(MessageExt message)? onTapDownFile;
+  final void Function(BuildContext context, MessageExt message)? onTapDownFile;
 
   final void Function(MessageExt message)? onTap;
 
@@ -52,8 +52,6 @@ class ImListItem extends StatelessWidget {
 
   final List<MenuItemProvider>? textMenuItems;
 
-  final ContextMenuController contextMenuController;
-
   /// 网址点击事件
   final void Function(String)? onTapUrl;
 
@@ -64,13 +62,13 @@ class ImListItem extends StatelessWidget {
   final void Function(String)? onTapPhone;
 
   /// 点击播放视频
-  final void Function(MessageExt message)? onTapPlayVideo;
+  final void Function(BuildContext context, MessageExt message)? onTapPlayVideo;
 
   /// 图片点击事件
   final void Function(MessageExt message)? onPictureTap;
 
   /// at点击事件
-  final void Function(UserInfo userInfo)? onAtTap;
+  final void Function(TapUpDetails details, FullUserInfo userInfo)? onAtTap;
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
@@ -101,9 +99,6 @@ class ImListItem extends StatelessWidget {
   /// 消息引用\回复
   final Function(MessageExt extMsg)? onQuoteMessage;
 
-  // /// 艾特点击事件
-  // final Function(AtUserInfo userInfo)? onAtTap;
-
   /// 重新发送事件
   final Function(MessageExt extMsg)? onResend;
 
@@ -121,6 +116,14 @@ class ImListItem extends StatelessWidget {
 
   /// 头像长按事件
   final void Function(UserInfo userInfo)? onAvatarLongPress;
+
+  /// 双击点击消息体
+  final void Function(MessageExt message)? onDoubleTapFile;
+
+  /// 鼠标右键点击事件
+  final void Function(PointerDownEvent event, MessageExt extMsg)? onPointerRightDown;
+
+  final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
 
   const ImListItem({
     super.key,
@@ -159,28 +162,27 @@ class ImListItem extends StatelessWidget {
     this.onQuoteMessage,
     this.onResend,
     this.onMessageSelect,
-    required this.contextMenuController,
     this.onQuoteMessageTap,
     this.highlight = false,
     this.onVoiceTap,
     this.onAvatarTap,
     this.onAvatarLongPress,
+    this.onDoubleTapFile,
+    this.onPointerRightDown,
+    this.contextMenuBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (message.m.contentType == MessageType.friendAddedNotification) {
-      return Container();
-    }
     return Container(
       color: highlight ? Colors.blue.withOpacity(0.1) : null,
       padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Directionality(
-        textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
-        child: Column(
-          children: [
-            if (message.ext.showTime) ImTime(message: message),
-            Padding(
+      child: Column(
+        children: [
+          if (message.ext.showTime) ImTime(message: message),
+          Directionality(
+            textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
+            child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 5),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -210,17 +212,11 @@ class ImListItem extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-  /*
-  *
-
-  *
-  * */
 
   Widget getContentType(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
@@ -243,7 +239,7 @@ class ImListItem extends StatelessWidget {
               ),
             );
           case 81:
-            return ImRedEnv(isMe: isMe, message: message, contextMenuController: contextMenuController);
+            return ImRedEnv(isMe: isMe, message: message);
           case 82:
             return Center(
               child: Text.rich(
@@ -262,6 +258,10 @@ class ImListItem extends StatelessWidget {
         return const Center(
           child: Text('群组开启禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
         );
+      case MessageType.dismissGroupNotification:
+        return const Center(
+          child: Text('群组已被解散', style: TextStyle(fontSize: 12, color: Colors.grey)),
+        );
       case MessageType.groupCancelMutedNotification:
         return const Center(
           child: Text('群组取消禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -270,25 +270,6 @@ class ImListItem extends StatelessWidget {
         return const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         );
-      // case MessageType.encryptedNotification:
-      //   return Center(
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 50),
-      //       child: Row(
-      //         crossAxisAlignment: CrossAxisAlignment.start,
-      //         children: [
-      //           Image.asset('assets/icons/lock.png', width: 16, height: 16),
-      //           const Expanded(
-      //             child: Text(
-      //               '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-      //               style: TextStyle(fontSize: 12, color: Colors.grey),
-      //               textAlign: TextAlign.center,
-      //             ),
-      //           ),
-      //         ],
-      //       ),
-      //     ),
-      //   );
       case MessageType.memberKickedNotification:
         return Center(
           child: Text.rich(
@@ -303,7 +284,7 @@ class ImListItem extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         );
-      case MessageType.revoke:
+      case MessageType.revokeMessageNotification:
         return Center(
           child: Text.rich(
             _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap),
@@ -369,17 +350,24 @@ class ImListItem extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                        ? null
-                                        : isMe
-                                            ? chatTheme.messageTheme.meBackgroundColor
-                                            : chatTheme.messageTheme.backgroundColor,
-                                    borderRadius: chatTheme.messageTheme.borderRadius,
+                                Listener(
+                                  onPointerDown: (PointerDownEvent event) {
+                                    if (event.buttons == 2) {
+                                      onPointerRightDown?.call(event, message);
+                                    }
+                                  },
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: ImCore.noBgMsgType.contains(message.m.contentType)
+                                          ? null
+                                          : isMe
+                                              ? chatTheme.messageTheme.meBackgroundColor
+                                              : chatTheme.messageTheme.backgroundColor,
+                                      borderRadius: chatTheme.messageTheme.borderRadius,
+                                    ),
+                                    padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                    child: getTypeWidget(),
                                   ),
-                                  padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                  child: getTypeWidget(),
                                 ),
                                 // Stack(
                                 //   children: [
@@ -417,7 +405,6 @@ class ImListItem extends StatelessWidget {
                                     child: ImQuoteItem(
                                       isMe: isMe,
                                       message: message,
-                                      contextMenuController: contextMenuController,
                                       onQuoteMessageTap: onQuoteMessageTap,
                                     ),
                                   ),
@@ -431,7 +418,7 @@ class ImListItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Container(
+              SizedBox(
                 width: avatarTheme.width,
                 height: avatarTheme.height,
               )
@@ -475,10 +462,10 @@ class ImListItem extends StatelessWidget {
   Widget getTypeWidget() {
     switch (message.m.contentType) {
       case MessageType.text:
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
         return Padding(
-          padding: EdgeInsets.only(left: 7),
+          padding: const EdgeInsets.only(left: 5),
           child: ImAtText(
             message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
             isMe: isMe,
@@ -492,8 +479,8 @@ class ImListItem extends StatelessWidget {
             onForwardTap: onForwardMessage,
             onMultiSelectTap: onMultiSelectTap,
             onQuoteTap: onQuoteMessage,
-            contextMenuController: contextMenuController,
             onRevokeTap: onRevokeMessage,
+            contextMenuBuilder: contextMenuBuilder,
           ),
         );
       case MessageType.picture:
@@ -503,12 +490,12 @@ class ImListItem extends StatelessWidget {
               message: message,
               isMe: isMe,
               onTap: onPictureTap,
-              contextMenuController: contextMenuController,
               onDeleteTap: onDeleteMessage,
               onForwardTap: onForwardMessage,
               onMultiSelectTap: onMultiSelectTap,
               onQuoteTap: onQuoteMessage,
               onRevokeTap: onRevokeMessage,
+              contextMenuBuilder: contextMenuBuilder,
             ),
             Positioned(
               bottom: 4,
@@ -539,16 +526,17 @@ class ImListItem extends StatelessWidget {
           message: message,
           isMe: isMe,
           onTap: onFileTap,
-          contextMenuController: contextMenuController,
           onRevokeTap: onRevokeMessage,
+          onDoubleTap: onDoubleTapFile,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.voice:
         return ImVoice(
           message: message,
           isMe: isMe,
-          contextMenuController: contextMenuController,
           onRevokeTap: onRevokeMessage,
           onTap: onVoiceTap,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.video:
         return Stack(
@@ -558,8 +546,8 @@ class ImListItem extends StatelessWidget {
               isMe: isMe,
               onTapDownFile: onTapDownFile,
               onTapPlayVideo: onTapPlayVideo,
-              contextMenuController: contextMenuController,
               onRevokeTap: onRevokeMessage,
+              contextMenuBuilder: contextMenuBuilder,
             ),
             Positioned(
               bottom: 4,
@@ -589,8 +577,8 @@ class ImListItem extends StatelessWidget {
           message: message,
           isMe: isMe,
           onTap: onCardTap,
-          contextMenuController: contextMenuController,
           onRevokeTap: onRevokeMessage,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.location:
         return Stack(
@@ -599,8 +587,8 @@ class ImListItem extends StatelessWidget {
               message: message,
               isMe: isMe,
               onTap: onLocationTap,
-              contextMenuController: contextMenuController,
               onRevokeTap: onRevokeMessage,
+              contextMenuBuilder: contextMenuBuilder,
             ),
             Positioned(
               bottom: 4,
@@ -629,14 +617,13 @@ class ImListItem extends StatelessWidget {
         return ImMerge(
           message: message,
           isMe: isMe,
-          contextMenuController: contextMenuController,
           onRevokeTap: onRevokeMessage,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case 300:
         return ImCustomFace(
           message: message,
           isMe: isMe,
-          contextMenuController: contextMenuController,
           onRevokeTap: onRevokeMessage,
         );
       default:

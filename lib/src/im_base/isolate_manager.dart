@@ -16,29 +16,14 @@ part of im_kit;
  */
 
 enum _PortMethod {
-  /// 下载多文件
-  downloadFiles,
-
-  /// 对文件加密
-  encryptFile,
-
-  /// 解密文件
-  decryptFile,
+  // /// 下载多文件
+  // downloadFiles,
 
   /// 复制文件
   copyFile,
 
-  /// 将Uint8List保存成图片
-  saveImageByUint8List,
-
   /// 转成MessageExt
   toMessageExt,
-
-  /// 上传文件
-  uploadFile,
-
-  /// 复制文件为下载文件
-  copyFileToDownload,
 
   downEmoji,
   checkEmoji,
@@ -98,11 +83,13 @@ class _PortModel {
 class DownloadItem {
   final String path;
   final String url;
+  final String secretKey;
   final String savePath;
 
   DownloadItem({
     required this.path,
     required this.url,
+    required this.secretKey,
     required this.savePath,
   });
 }
@@ -132,6 +119,16 @@ class ImKitIsolateManager {
     }
   }
 
+  /// Uint8List保存到临时文件夹
+  static Future<String> saveBytesToTemp(Uint8List pngBytes) async {
+    Completer<String> completer = Completer<String>();
+    String path = join(ImCore.tempPath, '${const Uuid().v4()}.png');
+    File file = File(path);
+    await file.writeAsBytes(pngBytes);
+    completer.complete(path);
+    return completer.future;
+  }
+
   /// 保存文件到相册
   static Future<bool> saveFileToAlbum(String path) async {
     try {
@@ -142,34 +139,13 @@ class ImKitIsolateManager {
     }
   }
 
-  ///保存文件
-  static File writeFileByU8Async(String path, Uint8List data) {
-    File file = File(path);
-    file.writeAsBytesSync(data, flush: true);
-    return file;
-  }
-
-  static Uint8List decFileNoPath({
-    required String keyStr,
-    required Uint8List fileByte,
-  }) {
-    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, keyStr, decIV: IV.fromUtf8("abcd1234abcd1234"));
-    if (res2.isEncData == 0) return fileByte;
-    Uint8List decData = res2.decFile;
-    return decData;
-  }
-
   /// 初始化
   static Future<void> init(String dirPath) async {
     if (_isInit) return;
-    // MediaKit.ensureInitialized();
-    ImCore.dirPath = dirPath;
+    MediaKit.ensureInitialized();
+    ImCore.init(dirPath);
     _isInit = true;
-    IsolateTask task = await Utils.createIsolate(
-      'imKitIsolate',
-      {'dirPath': dirPath},
-      _isolateEntry,
-    );
+    IsolateTask task = await Utils.createIsolate('imKitIsolate', {'dirPath': dirPath}, _isolateEntry);
 
     task.receivePort.listen((msg) {
       if (msg is SendPort) {
@@ -178,30 +154,31 @@ class ImKitIsolateManager {
     });
   }
 
-  /// 下载多文件
-  static void downloadFiles(String id, List<DownloadItem> data) {
-    /// 获取保存路径
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: {'id': id, 'data': data}, sendPort: port.sendPort));
-    port.listen((msg) {
-      if (msg is PortProgress) {
-        for (ImKitListen listener in _listeners) {
-          listener.onDownloadProgress(id, msg.progress);
-        }
-      } else {
-        if (msg.data != null) {
-          for (ImKitListen listener in _listeners) {
-            listener.onDownloadSuccess(id, (msg as PortResult).data!);
-          }
-        } else {
-          for (ImKitListen listener in _listeners) {
-            listener.onDownloadFailure(id, (msg as PortResult).error!);
-          }
-        }
-        port.close();
-      }
-    });
-  }
+  // /// 下载多文件
+  // static void downloadFiles(String id, List<DownloadItem> data) {
+  //   ReceivePort port = ReceivePort();
+  //   _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: {'id': id, 'data': data}, sendPort: port.sendPort));
+  //   port.listen((msg) {
+  //     if (msg is PortProgress) {
+  //       for (ImKitListen listener in _listeners) {
+  //         listener.onDownloadProgress(id, msg.progress);
+  //       }
+  //     } else {
+  //       if (msg is PortResult) {
+  //         if (msg.data != null) {
+  //           for (ImKitListen listener in _listeners) {
+  //             listener.onDownloadSuccess(id, msg.data!);
+  //           }
+  //         } else {
+  //           for (ImKitListen listener in _listeners) {
+  //             listener.onDownloadFailure(id, msg.error!);
+  //           }
+  //         }
+  //       }
+  //       port.close();
+  //     }
+  //   });
+  // }
 
   /// 下载压缩包
   ///
@@ -237,107 +214,18 @@ class ImKitIsolateManager {
   }
 
   /// 复制文件
-  static Future<String> copyFile(String path) {
+  static Future<String> copyFile(String path, String savePath) {
     var completer = Completer<String>();
-    var savePath = ImCore.getSavePathForFilePath(path);
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
       method: _PortMethod.copyFile,
-      data: {'path': path, 'savePath': savePath.$1, 'desPath': savePath.$2},
+      data: {'path': path, 'savePath': savePath},
       sendPort: port.sendPort,
     ));
 
     port.listen((msg) {
       if (msg is PortResult<String>) {
-        if (msg.data != null) {
-          completer.complete(msg.data);
-        } else {
-          completer.completeError(msg.error!);
-        }
-        port.close();
-      }
-    });
-    return completer.future;
-  }
-
-  /// 复制为下载文件
-  static Future<void> copyFileToDownload(MessageExt extMsg) {
-    String? filePath;
-    String? savePath;
-    if ([MessageType.picture, MessageType.voice, MessageType.file, MessageType.video].contains(extMsg.m.contentType)) {
-      filePath = extMsg.m.pictureElem?.sourcePath ?? extMsg.m.videoElem?.videoPath ?? extMsg.m.fileElem?.filePath ?? extMsg.m.soundElem?.soundPath;
-      savePath = ImCore.getSavePath(extMsg.m);
-    }
-    if (filePath == null || savePath == null) return Future.value();
-    var completer = Completer<void>();
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.copyFileToDownload,
-      data: {'path': filePath, 'savePath': savePath},
-      sendPort: port.sendPort,
-    ));
-
-    port.listen((msg) {
-      if (msg is PortResult<String>) {
-        if (msg.data != null) {
-          completer.complete();
-        } else {
-          completer.completeError(msg.error!);
-        }
-        port.close();
-      }
-    });
-    return completer.future;
-  }
-
-  /// 加密文件
-  static Future<void> encryptFile(String key, String path, {String iv = 'abcd1234abcd1234'}) async {
-    var completer = Completer();
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.encryptFile,
-      data: {'key': key, 'iv': iv, 'path': path},
-      sendPort: port.sendPort,
-    ));
-
-    port.listen((msg) {
-      if (msg is PortResult) {
-        if (msg.data != null) {
-          completer.complete();
-        } else {
-          completer.completeError(msg.error!);
-        }
-        port.close();
-      }
-    });
-    return completer.future;
-  }
-
-  /// 重命名文件
-  static Future<void> renameFile(String path, String url) async {
-    /// 检查文件是否存在  如果存在则重命名
-    File file = File(path);
-    if (await file.exists()) {
-      await file.rename(ImCore.getSaveForUrlPath(url));
-    }
-  }
-
-  /// 解密文件
-  static Future<String> decryptFile(String key, String path, {String iv = 'abcd1234abcd1234'}) async {
-    var completer = Completer<String>();
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.decryptFile,
-      data: {'key': key, 'iv': iv, 'filePath': path},
-      sendPort: port.sendPort,
-    ));
-
-    port.listen((msg) {
-      if (msg is PortResult) {
         if (msg.data != null) {
           completer.complete(msg.data);
         } else {
@@ -386,85 +274,28 @@ class ImKitIsolateManager {
       if (msg is _PortModel) {
         try {
           switch (msg.method) {
-            case _PortMethod.downloadFiles:
-              IsolateMethod.downloadFiles(msg);
-              break;
+            // case _PortMethod.downloadFiles:
+            //   IsolateMethod.downloadFiles(msg);
+            //   break;
             case _PortMethod.downEmoji:
               IsolateMethod.downEmoji(msg);
               break;
             case _PortMethod.checkEmoji:
               IsolateMethod.checkEmoji(msg);
               break;
-            case _PortMethod.encryptFile:
-              IsolateMethod.encryptFile(msg);
-            case _PortMethod.decryptFile:
-              IsolateMethod.decryptFile(msg);
+
             case _PortMethod.copyFile:
               IsolateMethod.copyFile(msg);
-            case _PortMethod.saveImageByUint8List:
-              IsolateMethod.saveImageByUint8List(msg);
+              break;
             case _PortMethod.toMessageExt:
               IsolateMethod.toMessageExt(msg);
-            case _PortMethod.uploadFile:
-              IsolateMethod.uploadFile(msg);
-            case _PortMethod.copyFileToDownload:
-              IsolateMethod.copyFileToDownload(msg);
+              break;
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
         }
       }
     });
-  }
-
-  /// 将Uint8List存储为图片
-  static Future<String> saveImageByUint8List(Uint8List bytes) async {
-    var completer = Completer<String>();
-
-    String path = join(ImCore.saveDir, '${const Uuid().v4()}.jpg');
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.saveImageByUint8List,
-      data: {'filePath': path, 'uint8List': bytes},
-      sendPort: port.sendPort,
-    ));
-
-    port.listen((msg) {
-      if (msg is PortResult) {
-        if (msg.data != null) {
-          completer.complete(msg.data);
-        } else {
-          completer.completeError(msg.error!);
-        }
-        port.close();
-      }
-    });
-    return completer.future;
-  }
-
-  /// 上传文件
-  static Future<String> uploadFile(String path, String token, String hostUrl) async {
-    var completer = Completer<String>();
-
-    ReceivePort port = ReceivePort();
-    _isolateSendPort.send(_PortModel(
-      method: _PortMethod.uploadFile,
-      data: {'filePath': path, 'token': token, 'hostUrl': hostUrl},
-      sendPort: port.sendPort,
-    ));
-
-    port.listen((msg) {
-      if (msg is PortResult) {
-        if (msg.data != null) {
-          completer.complete(msg.data);
-        } else {
-          completer.completeError(msg.error!);
-        }
-        port.close();
-      }
-    });
-    return completer.future;
   }
 
   /// 检测表情包是否下载

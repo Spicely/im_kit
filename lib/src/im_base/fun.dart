@@ -1,27 +1,37 @@
 part of im_kit;
 
-typedef UserNotificationCallback = void Function(UserInfo user);
+typedef UserNotificationCallback = void Function(TapUpDetails details, FullUserInfo user);
+
+typedef SelfNotificationCallback = void Function(TapUpDetails details, UserInfo user);
 
 /// 踢出群组
-TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
   List<dynamic> kickedUserList = detail['kickedUserList'];
   return TextSpan(
     children: [
       ...kickedUserList
           .map(
             (v) => TextSpan(
-              text: v['userID'] == OpenIM.iMManager.uid ? '你${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}' : '${v['nickname']}${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}',
-              style: TextStyle(color: userColor),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () async {
-                  if (v['userID'] == OpenIM.iMManager.uid) {
-                    onTap?.call(OpenIM.iMManager.uInfo!);
-                  } else {
-                    List<UserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
-                    onTap?.call(users[0]);
+                text: v['userID'] == OpenIM.iMManager.uid ? '你${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}' : '${v['nickname']}${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}',
+                style: TextStyle(color: userColor),
+                recognizer: TapGestureRecognizer()
+                  ..onTapUp = (details) async {
+                    if (v['userID'] == OpenIM.iMManager.uid) {
+                      onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
+                    } else {
+                      List<FullUserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
+                      onTap?.call(details, users[0]);
+                    }
                   }
-                },
-            ),
+                // ..onTap = () async {
+                //   if (v['userID'] == OpenIM.iMManager.uid) {
+                //     onTap?.call(OpenIM.iMManager.uInfo!);
+                //   } else {
+                //     List<UserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
+                //     onTap?.call(users[0]);
+                //   }
+                // },
+                ),
           )
           .toList(),
       const TextSpan(text: '被踢出群组'),
@@ -30,19 +40,19 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
 }
 
 /// 撤回消息
-TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
   return TextSpan(
     children: [
       TextSpan(
         text: extMsg.m.sendID == OpenIM.iMManager.uid ? '你' : extMsg.m.senderNickname,
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
-          ..onTap = () async {
+          ..onTapUp = (details) async {
             if (extMsg.m.sendID == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
+              onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
             } else {
               OpenIM.iMManager.userManager.getUsersInfo(uidList: [extMsg.m.sendID!]).then((users) {
-                onTap?.call(users.first);
+                onTap?.call(details, users.first);
               });
             }
           },
@@ -53,7 +63,7 @@ TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallba
 }
 
 /// 邀请进群
-TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
   List<dynamic> invitedUserList = detail['invitedUserList'];
   return TextSpan(
     children: [
@@ -63,12 +73,12 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
               text: v['userID'] == OpenIM.iMManager.uid ? '你${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}' : '${v['nickname']}${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}',
               style: TextStyle(color: userColor),
               recognizer: TapGestureRecognizer()
-                ..onTap = () async {
+                ..onTapUp = (details) async {
                   if (v['userID'] == OpenIM.iMManager.uid) {
-                    onTap?.call(OpenIM.iMManager.uInfo!);
+                    onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
                   } else {
-                    List<UserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
-                    onTap?.call(users[0]);
+                    List<FullUserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
+                    onTap?.call(details, users[0]);
                   }
                 },
             ),
@@ -80,7 +90,7 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
 }
 
 /// 修改了群组资料
-TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
   String? userId = detail['mutedUser']?['userID'] ?? detail['opUser']?['userID'] ?? detail['entrantUser']?['userID'] ?? detail['quitUser']?['userID'];
   String? nickname = detail['mutedUser']?['nickname'] ?? detail['opUser']?['nickname'] ?? detail['entrantUser']?['nickname'] ?? detail['quitUser']?['nickname'];
   return TextSpan(
@@ -89,12 +99,12 @@ TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userCol
         text: userId == OpenIM.iMManager.uid ? '你' : nickname,
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
-          ..onTap = () async {
+          ..onTapUp = (details) async {
             if (userId == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
+              onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
             } else {
               OpenIM.iMManager.userManager.getUsersInfo(uidList: [userId!]).then((users) {
-                onTap?.call(users.first);
+                onTap?.call(details, users.first);
               });
             }
           },
@@ -124,14 +134,15 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
         text: extMsg.m.sendID == OpenIM.iMManager.uid ? '你' : extMsg.m.senderNickname,
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
-          ..onTap = () async {
-            if (extMsg.m.sendID == OpenIM.iMManager.uid) {
-              onTap?.call(OpenIM.iMManager.uInfo!);
-            } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [extMsg.m.sendID!]).then((users) {
-                onTap?.call(users.first);
-              });
-            }
+          ..onTapDown = (details) {
+            print(details.globalPosition);
+            // if (extMsg.m.sendID == OpenIM.iMManager.uid) {
+            //   onTap?.call(OpenIM.iMManager.uInfo!);
+            // } else {
+            //   OpenIM.iMManager.userManager.getUsersInfo(uidList: [extMsg.m.sendID!]).then((users) {
+            //     onTap?.call(users.first);
+            //   });
+            // }
           },
       ),
       const TextSpan(text: '领取了'),

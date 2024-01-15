@@ -1,7 +1,7 @@
 part of im_kit;
 
 extension ExtensionAdvancedMessage on AdvancedMessage {
-  Future<List<MessageExt>> toExt(String secretKey) async {
+  Future<List<MessageExt>> toExt() async {
     return Future.wait(messageList.map((e) => e.toExt()));
   }
 }
@@ -23,9 +23,11 @@ extension ExtensionMessage on Message {
         MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
         MessageType.groupMutedNotification => const TextSpan(text: '群组开启禁言'),
         MessageType.groupCancelMutedNotification => const TextSpan(text: '群组取消禁言'),
-        MessageType.advancedRevoke => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
-        MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
-        MessageType.revoke => TextSpan(text: '$senderNickname撤回了一条消息'),
+        MessageType.revokeMessageNotification => TextSpan(text: isSingleChat ? '[撤回消息]' : '${sendID == OpenIM.iMManager.uid ? '你' : senderNickname}: [撤回消息]'),
+        MessageType.text || MessageType.advancedText || MessageType.atText => _getAtText(this),
+        // MessageType.revokeMessageNotification => TextSpan(text: '${sendID == OpenIM.iMManager.uid ? '你' : senderNickname}撤回了一条消息'),
+        MessageType.friendApplicationApprovedNotification => const TextSpan(text: '[成为好友]'),
+        MessageType.oaNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['notificationName']),
         300 => TextSpan(text: isSingleChat ? '[表情]' : '$senderNickname: [表情]'),
         MessageType.burnAfterReadingNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭'),
         MessageType.memberInvitedNotification => _getMemberInvitedNotification(jsonDecode(notificationElem?.detail ?? '{}')),

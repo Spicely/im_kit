@@ -7,8 +7,8 @@ class ImVideo extends ImBase {
     required super.message,
     super.onTapDownFile,
     super.onTapPlayVideo,
-    required super.contextMenuController,
     super.onRevokeTap,
+    super.contextMenuBuilder,
   });
 
   (double w, double h) get size {
@@ -37,12 +37,15 @@ class ImVideo extends ImBase {
       textDirection: TextDirection.ltr,
       child: Stack(
         children: [
-          CachedImage(
-            memory: ext.preview,
-            file: ext.previewPath != null ? File(ext.previewPath!) : null,
-            width: w,
-            height: h,
-            circular: 5,
+          getSelectableView(
+            context,
+            CachedImage(
+              imageUrl: msg.videoElem?.snapshotUrl,
+              file: ext.previewFile,
+              width: w,
+              height: h,
+              circular: 5,
+            ),
           ),
           Positioned(
             left: 0,
@@ -54,9 +57,9 @@ class ImVideo extends ImBase {
                 onTap: () {
                   if (ext.isDownloading) return;
                   if (ext.file == null) {
-                    onTapDownFile?.call(message);
+                    onTapDownFile?.call(context, message);
                   } else {
-                    onTapPlayVideo?.call(message);
+                    onTapPlayVideo?.call(context, message);
                   }
                 },
                 child: Stack(

@@ -5,12 +5,13 @@ class ImQuoteItem extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    required super.contextMenuController,
     super.onQuoteMessageTap,
     super.onRevokeTap,
   });
 
-  MessageExt get quoteMsg => message.ext.quoteMessage!;
+  MessageExt get quoteMsg => message.ext.quoteMessage!
+    ..ext.file = message.ext.file
+    ..ext.previewFile = ext.previewFile;
 
   double get maxW {
     if ((quoteMsg.m.contentType == MessageType.location) || (quoteMsg.m.contentType == MessageType.file) || (quoteMsg.m.contentType == MessageType.card)) {
@@ -35,7 +36,7 @@ class ImQuoteItem extends ImBase {
         // margin: const EdgeInsets.only(top: 4),
         padding: chatTheme.messageTheme.quotePadding,
         decoration: BoxDecoration(
-          color: const Color.fromRGBO(242, 242, 242, 1),
+          color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
           borderRadius: chatTheme.messageTheme.borderRadius,
         ),
         child: Row(
@@ -82,7 +83,7 @@ class ImQuoteItem extends ImBase {
               Row(
                 children: [
                   const SizedBox(width: 4),
-                  CachedImage(imageUrl: json.decode(quoteMsg.m.textElem?.content ?? '')['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
+                  CachedImage(imageUrl: json.decode(quoteMsg.m.textElem!.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
                 ],
               ),
           ],
@@ -134,7 +135,6 @@ class ImQuoteItem extends ImBase {
           ],
         );
       case MessageType.video:
-        VideoElem? sourcePicture = quoteMsg.m.videoElem;
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,11 +160,11 @@ class ImQuoteItem extends ImBase {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Image.network(sourcePicture?.snapshotUrl ?? '', width: 40, height: 40, fit: BoxFit.cover),
+                      child: CachedImage(file: ext.previewFile, width: 40, height: 40, circular: 5),
                     ),
-                    Positioned.fill(
+                    const Positioned.fill(
                       child: Center(
-                        child: Image.asset('assets/images/ic_video_play.webp', width: 15),
+                        child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
                       ),
                     )
                   ],
@@ -221,7 +221,7 @@ class ImQuoteItem extends ImBase {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
       case MessageType.text:
         return Text.rich(

@@ -5,7 +5,6 @@ class ImCustomFace extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    required super.contextMenuController,
     super.onRevokeTap,
   });
 

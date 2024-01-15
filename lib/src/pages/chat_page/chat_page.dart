@@ -21,86 +21,86 @@ class ChatPage extends StatelessWidget {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImLanguage language = ImKitTheme.of(context).language;
 
-    return GetBuilder(
-      key: ValueKey(controller.conversationInfo.value.conversationID),
-      init: controller,
-      tag: controller.conversationInfo.value.conversationID,
-      builder: (controller) => Scaffold(
-        backgroundColor: chatTheme.backgroundColor,
-        appBar: Utils.isDesktop
-            ? null
-            : AppBar(
-                backgroundColor: chatTheme.appBarTheme.backgroundColor,
-                iconTheme: chatTheme.appBarTheme.iconTheme,
-                leading: Obx(
-                  () => Visibility(
-                    visible: controller.showSelect.value,
-                    replacement: TextButton(
-                      onPressed: Get.back,
-                      child: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                    ),
-                    child: TextButton(
-                      onPressed: () {
-                        controller.selectList.clear();
-                        controller.showSelect.value = false;
-                      },
-                      child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
-                    ),
-                  ),
-                ),
-                title: Column(
-                  children: [
-                    Obx(
-                      () => Text(
-                        controller.conversationInfo.value.title(number: controller.groupMemberInfo.length),
-                        style: chatTheme.appBarTheme.style,
+    return GestureDetector(
+      onTap: () {
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus) {
+          currentFocus.focusedChild?.unfocus();
+        }
+      },
+      child: GetBuilder(
+        key: ValueKey(controller.conversationInfo.value.conversationID),
+        init: controller,
+        tag: controller.conversationInfo.value.conversationID,
+        builder: (controller) => Scaffold(
+          backgroundColor: chatTheme.backgroundColor,
+          appBar: Utils.isDesktop
+              ? null
+              : AppBar(
+                  backgroundColor: chatTheme.appBarTheme.backgroundColor,
+                  iconTheme: chatTheme.appBarTheme.iconTheme,
+                  leading: Obx(
+                    () => Visibility(
+                      visible: controller.showSelect.value,
+                      replacement: TextButton(
+                        onPressed: Get.back,
+                        child: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          controller.selectList.clear();
+                          controller.showSelect.value = false;
+                        },
+                        child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
                       ),
                     ),
-                    // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
-                  ],
+                  ),
+                  title: Column(
+                    children: [
+                      Obx(
+                        () => Text(
+                          controller.conversationInfo.value.title(number: controller.groupMembers.length),
+                          style: chatTheme.appBarTheme.style,
+                        ),
+                      ),
+                      // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
+                    ],
+                  ),
+                  centerTitle: chatTheme.appBarTheme.centerTitle,
+                  actions: appBarActions,
                 ),
-                centerTitle: chatTheme.appBarTheme.centerTitle,
-                actions: appBarActions,
-              ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Obx(
-                () => PageInit(
-                  onPageTap: controller.onTapBody,
-                  child: EasyRefresh.builder(
+          body: Column(
+            children: [
+              Expanded(
+                child: Obx(
+                  () => EasyRefresh.builder(
                     controller: controller.easyRefreshController,
                     clipBehavior: Clip.none,
                     footer: BuilderFooter(
-                        triggerOffset: 40,
-                        infiniteOffset: 60,
-                        clamping: false,
-                        position: IndicatorPosition.above,
-                        processedDuration: Duration.zero,
-                        builder: (context, state) {
-                          return Stack(
-                            children: [
-                              SizedBox(
-                                height: state.offset,
+                      triggerOffset: 40,
+                      infiniteOffset: 60,
+                      clamping: false,
+                      position: IndicatorPosition.above,
+                      processedDuration: Duration.zero,
+                      builder: (context, state) {
+                        return Stack(
+                          children: [
+                            SizedBox(height: state.offset, width: double.infinity),
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                alignment: Alignment.center,
                                 width: double.infinity,
+                                height: 40,
+                                child: SpinKitCircle(size: 24, color: Theme.of(context).primaryColor),
                               ),
-                              Positioned(
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                child: Container(
-                                  alignment: Alignment.center,
-                                  width: double.infinity,
-                                  height: 40,
-                                  child: SpinKitCircle(
-                                    size: 24,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                              )
-                            ],
-                          );
-                        }),
+                            )
+                          ],
+                        );
+                      },
+                    ),
                     onLoad: controller.noMore.value ? null : controller.onLoad,
                     childBuilder: (context, physics) => Obx(
                       () => ScrollablePositionedList.builder(
@@ -112,7 +112,6 @@ class ChatPage extends StatelessWidget {
                         itemScrollController: controller.itemScrollController,
                         itemBuilder: (context, index) => Obx(
                           () => ImListItem(
-                            contextMenuController: controller.contextMenuController,
                             message: controller.data[index],
                             selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
                             // onTap: controller.onTap,
@@ -140,12 +139,15 @@ class ChatPage extends StatelessWidget {
                             onMultiSelectTap: controller.onMultiSelectTap,
                             onQuoteMessage: controller.onQuoteMessage,
                             onMessageSelect: controller.onMessageSelect,
-                            onRevokeMessage: controller.onRevokeMessage,
+                            onRevokeMessage: controller.revokeMessage,
                             onQuoteMessageTap: controller.onQuoteMessageTap,
                             onVoiceTap: controller.onVoiceTap,
                             onAvatarTap: controller.onAvatarTap,
                             onAvatarLongPress: controller.onAvatarLongPress,
+                            onDoubleTapFile: controller.onDoubleTapFile,
+                            onPointerRightDown: controller.onPointerRightDown,
                             highlight: controller.currentIndex.value == index,
+                            contextMenuBuilder: controller.contextMenuBuilder,
                             sendSuccessWidget: Text(
                               controller.data[index].m.isRead == true ? '已读' : '未读',
                               style: const TextStyle(fontSize: 10, color: Colors.grey),
@@ -157,18 +159,18 @@ class ChatPage extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-            if (!Utils.isDesktop)
-              Obx(
-                () => Visibility(
-                  visible: controller.showSelect.value,
-                  replacement: _buildBottomInput(context),
-                  child: _buildMoreBottomView(),
+              if (!Utils.isDesktop)
+                Obx(
+                  () => Visibility(
+                    visible: controller.showSelect.value,
+                    replacement: _buildBottomInput(context),
+                    child: _buildMoreBottomView(),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
+          resizeToAvoidBottomInset: true,
         ),
-        resizeToAvoidBottomInset: true,
       ),
     );
   }
@@ -187,7 +189,6 @@ class ChatPage extends StatelessWidget {
               () => controller.quoteMessage.value == null
                   ? Container()
                   : ImQuote(
-                      contextMenuController: controller.contextMenuController,
                       padding: EdgeInsets.zero,
                       isMe: controller.quoteMessage.value?.m.sendID == OpenIM.iMManager.uid,
                       message: controller.quoteMessage.value!,
@@ -356,12 +357,11 @@ class ChatPage extends StatelessWidget {
                 () => Offstage(
                   offstage: controller.hasInput.value,
                   child: GestureDetector(
-                    onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowActions,
-                    child: Padding(
-                      padding: EdgeInsets.only(left: gap),
-                      child: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 28, height: 28),
-                    ),
-                  ),
+                      onTap: controller.isMute.value || controller.isMuteUser.value ? null : controller.onShowActions,
+                      child: Padding(
+                        padding: EdgeInsets.only(left: gap),
+                        child: const CachedImage(assetUrl: 'assets/icons/chat_action.png', package: 'im_kit', width: 28, height: 28),
+                      )),
                 ),
               ),
             ],

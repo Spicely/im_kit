@@ -23,7 +23,6 @@ class ImQuote extends ImBase {
     required super.isMe,
     required super.message,
     this.padding,
-    required super.contextMenuController,
     super.onRevokeTap,
   });
 
@@ -46,14 +45,14 @@ class ImQuote extends ImBase {
       case MessageType.picture:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.picture}]',
-          style: TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       case MessageType.video:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.video}]',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
@@ -61,35 +60,35 @@ class ImQuote extends ImBase {
       case MessageType.merger:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.chatRecord}]${message.m.mergeElem?.title ?? ''}',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       case MessageType.card:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.card}]',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       case MessageType.voice:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.voice}]',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       case 300:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.emoji}]',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
       case MessageType.file:
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.file}]',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
@@ -97,11 +96,11 @@ class ImQuote extends ImBase {
         Map<String, dynamic> des = message.ext.data;
         return Text(
           '${message.m.senderNickname ?? ''}: [${language.location}] ${des['addr']}',
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
       case MessageType.text:
         return Text.rich(
@@ -129,7 +128,7 @@ class ImQuote extends ImBase {
               }).toList()),
             ],
           ),
-          style: TextStyle(fontSize: 12, color: const Color.fromRGBO(126, 126, 126, 1)),
+          style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );

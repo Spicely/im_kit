@@ -6,27 +6,28 @@ class ImVoice extends ImBase {
     required super.isMe,
     required super.message,
     super.onTap,
-    required super.contextMenuController,
     super.onRevokeTap,
+    super.contextMenuBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: ext.file == null
-          ? const ImLoading()
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Transform.rotate(
-                  angle: isMe ? -pi : 0,
-                  child: Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
-                ),
-                const SizedBox(width: 8),
-                Text('${message.m.soundElem?.duration}"'),
-              ],
+      child: getSelectableView(
+        context,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Transform.rotate(
+              angle: isMe ? -pi : 0,
+              child: Lottie.asset('assets/json/voice_record.json', height: 30, animate: ext.isPlaying, package: 'im_kit'),
             ),
+            const SizedBox(width: 8),
+            Text('${message.m.soundElem?.duration}"'),
+          ],
+        ),
+      ),
     );
   }
 

@@ -20,8 +20,6 @@ class ImBase extends StatelessWidget {
 
   final MessageExt message;
 
-  final ContextMenuController contextMenuController;
-
   final void Function(MenuItemProvider, MessageExt)? onClickMenu;
 
   ImExtModel get ext => message.ext;
@@ -41,10 +39,10 @@ class ImBase extends StatelessWidget {
   final void Function(String)? onTapPhone;
 
   /// 点击下载文件
-  final void Function(MessageExt message)? onTapDownFile;
+  final void Function(BuildContext context, MessageExt message)? onTapDownFile;
 
   /// 点击播放视频
-  final void Function(MessageExt message)? onTapPlayVideo;
+  final void Function(BuildContext context, MessageExt message)? onTapPlayVideo;
 
   /// 点击复制
   final void Function(EditableTextState editableTextState)? onCopyTap;
@@ -67,11 +65,31 @@ class ImBase extends StatelessWidget {
   /// 引用消息点击
   final void Function(MessageExt message)? onQuoteMessageTap;
 
+  final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
+
+  Widget getSelectableView(BuildContext context, Widget child) {
+    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
+    return SelectableText.rich(
+      TextSpan(
+        children: [WidgetSpan(child: child)],
+      ),
+      style: chatTheme.textStyle,
+      contextMenuBuilder: (BuildContext context, EditableTextState state) {
+        if (contextMenuBuilder == null) {
+          return AdaptiveTextSelectionToolbar.editableText(
+            editableTextState: state,
+          );
+        } else {
+          return contextMenuBuilder!(context, message, state);
+        }
+      },
+    );
+  }
+
   const ImBase({
     super.key,
     required this.isMe,
     required this.message,
-    required this.contextMenuController,
     this.onClickMenu,
     this.onTap,
     this.onTapUrl,
@@ -86,6 +104,7 @@ class ImBase extends StatelessWidget {
     this.onMultiSelectTap,
     this.onRevokeTap,
     this.onQuoteMessageTap,
+    this.contextMenuBuilder,
   });
 
   @override
@@ -121,8 +140,7 @@ class MessageExt {
         isDownloading: json['ext']?['isDownloading'] as bool? ?? false,
         canDelete: json['ext']?['canDelete'] as bool? ?? true,
         createTime: DateTime.fromMillisecondsSinceEpoch(json['ext']?['createTime'] as int? ?? 0),
-        preview: json['ext']?['preview'] as Uint8List?,
-        previewPath: json['ext']?['previewPath'] as String?,
+        previewFile: json['ext']?['previewFile'] as File?,
         secretKey: json['ext']?['secretKey'] as String? ?? '',
       ),
       m: Message.fromJson(json['m'] as Map<String, Object?>? ?? {}),
@@ -130,9 +148,9 @@ class MessageExt {
   }
 }
 
-String _getSecretKey(Message message, String currentSecretKey) {
-  String? k = message.ex ?? message.quoteElem?.quoteMessage?.ex ?? message.atTextElem?.quoteMessage?.ex;
-  return k ?? currentSecretKey;
+abstract class ImExtErrorCode {
+  /// 下载失败
+  static const int downloadFailure = 1;
 }
 
 class ImExtModel {
@@ -140,8 +158,6 @@ class ImExtModel {
   final DateTime createTime;
 
   final GlobalKey key;
-
-  SelectionAreaWidgetController? controller;
 
   double? progress;
 
@@ -156,11 +172,8 @@ class ImExtModel {
   /// 是否可以删除
   bool canDelete;
 
-  /// 预览图
-  Uint8List? preview;
-
   /// 预览地址
-  String? previewPath;
+  File? previewFile;
 
   /// 密钥
   String secretKey;
@@ -206,6 +219,9 @@ class ImExtModel {
   /// 发送时间
   String time;
 
+  /// 错误码
+  int? errorCode;
+
   ImExtModel({
     this.progress,
     this.file,
@@ -215,8 +231,7 @@ class ImExtModel {
     this.canDelete = true,
     required this.createTime,
     required this.key,
-    this.preview,
-    this.previewPath,
+    this.previewFile,
     this.secretKey = '',
     this.width,
     this.height,
@@ -231,7 +246,7 @@ class ImExtModel {
     this.seconds = 30,
     this.showTime = false,
     this.time = '',
-    this.controller,
+    this.errorCode,
   });
 
   Map<String, dynamic> toJson() {
@@ -242,9 +257,22 @@ class ImExtModel {
       'isDownloading': isDownloading,
       'canDelete': canDelete,
       'createTime': createTime.millisecondsSinceEpoch,
-      'preview': preview,
-      'previewPath': previewPath,
+      'previewPath': previewFile,
       'secretKey': secretKey,
+      'width': width,
+      'height': height,
+      'data': data,
+      'quoteMessage': quoteMessage?.toJson(),
+      'isVoice': isVoice,
+      'isPrivateChat': isPrivateChat,
+      'isRedEnvelope': isRedEnvelope,
+      'isSnapchat': isSnapchat,
+      'isBothDelete': isBothDelete,
+      'isGroupBothDelete': isGroupBothDelete,
+      'seconds': seconds,
+      'showTime': showTime,
+      'time': time,
+      'errorCode': errorCode,
     };
   }
 }
@@ -257,45 +285,30 @@ class ImCore {
 
   static String _playID = '';
 
-  static String? _uid;
+  static String? userID;
 
-  /// 文件保存文件夹
-  static String get saveDir => join(dirPath, 'FileRecv', _uid ?? OpenIM.iMManager.uid);
+  /// 临时缓存文件夹
+  static String get tempPath => join(dirPath, 'Temp');
 
-  /// 文件加密保存文件夹
-  static String get saveDesDir => join(dirPath, 'DesRecv', _uid ?? OpenIM.iMManager.uid);
+  /// 临时缓存文件夹
+  static String get recvPath => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
 
-  /// 设置用户id
-  static void setUid(String? uid) {
-    _uid = uid;
+  static init(String path) {
+    dirPath = path;
+    Directory(tempPath).createSync(recursive: true);
+  }
+
+  /// 初始化用户文件夹
+  static void initUserFolder(String userID) {
+    /// 判断文件夹是否存在
+    if (!Directory(recvPath).existsSync()) {
+      Directory(recvPath).createSync(recursive: true);
+    }
   }
 
   /// 播放回调
   static void onPlayerStateChanged(void Function(a.PlayerState state, String id) listener) {
     _player.onPlayerStateChanged.listen((a.PlayerState state) => listener(state, _playID));
-  }
-
-  /// 文件保存地址
-  static String getSavePath(Message msg) {
-    String? url = msg.fileElem?.sourceUrl ?? msg.videoElem?.videoUrl ?? msg.soundElem?.sourceUrl ?? msg.pictureElem?.sourcePicture?.url;
-    if (url == null) return '';
-    String fileName = url.split('/').last;
-    return join(saveDir, fileName);
-  }
-
-  /// 文件保存地址
-  static String getSaveForUrlPath(String path) {
-    String fileName = path.split('/').last;
-    return join(saveDir, fileName);
-  }
-
-  /// 文件保存地址
-  static (String, String) getSavePathForFilePath(String path) {
-    /// 获取后缀名
-    String ext = path.split('.').last;
-    var uuid = const Uuid();
-    String fileName = '${uuid.v4()}${ext.isEmpty ? '' : '.$ext'}';
-    return (join(saveDir, fileName), join(saveDesDir, fileName));
   }
 
   /// 检测文件是否存在
@@ -381,37 +394,6 @@ class ImCore {
         ),
       ),
     );
-  }
-
-  /// 文件下载
-  static void downloadFile(MessageExt extMsg) {
-    if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
-      if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType)) {
-        if (extMsg.m.contentType == MessageType.video) {
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
-            DownloadItem(path: extMsg.m.videoElem?.snapshotPath ?? '', url: extMsg.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.snapshotUrl ?? '')),
-            DownloadItem(path: extMsg.m.videoElem?.videoPath ?? '', url: extMsg.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.m.videoElem?.videoUrl ?? '')),
-          ]);
-        } else {
-          String url = extMsg.m.fileElem?.sourceUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '';
-          String path = extMsg.m.fileElem?.filePath ?? extMsg.m.pictureElem?.sourcePath ?? extMsg.m.soundElem?.soundPath ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url))]);
-        }
-      }
-    } else if (MessageType.quote == extMsg.m.contentType) {
-      if ([MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.ext.quoteMessage?.m.contentType)) {
-        if (extMsg.ext.quoteMessage?.m.contentType == MessageType.video) {
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [
-            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.snapshotPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.snapshotUrl ?? '')),
-            DownloadItem(path: extMsg.ext.quoteMessage?.m.videoElem?.videoPath ?? '', url: extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '', savePath: ImCore.getSaveForUrlPath(extMsg.ext.quoteMessage?.m.videoElem?.videoUrl ?? '')),
-          ]);
-        } else {
-          String url = extMsg.ext.quoteMessage?.m.fileElem?.sourceUrl ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePicture?.url ?? extMsg.ext.quoteMessage?.m.soundElem?.sourceUrl ?? '';
-          String path = extMsg.ext.quoteMessage?.m.fileElem?.filePath ?? extMsg.ext.quoteMessage?.m.pictureElem?.sourcePath ?? extMsg.ext.quoteMessage?.m.soundElem?.soundPath ?? '';
-          ImKitIsolateManager.downloadFiles(extMsg.m.clientMsgID!, [DownloadItem(path: path, url: url, savePath: ImCore.getSaveForUrlPath(url))]);
-        }
-      }
-    }
   }
 
   /// 没有内边距
@@ -557,13 +539,13 @@ class ImCore {
 
 mixin ImKitListen {
   /// 下载进度
-  void onDownloadProgress(String id, double progress);
+  void onDownloadProgress(String id, double progress) {}
 
   /// 下载成功
-  void onDownloadSuccess(String id, List<String> paths);
+  void onDownloadSuccess(String id, List<String> paths) {}
 
   /// 下载失败
-  void onDownloadFailure(String id, String error);
+  void onDownloadFailure(String id, String error) {}
 }
 
 class SignalingType {
@@ -616,7 +598,7 @@ class SignalingType {
       return {"err": true};
     }
     try {
-      var data = jsonDecode(msg.textElem?.content ?? '');
+      var data = jsonDecode(msg.textElem?.content ?? '{}');
       data = jsonDecode(data["data"]);
       return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
     } catch (e) {

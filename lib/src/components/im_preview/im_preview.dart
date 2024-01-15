@@ -73,7 +73,8 @@ class _ImPreviewState extends State<ImPreview> {
               MessageExt message = messages[index];
               final (w, h) = getSize(message);
               return PhotoViewGalleryPageOptions(
-                imageProvider: FileImage(message.ext.file!),
+                // imageProvider: message.ext.file == null ? NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? '') as ImageProvider<Object>? : FileImage(message.ext.file!),
+                imageProvider: NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? ''),
                 initialScale: PhotoViewComputedScale.contained,
                 minScale: PhotoViewComputedScale.contained * 0.5,
                 maxScale: PhotoViewComputedScale.contained * 2,
@@ -88,7 +89,7 @@ class _ImPreviewState extends State<ImPreview> {
             pageController: pageController,
             onPageChanged: onPageChanged,
           ),
-          _buildBackBtn(),
+          if (!Utils.isDesktop) _buildBackBtn(),
           Positioned(
             bottom: 80,
             left: 0,
@@ -109,10 +110,7 @@ class _ImPreviewState extends State<ImPreview> {
                         color: Colors.grey.withOpacity(0.4),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        language.save,
-                        style: const TextStyle(fontSize: 14, color: Colors.white),
-                      ),
+                      child: Text(language.save, style: const TextStyle(fontSize: 14, color: Colors.white)),
                     ),
                   ),
                 ],

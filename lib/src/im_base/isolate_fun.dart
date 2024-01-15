@@ -1,53 +1,19 @@
 part of im_kit;
 
 class _IsolateFun {
-  /// 加密文件
-  static Future<void> encryptFile(String key, String path, {String iv = 'abcd1234abcd1234'}) async {
-    final fileByte = File(path).readAsBytesSync();
-
-    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: enc.IV.fromUtf8(iv));
-    if (res2.isEncData != 0) return;
-    Uint8List encdata = res2.encData;
-
-    /// 写入加密后的文件
-    File file = File(path);
-    await file.writeAsBytes(encdata, flush: true);
-  }
-
-  /// 解开密文件
-  static Future<void> decryptFile(String key, String filePath, {String iv = 'abcd1234abcd1234'}) async {
-    final fileByte = await File(filePath).readAsBytes();
-    DecDataRes res2 = DecDataRes.fromByUint8list(fileByte, key, decIV: enc.IV.fromUtf8(iv));
-    if (res2.isEncData == 0) {
-      return;
-    }
-    Uint8List decData = res2.decFile;
-    File file = File(filePath);
-    await file.writeAsBytes(decData, flush: true);
-
-    /// 延迟1s 避免文件还未写入完成
-    await Future.delayed(const Duration(seconds: 1));
-  }
-
   /// 转成MessageExt
   static Future<MessageExt> toMessageExt(Message msg) async {
     final ext = ImExtModel(key: GlobalKey(), createTime: DateTime.now());
-    // SelectionAreaWidgetController controller=
-    ext.controller = SelectionAreaWidgetController(
-        globalKey: ext.key,
-        // ctxMenuctr:ctxcontroller,
-        screenHeight: 770.0,
-        safeBot: 56,
-        safeTop: 56);
+
     if (msg.sendTime != null) {
-      ext.time = DateFormat('HH:mm').format(DateTime.fromMillisecondsSinceEpoch(msg.sendTime!));
+      ext.time = msg.sendTime!.formatDate();
     }
 
     /// 阅后即焚
     ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;
     try {
       switch (msg.contentType) {
-        case MessageType.at_text:
+        case MessageType.atText:
         case MessageType.text:
         case MessageType.quote:
           {
@@ -88,7 +54,9 @@ class _IsolateFun {
                   list.add(ImAtTextType(type: ImAtType.email, text: value));
                 } else if (RegExp(atReg).hasMatch(value)) {
                   String id = value.replaceAll('@', '').trim();
+
                   AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
+
                   if (atUserInfo == null) {
                     if (RegExp(phoneReg).hasMatch(value)) {
                       list.add(ImAtTextType(type: ImAtType.phone, text: value));
@@ -96,7 +64,7 @@ class _IsolateFun {
                       list.add(ImAtTextType(type: ImAtType.text, text: value));
                     }
                   } else {
-                    if (atUserInfo.atUserID == ImCore._uid) {
+                    if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
                       list.add(ImAtTextType(type: ImAtType.at, text: '@你 ', userInfo: atUserInfo));
                     } else {
                       list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
@@ -117,10 +85,6 @@ class _IsolateFun {
             }
             ext.data = list;
           }
-          break;
-        case MessageType.card:
-          var data = json.decode(msg.textElem?.content ?? '{}');
-          ext.data = data;
           break;
         case MessageType.location:
           var data = json.decode(msg.locationElem?.description ?? '{}');
@@ -154,6 +118,7 @@ class _IsolateFun {
         case MessageType.groupCreatedNotification:
         case MessageType.burnAfterReadingNotification:
         case MessageType.memberQuitNotification:
+        case MessageType.oaNotification:
           var data = json.decode(msg.notificationElem?.detail ?? '{}');
           ext.data = data;
           ext.isSnapchat = data['isPrivate'] ?? false;
@@ -186,6 +151,8 @@ class _IsolateFun {
           ext.height = height;
           break;
         default:
+          var data = json.decode(msg.textElem?.content ?? '{}');
+          ext.data = data;
       }
 
       return MessageExt(ext: ext, m: msg);

@@ -48,7 +48,7 @@ class ImBottomVoice extends StatefulWidget {
 
 class _ImBottomVoiceState extends State<ImBottomVoice> {
   /// 录音实例
-  // final AudioRecorder record = AudioRecorder();
+  final AudioRecorder record = AudioRecorder();
 
   /// 是否正在录音
   bool isRecording = false;
@@ -133,7 +133,7 @@ class _ImBottomVoiceState extends State<ImBottomVoice> {
   @override
   void dispose() {
     timer?.cancel();
-    // record.dispose();
+    record.dispose();
     super.dispose();
   }
 
@@ -145,24 +145,24 @@ class _ImBottomVoiceState extends State<ImBottomVoice> {
     });
     timer?.cancel();
     duration = 0;
-    // record.stop();
+    record.stop();
   }
 
   /// 录音
   void recordVoice() async {
     /// 获取录音权限
-    // if (await record.hasPermission()) {
-    //   time = DateTime.now();
-    //   fileName = const Uuid().v4();
-    //   setState(() {
-    //     isRecording = true;
-    //     duration = 0;
-    //   });
-    //   startTimer();
-    //   // record.start(const RecordConfig(), path: '$path/$fileName.m4a');
-    // } else {
-    //   widget.onRecordNotPermission?.call();
-    // }
+    if (await record.hasPermission()) {
+      time = DateTime.now();
+      fileName = const Uuid().v4();
+      setState(() {
+        isRecording = true;
+        duration = 0;
+      });
+      startTimer();
+      record.start(const RecordConfig(), path: '$path/$fileName.m4a');
+    } else {
+      widget.onRecordNotPermission?.call();
+    }
   }
 
   /// 开始计时
@@ -182,7 +182,7 @@ class _ImBottomVoiceState extends State<ImBottomVoice> {
     });
     timer?.cancel();
     duration = 0;
-    // record.stop();
+    record.stop();
     if (currentTime.difference(time) < widget.minDuration) {
       // widget.onRecordError?.call();
       return;
