@@ -69,6 +69,9 @@ extension ExtensionMessage on Message {
 
 extension ExtensionConversationInfo on ConversationInfo {
   String title({int? number}) {
+    if (userID == OpenIM.iMManager.uid) {
+      return '文件助手';
+    }
     if (isGroupChat) {
       return number != null && number != 0 ? '$showName($number)' : showName ?? '';
     } else {
