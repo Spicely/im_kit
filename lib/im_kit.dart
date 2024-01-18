@@ -54,7 +54,6 @@ part 'src/im_at_text/im_at_text.dart';
 part 'src/im_base/im_base.dart';
 
 part 'src/im_base/isolate_manager.dart';
-part 'src/im_base/isolate_fun.dart';
 part 'src/im_base/emoji.dart';
 part 'src/im_theme/im_theme.dart';
 part 'src/im_theme/im_chat_theme.dart';

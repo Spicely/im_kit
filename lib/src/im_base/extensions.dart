@@ -8,7 +8,7 @@ extension ExtensionAdvancedMessage on AdvancedMessage {
 
 extension ExtensionMessage on Message {
   Future<MessageExt> toExt() async {
-    return await ImKitIsolateManager.toMessageExt(OpenIM.iMManager.uid!, this);
+    return await ImKitIsolateManager.toMessageExt(this);
   }
 
   /// 消息类型

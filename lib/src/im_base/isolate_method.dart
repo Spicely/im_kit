@@ -83,20 +83,6 @@ class IsolateMethod {
     }
   }
 
-  /// 加密文件
-  static Future<void> toMessageExt(_PortModel params) async {
-    try {
-      Message msg = params.data['msg'];
-      ImCore.userID = params.data['uid'];
-
-      MessageExt extMsg = await _IsolateFun.toMessageExt(msg);
-
-      params.sendPort?.send(PortResult(data: extMsg));
-    } catch (e) {
-      params.sendPort?.send(PortResult(error: e.toString()));
-    }
-  }
-
   /// 下载表情包
   static downEmoji(_PortModel params) async {
     try {
