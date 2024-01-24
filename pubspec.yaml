@@ -30,10 +30,11 @@ dependencies:
   uuid:
   encrypt: 
   pointycastle:
-  popup_menu: 
-  media_kit: 1.1.10
-  media_kit_video: 1.2.4
-  media_kit_libs_video: 1.0.4
+  popup_menu:
+  chinese_font_library: 
+  media_kit: 
+  media_kit_video:
+  media_kit_libs_video: 
   extended_text_field:
   fc_native_video_thumbnail: 
   bubble_tab_indicator: 
@@ -45,6 +46,7 @@ dependencies:
   url_launcher:
   easy_refresh:
   pasteboard: 
+  fluent_ui: 
   scrollable_positioned_list:
 
 dev_dependencies:

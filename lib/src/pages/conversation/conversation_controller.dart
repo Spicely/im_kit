@@ -13,6 +13,9 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   /// 当前选中的会话信息
   ConversationInfo? currentConversationInfo;
 
+  /// 当前选中的会话信息
+  Rx<String> currentConversationID = ''.obs;
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);
@@ -105,7 +108,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   void onLongPress() {}
 
   /// 鼠标按下
-  void _onPointerDown(ConversationInfo conversationInfo, PointerDownEvent event) {
+  void onPointerDown(ConversationInfo conversationInfo, PointerDownEvent event) {
     /// 判断鼠标右键按下
     if (event.buttons == 2) {
       onPointerRightDown(conversationInfo, event);
