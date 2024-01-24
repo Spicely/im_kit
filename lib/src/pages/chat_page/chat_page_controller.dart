@@ -82,6 +82,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 显示名称
   String get showName => isGroupChat ? '${conversationInfo.value.showName}(${groupMembers.length})' : conversationInfo.value.showName ?? '';
 
+  /// 获取回话名称
+  String get title => isGroupChat ? '${conversationInfo.value.showName}(${groupMembers.length})' : '${conversationInfo.value.showName}';
+
   /// 引用消息
   Rx<MessageExt?> quoteMessage = Rx(null);
 
