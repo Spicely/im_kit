@@ -280,6 +280,8 @@ class ImExtModel {
 class ImCore {
   static final a.AudioPlayer _player = a.AudioPlayer();
 
+  static final KeyboardHeightPlugin _keyboardHeightPlugin = KeyboardHeightPlugin();
+
   /// 文件路径
   static String dirPath = '';
 
@@ -287,15 +289,18 @@ class ImCore {
 
   static String? userID;
 
+  static late final SharedPreferences prefs;
+
   /// 临时缓存文件夹
   static String get tempPath => join(dirPath, 'Temp');
 
   /// 临时缓存文件夹
   static String get recvPath => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
 
-  static init(String path) {
+  static init(String path) async {
     dirPath = path;
-    Directory(tempPath).createSync(recursive: true);
+    Directory(tempPath).create(recursive: true);
+    prefs = await SharedPreferences.getInstance();
   }
 
   /// 初始化用户文件夹

@@ -48,6 +48,8 @@ dependencies:
   pasteboard: 
   fluent_ui: 
   scrollable_positioned_list:
+  keyboard_height_plugin:
+  shared_preferences:
 
 dev_dependencies:
   flutter_test:

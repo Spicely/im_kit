@@ -29,6 +29,12 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   RxBool isDrop = false.obs;
 
+  /// 键盘高度
+  final RxDouble _keyboardHeight = (ImCore.prefs.getDouble('keyboard_height') ?? 230.0).obs;
+
+  /// 显示高度
+  final RxDouble _keyboardShowHeight = 0.0.obs;
+
   /// 群成员信息
   RxList<GroupMembersInfo> groupMembers = RxList([]);
 
@@ -154,6 +160,13 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
     });
     isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
+    ImCore._keyboardHeightPlugin.onKeyboardHeightChanged((double height) {
+      if (height != 0) {
+        ImCore.prefs.setDouble('keyboard_height', height);
+        _keyboardHeight.value = height;
+      }
+      _keyboardShowHeight.value = height;
+    });
     computeTime();
   }
 
