@@ -20,6 +20,7 @@ class Conversation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImLanguage language = ImKitTheme.of(context).language;
+    ImConversationTheme conversationTheme = ImKitTheme.of(context).conversationTheme;
     return FluentTheme(
       data: FluentThemeData(),
       child: GetBuilder(
@@ -88,7 +89,7 @@ class Conversation extends StatelessWidget {
                                         Expanded(
                                           child: Text(
                                             c.data[index].title(),
-                                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500).useSystemChineseFont(),
+                                            style: conversationTheme.titleStyle.useSystemChineseFont(),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -116,7 +117,7 @@ class Conversation extends StatelessWidget {
                                                     TextSpan(text: c.data[index].draftText, style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
                                                   ])
                                                 : c.data[index].latestMsg?.type ?? const TextSpan(),
-                                            style: const TextStyle(fontSize: 12, color: Color.fromRGBO(179, 179, 179, 1)),
+                                            style: conversationTheme.subtitleStyle.useSystemChineseFont(),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
