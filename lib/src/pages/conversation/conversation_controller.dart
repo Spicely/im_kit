@@ -93,9 +93,11 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
         title: '通知',
         content: '你正在删除和${info.showName}的聊天记录，这将删除和${info.showName}的所有聊天记录。清空后不可找回，确定要清空当前对话的历史记录吗？',
         onConfirm: () {
-          OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: info.conversationID);
-          data.remove(info);
-          Get.back();
+          Utils.exceptionCapture(() async {
+            OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: info.conversationID);
+            data.remove(info);
+            Get.back();
+          });
         },
       ),
     );
@@ -119,36 +121,48 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   void onPointerRightDown(ConversationInfo conversationInfo, PointerDownEvent event) {}
 
   /// 消息置顶设置
-  Future<void> pinConversation(ConversationInfo conversation, bool status) async {
-    await OpenIM.iMManager.conversationManager.pinConversation(
-      conversationID: conversation.conversationID,
-      isPinned: status,
-    );
+  void pinConversation(ConversationInfo conversation, bool status) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.conversationManager.pinConversation(
+        conversationID: conversation.conversationID,
+        isPinned: status,
+      );
+    });
   }
 
   /// copy群号
-  Future<void> copyGroupID(ConversationInfo conversation) async {
-    Clipboard.setData(ClipboardData(text: conversation.groupID ?? ''));
+  void copyGroupID(ConversationInfo conversation) {
+    Utils.exceptionCapture(() async {
+      await Clipboard.setData(ClipboardData(text: conversation.groupID ?? ''));
+    });
   }
 
   /// copyID
-  Future<void> copyID(ConversationInfo conversation) async {
-    Clipboard.setData(ClipboardData(text: conversation.userID ?? ''));
+  void copyID(ConversationInfo conversation) {
+    Utils.exceptionCapture(() async {
+      await Clipboard.setData(ClipboardData(text: conversation.userID ?? ''));
+    });
   }
 
   /// 删除会话
-  Future<void> removeConversation(ConversationInfo conversation) async {
-    await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversation.conversationID);
-    data.removeWhere((v) => v.conversationID == conversation.conversationID);
+  void removeConversation(ConversationInfo conversation) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversation.conversationID);
+      data.removeWhere((v) => v.conversationID == conversation.conversationID);
+    });
   }
 
   /// 标记已读
-  Future<void> markConversationRead(ConversationInfo conversation) async {
-    await OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversation.conversationID, messageIDList: []);
+  void markConversationRead(ConversationInfo conversation) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversation.conversationID, messageIDList: []);
+    });
   }
 
   /// 免打扰
-  Future<void> setConversationRecvMessageOpt(ConversationInfo conversation, int status) async {
-    await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
+  void setConversationRecvMessageOpt(ConversationInfo conversation, int status) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
+    });
   }
 }

@@ -156,7 +156,7 @@ class ChatPage extends StatelessWidget {
             ),
           ),
           resizeToAvoidBottomInset: false,
-          bottomNavigationBar: !Utils.isDesktop
+          bottomNavigationBar: Utils.isMobile
               ? Obx(
                   () => Visibility(
                     visible: controller.showSelect.value,

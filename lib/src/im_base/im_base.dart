@@ -280,7 +280,7 @@ class ImExtModel {
 class ImCore {
   static final a.AudioPlayer _player = a.AudioPlayer();
 
-  static final KeyboardHeightPlugin _keyboardHeightPlugin = KeyboardHeightPlugin();
+  static late final KeyboardHeightPlugin _keyboardHeightPlugin;
 
   /// 文件路径
   static String dirPath = '';
@@ -300,6 +300,9 @@ class ImCore {
   static init(String path) async {
     dirPath = path;
     Directory(tempPath).create(recursive: true);
+    if (Utils.isMobile) {
+      _keyboardHeightPlugin = KeyboardHeightPlugin();
+    }
     prefs = await SharedPreferences.getInstance();
   }
 

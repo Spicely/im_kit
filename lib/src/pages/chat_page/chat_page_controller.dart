@@ -160,13 +160,15 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
     });
     isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
-    ImCore._keyboardHeightPlugin.onKeyboardHeightChanged((double height) {
-      if (height != 0) {
-        ImCore.prefs.setDouble('keyboard_height', height);
-        _keyboardHeight.value = height;
-      }
-      _keyboardShowHeight.value = height;
-    });
+    if (Utils.isMobile) {
+      ImCore._keyboardHeightPlugin.onKeyboardHeightChanged((double height) {
+        if (height != 0) {
+          ImCore.prefs.setDouble('keyboard_height', height);
+          _keyboardHeight.value = height;
+        }
+        _keyboardShowHeight.value = height;
+      });
+    }
     computeTime();
   }
 
@@ -836,10 +838,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       );
 
       if (value.isNotEmpty) {
-        /// 创建@消息
-        List<AtUserInfo> list = atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList();
         if (atUserMap.isNotEmpty) {
-          message = await createTextAtMessage(list, value, quoteMessage: quoteMsg?.m);
+          message = await createTextAtMessage(value, quoteMessage: quoteMsg?.m);
         } else if (quoteMsg != null) {
           message = await createQuoteMessage(value, quoteMsg.m);
         } else {
@@ -891,25 +891,11 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 创建@消息
-  Future<MessageExt> createTextAtMessage(List<AtUserInfo> atUserInfoList, String text, {Message? quoteMessage}) async {
-    var regexAt = atUserInfoList.map((e) => '@${e.atUserID} ').toList().join('|');
-
-    /// 替换text中的@字符串
-    text = text.splitMapJoin(
-      RegExp(regexAt),
-      onMatch: (m) {
-        String value = m.group(0)!;
-        String id = value.split('#').first.replaceFirst('@', '').trim();
-
-        return '@$id ';
-      },
-      onNonMatch: (n) => n,
-    );
-
+  Future<MessageExt> createTextAtMessage(String text, {Message? quoteMessage}) async {
     return await (await OpenIM.iMManager.messageManager.createTextAtMessage(
       text: text,
-      atUserIDList: atUserInfoList.map((e) => e.atUserID ?? '').toList(),
-      atUserInfoList: atUserInfoList,
+      atUserIDList: atUserMap.map((v) => v.userID ?? '').toList(),
+      atUserInfoList: atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList(),
       quoteMessage: quoteMessage,
     ))
         .toExt();
