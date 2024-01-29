@@ -18,7 +18,7 @@ class ChatPageItem {
   });
 }
 
-class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin {
+class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WidgetsBindingObserver {
   late Rx<ConversationInfo> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -147,8 +147,26 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   RxList<GroupMembersInfo> atUserMap = RxList<GroupMembersInfo>([]);
 
   @override
+  void didChangeMetrics() {
+    //系统窗口相关改变回调，如旋转
+
+    super.didChangeMetrics();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      double bottom = Get.mediaQuery.viewInsets.bottom;
+      double height = max(bottom, _keyboardHeight.value);
+
+      if (height > 0) {
+        ImCore.prefs.setDouble('keyboard_height', height);
+        _keyboardHeight.value = height;
+      }
+    });
+  }
+
+  @override
   void onInit() {
     OpenIMManager.addListener(this);
+    WidgetsBinding.instance.addObserver(this);
     textEditingController.addListener(_checkHistoryAction);
 
     ImCore.onPlayerStateChanged(onPlayerStateChanged);
@@ -161,12 +179,13 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     });
     isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
     if (Utils.isMobile) {
-      ImCore._keyboardHeightPlugin.onKeyboardHeightChanged((double height) {
-        if (height != 0) {
+      ImCore._keyboardHeightPlugin.onKeyboardHeightChanged((double bottom) {
+        double height = max(bottom, _keyboardHeight.value);
+        if (bottom != 0) {
           ImCore.prefs.setDouble('keyboard_height', height);
           _keyboardHeight.value = height;
         }
-        _keyboardShowHeight.value = height;
+        _keyboardShowHeight.value = bottom > 0 ? height : bottom;
       });
     }
     computeTime();
@@ -375,6 +394,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   @override
   void onClose() {
     OpenIMManager.removeListener(this);
+    WidgetsBinding.instance.removeObserver(this);
     textEditingController.removeListener(_checkHistoryAction);
     for (var i in data) {
       if (i.ext.isPrivateChat) {

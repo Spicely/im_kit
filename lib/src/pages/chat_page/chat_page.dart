@@ -20,7 +20,6 @@ class ChatPage extends StatelessWidget {
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImLanguage language = ImKitTheme.of(context).language;
-
     return GestureDetector(
       onTap: () {
         FocusScopeNode currentFocus = FocusScope.of(context);
@@ -386,7 +385,6 @@ class ChatPage extends StatelessWidget {
                         children: [
                           SizedBox(
                             height: 46,
-                            width: double.infinity,
                             child: TabBar(
                               isScrollable: true,
                               controller: controller.tabController,
@@ -397,6 +395,8 @@ class ChatPage extends StatelessWidget {
                                 indicatorRadius: 8,
                                 tabBarIndicatorSize: TabBarIndicatorSize.tab,
                               ),
+                              tabAlignment: TabAlignment.start,
+                              dividerColor: chatTheme.textFieldTheme.backgroundColor,
                               tabs: [
                                 const Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
                                 ...controller.tabs.map((e) => e.tab).toList(),
@@ -483,9 +483,12 @@ class ChatPage extends StatelessWidget {
                 Obx(
                   () => Offstage(
                     offstage: !(controller.fieldType.value == ImChatPageFieldType.voice),
-                    child: ImBottomVoice(
-                      onVoiceSend: controller.onRecordSuccess,
-                      isMute: controller.fieldType.value != ImChatPageFieldType.voice || controller.isMute.value || controller.isMuteUser.value,
+                    child: SizedBox(
+                      height: controller._keyboardHeight.value,
+                      child: ImBottomVoice(
+                        onVoiceSend: controller.onRecordSuccess,
+                        isMute: controller.fieldType.value != ImChatPageFieldType.voice || controller.isMute.value || controller.isMuteUser.value,
+                      ),
                     ),
                   ),
                 ),
