@@ -5,6 +5,8 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   RxList<ConversationInfo> data = RxList([]);
 
+  Rx<UserInfo> userInfo = Rx(OpenIM.iMManager.uInfo!);
+
   /// 未读消息
   RxInt unReadMsg = 0.obs;
 
