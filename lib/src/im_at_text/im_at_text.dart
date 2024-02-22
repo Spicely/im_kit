@@ -38,7 +38,7 @@ class ImAtText extends ImBase {
   final List<MenuItemProvider>? textMenuItems;
 
   /// at点击事件
-  final void Function(TapUpDetails details, FullUserInfo userInfo)? onAtTap;
+  final void Function(TapUpDetails details, String userID)? onAtTap;
 
   const ImAtText({
     super.key,
@@ -91,16 +91,10 @@ class ImAtText extends ImBase {
                   break;
                 case ImAtType.at:
                   if (e.userInfo?.atUserID == '-1') {
-                    // onAtTap?.call(details, FullUserInfo(userID: '-1'));
+                    onAtTap?.call(details, '-1');
                     return;
                   }
-                  if (OpenIM.iMManager.uid == e.userInfo?.atUserID) {
-                    // onAtTap?.call(details, OpenIM.iMManager.uInfo!);
-                  } else {
-                    OpenIM.iMManager.userManager.getUsersInfo(uidList: [e.userInfo!.atUserID!]).then((v) {
-                      onAtTap?.call(details, v.first);
-                    });
-                  }
+                  onAtTap?.call(details, e.userInfo!.atUserID!);
                 default:
               }
             },

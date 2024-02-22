@@ -3,7 +3,7 @@ part of im_kit;
 class ImListItem extends StatelessWidget {
   final MessageExt message;
 
-  final void Function(BuildContext context, MessageExt message)? onTapDownFile;
+  final void Function(MessageExt message)? onTapDownFile;
 
   final void Function(MessageExt message)? onTap;
 
@@ -62,13 +62,13 @@ class ImListItem extends StatelessWidget {
   final void Function(String)? onTapPhone;
 
   /// 点击播放视频
-  final void Function(BuildContext context, MessageExt message)? onTapPlayVideo;
+  final void Function(MessageExt message)? onTapPlayVideo;
 
   /// 图片点击事件
   final void Function(MessageExt message)? onPictureTap;
 
   /// at点击事件
-  final void Function(TapUpDetails details, FullUserInfo userInfo)? onAtTap;
+  final void Function(TapUpDetails details, String userID)? onAtTap;
 
   bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
 
@@ -85,7 +85,7 @@ class ImListItem extends StatelessWidget {
   final Function(bool status)? onAfterSave;
 
   /// tag点击事件
-  final Function(UserInfo user)? onTagUserTap;
+  final Function(String userID)? onTagUserTap;
 
   /// 复制消息提示事件
   final Function(String text)? onCopyTip;
@@ -112,10 +112,10 @@ class ImListItem extends StatelessWidget {
   final void Function(MessageExt message)? onVoiceTap;
 
   /// 头像点击事件
-  final void Function(UserInfo userInfo)? onAvatarTap;
+  final void Function(TapUpDetails details, String userID)? onAvatarTap;
 
   /// 头像长按事件
-  final void Function(UserInfo userInfo)? onAvatarLongPress;
+  final void Function(String userID)? onAvatarLongPress;
 
   /// 双击点击消息体
   final void Function(MessageExt message)? onDoubleTapFile;
@@ -124,6 +124,9 @@ class ImListItem extends StatelessWidget {
   final void Function(PointerDownEvent event, MessageExt extMsg)? onPointerRightDown;
 
   final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
+
+  /// 是否显示通知类消息
+  final bool showNotification;
 
   const ImListItem({
     super.key,
@@ -170,6 +173,7 @@ class ImListItem extends StatelessWidget {
     this.onDoubleTapFile,
     this.onPointerRightDown,
     this.contextMenuBuilder,
+    this.showNotification = true,
   });
 
   @override
@@ -179,147 +183,138 @@ class ImListItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Column(
         children: [
-          if (message.ext.showTime) ImTime(message: message),
-          Directionality(
-            textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 5),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showSelect)
+          if (message.ext.showTime && showNotification) ImTime(message: message),
+          Row(
+            children: [
+              if (showSelect && !ImCore.types.contains(message.m.contentType))
+                Row(
+                  children: [
                     Checkbox(
                       value: selected,
+                      splashRadius: 0,
                       shape: const CircleBorder(),
                       side: BorderSide(
                         width: 1.2,
                         color: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope ? const Color.fromRGBO(175, 175, 175, 0.2) : const Color.fromRGBO(175, 175, 175, 1),
                       ),
-                      fillColor: MaterialStateProperty.resolveWith((states) {
-                        if (states.contains(MaterialState.selected)) {
-                          return Theme.of(context).primaryColor;
-                        } else {
-                          return Colors.transparent;
-                        }
-                      }),
+                      fillColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? Theme.of(context).primaryColor : Colors.transparent),
                       onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
                           ? null
                           : (value) {
                               onMessageSelect?.call(message, !selected);
                             },
                     ),
-                  Expanded(child: getContentType(context)),
-                ],
+                    const SizedBox(width: 20),
+                  ],
+                ),
+              Expanded(
+                child: Directionality(
+                  textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: getContentType(context),
+                  ),
+                ),
               ),
-            ),
-          ),
+            ],
+          )
         ],
       ),
     );
   }
 
+  Widget beforeRenderView(Widget child) {
+    if (showNotification) return child;
+    return const SizedBox();
+  }
+
   Widget getContentType(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImAvatarTheme avatarTheme = ImKitTheme.of(context).chatTheme.avatarTheme;
-    switch (message.m.contentType) {
-      case MessageType.custom:
-        switch (message.ext.data['contentType']) {
-          case 27:
-            return const Center(
-              child: Text.rich(
-                TextSpan(text: '双方聊天记录已清空'),
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            );
-          case 77:
-            return const Center(
-              child: Text.rich(
-                TextSpan(text: '群主清除了聊天记录'),
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            );
-          case 81:
-            return ImRedEnv(isMe: isMe, message: message);
-          case 82:
-            return Center(
-              child: Text.rich(
-                _getRedEnvelope(message, message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            );
 
-          default:
-            return const Center(
+    return switch (message.m.contentType) {
+      MessageType.custom => switch (message.ext.data['contentType']) {
+          27 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '双方聊天记录已清空'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
+          77 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '群主清除了聊天记录'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
+          81 => ImRedEnv(isMe: isMe, message: message),
+          82 => beforeRenderView(
+              Center(
+                child: Text.rich(
+                  _getRedEnvelope(message, message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ),
+            ),
+          2024 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '对方不是你的好友'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
+          2025 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '对方拒收你的消息'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
+          _ => beforeRenderView(const Center(
               child: Text('暂不支持的消息', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            );
-        }
-
-      case MessageType.groupMutedNotification:
-        return const Center(
+            ))
+        },
+      MessageType.groupMutedNotification => beforeRenderView(const Center(
           child: Text('群组开启禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        );
-      case MessageType.dismissGroupNotification:
-        return const Center(
-          child: Text('群组已被解散', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        );
-      case MessageType.groupCancelMutedNotification:
-        return const Center(
+        )),
+      MessageType.groupCancelMutedNotification => beforeRenderView(const Center(
           child: Text('群组取消禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        );
-      case MessageType.friendApplicationApprovedNotification:
-        return const Center(
+        )),
+      MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => beforeRenderView(const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        );
-      case MessageType.memberKickedNotification:
-        return Center(
+        )),
+      // MessageType.encryptedNotification => beforeRenderView(Center(
+      //     child: Padding(
+      //       padding: const EdgeInsets.symmetric(horizontal: 50),
+      //       child: Row(
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           Image.asset('assets/icons/lock.png', width: 16, height: 16),
+      //           const Expanded(
+      //             child: Text(
+      //               '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+      //               style: TextStyle(fontSize: 12, color: Colors.grey),
+      //               textAlign: TextAlign.center,
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   )),
+      MessageType.memberKickedNotification => beforeRenderView(Center(
           child: Text.rich(
             _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-        );
-      case MessageType.burnAfterReadingNotification:
-        return Center(
+        )),
+      MessageType.burnAfterReadingNotification => beforeRenderView(Center(
           child: Text(
             message.ext.data?['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-        );
-      case MessageType.revokeMessageNotification:
-        return Center(
+        )),
+      MessageType.revokeMessageNotification => beforeRenderView(Center(
           child: Text.rich(
             _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-        );
-
-      case MessageType.groupInfoSetNotification:
-      case MessageType.groupCreatedNotification:
-      case MessageType.groupMemberCancelMutedNotification:
-      case MessageType.groupMemberMutedNotification:
-      case MessageType.memberEnterNotification:
-      case MessageType.memberQuitNotification:
-        return Center(
-          child: Text.rich(
+        )),
+      MessageType.groupInfoSetNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification || MessageType.groupMemberMutedNotification || MessageType.memberEnterNotification || MessageType.memberQuitNotification => Center(
+          child: beforeRenderView(Text.rich(
             _getNotification(message.ext.data, message.m.contentType!, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        );
-      case MessageType.memberInvitedNotification:
-        return Center(
+          )),
+        ),
+      MessageType.memberInvitedNotification => beforeRenderView(Center(
           child: Text.rich(
             _getMemberInvitedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
-        );
-
-      default:
-        return GestureDetector(
+        )),
+      _ => GestureDetector(
           onTap: _onSelectTap,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: _onAvatarTap,
+                onTapUp: _onAvatarTap,
                 onLongPress: _onAvatarLongPress,
                 child: CachedImage(
                   imageUrl: message.m.senderFaceUrl,
@@ -350,24 +345,32 @@ class ImListItem extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Listener(
-                                  onPointerDown: (PointerDownEvent event) {
-                                    if (event.buttons == 2) {
-                                      onPointerRightDown?.call(event, message);
-                                    }
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                          ? null
-                                          : isMe
-                                              ? chatTheme.messageTheme.meBackgroundColor
-                                              : chatTheme.messageTheme.backgroundColor,
-                                      borderRadius: chatTheme.messageTheme.borderRadius,
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Listener(
+                                      onPointerDown: (PointerDownEvent event) {
+                                        if (event.buttons == 2) {
+                                          onPointerRightDown?.call(event, message);
+                                        }
+                                      },
+                                      child: Container(
+                                        constraints: const BoxConstraints(maxWidth: 500),
+                                        decoration: BoxDecoration(
+                                          color: ImCore.noBgMsgType.contains(message.m.contentType)
+                                              ? null
+                                              : isMe
+                                                  ? chatTheme.messageTheme.meBackgroundColor
+                                                  : chatTheme.messageTheme.backgroundColor,
+                                          borderRadius: chatTheme.messageTheme.borderRadius,
+                                        ),
+                                        padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+                                        child: getTypeWidget(),
+                                      ),
                                     ),
-                                    padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                    child: getTypeWidget(),
-                                  ),
+                                    const SizedBox(width: 10),
+                                    SizedBox(child: getStatusWidget()),
+                                  ],
                                 ),
                                 // Stack(
                                 //   children: [
@@ -399,7 +402,7 @@ class ImListItem extends StatelessWidget {
                                 //     // ),
                                 //   ],
                                 // ),
-                                if (message.m.contentType == MessageType.quote)
+                                if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.atText && message.m.quoteElem != null) && message.ext.quoteMessage != null)
                                   Container(
                                     margin: const EdgeInsets.only(top: 5),
                                     child: ImQuoteItem(
@@ -421,11 +424,11 @@ class ImListItem extends StatelessWidget {
               SizedBox(
                 width: avatarTheme.width,
                 height: avatarTheme.height,
-              )
+              ),
             ],
           ),
-        );
-    }
+        )
+    };
   }
 
   void _onSelectTap() {
@@ -508,13 +511,7 @@ class ImListItem extends StatelessWidget {
                     color: Colors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Row(
-                    children: [
-                      Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                      if (isMe) const SizedBox(width: 1),
-                      if (isMe && message.m.isRead!) const Icon(Icons.done_all, size: 12, color: Colors.blue),
-                    ],
-                  ),
+                  child: Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
                 ),
               ),
             ),
@@ -642,28 +639,12 @@ class ImListItem extends StatelessWidget {
   }
 
   /// 头像点击
-  void _onAvatarTap() {
-    if (message.m.sendID == OpenIM.iMManager.uid) {
-      onAvatarTap?.call(OpenIM.iMManager.uInfo!);
-    } else {
-      onAvatarTap?.call(UserInfo(
-        userID: message.m.sendID,
-        nickname: message.m.senderNickname,
-        faceURL: message.m.senderFaceUrl,
-      ));
-    }
+  void _onAvatarTap(TapUpDetails details) {
+    onAvatarTap?.call(details, message.m.sendID!);
   }
 
   /// 头像长按
   void _onAvatarLongPress() {
-    if (message.m.sendID == OpenIM.iMManager.uid) {
-      onAvatarLongPress?.call(OpenIM.iMManager.uInfo!);
-    } else {
-      onAvatarLongPress?.call(UserInfo(
-        userID: message.m.sendID,
-        nickname: message.m.senderNickname,
-        faceURL: message.m.senderFaceUrl,
-      ));
-    }
+    onAvatarLongPress?.call(message.m.sendID!);
   }
 }

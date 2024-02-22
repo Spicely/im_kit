@@ -14,9 +14,10 @@ dependencies:
     path: ../../../flutter_openim_sdk_ffi
   flutter_muka:
     path: ../../../flutter_muka
-    # git:
-    #   url: https://github.com/Spicely/flutter_muka.git
-    #   ref: v3
+  # flutter_muka:
+  #   git:
+  #     url: https://github.com/Spicely/flutter_muka.git
+  #     ref: v3
   path:
   get:
   audioplayers:
@@ -30,11 +31,11 @@ dependencies:
   uuid:
   encrypt: 
   pointycastle:
-  popup_menu:
+  popup_menu: 
   chinese_font_library: 
-  media_kit: 
+  media_kit:
   media_kit_video:
-  media_kit_libs_video: 
+  media_kit_libs_video:
   extended_text_field:
   fc_native_video_thumbnail: 
   bubble_tab_indicator: 

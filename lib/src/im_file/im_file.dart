@@ -52,7 +52,7 @@ class ImFile extends ImBase {
                               child: SizedBox(
                                 height: 40,
                                 child: Text(
-                                  ImCore.fixAutoLines(filename ?? ''),
+                                  filename ?? '',
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 2,
                                   style: const TextStyle(fontSize: 14),

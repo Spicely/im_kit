@@ -5,15 +5,14 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   RxList<ConversationInfo> data = RxList([]);
 
+  final Rx<dynamic> currentChatPageController = Rx<dynamic>(null);
+
   Rx<UserInfo> userInfo = Rx(OpenIM.iMManager.uInfo!);
 
   /// 未读消息
   RxInt unReadMsg = 0.obs;
 
   TapDownDetails? details;
-
-  /// 当前选中的会话信息
-  ConversationInfo? currentConversationInfo;
 
   /// 当前选中的会话信息
   Rx<String> currentConversationID = ''.obs;
@@ -49,7 +48,59 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   }
 
   @override
+  void onRecvNewMessage(Message msg) async {
+    // if ( msg.contentType == MessageType.memberQuitNotification && msg.notificationElem.) {
+    //   return;
+    // }
+    MessageExt extMsg = await msg.toExt();
+    if (extMsg.ext.isBothDelete && extMsg.m.isGroupChat) {
+      ImKitIsolateManager._cleanPrivateChatAll();
+    }
+  }
+
+  // @override
+  // void onBlacklistAdded(BlacklistInfo u) {
+  //   OpenIM.iMManager.conversationManager.getOneConversation(sourceID: u.userID!, sessionType: ConversationType.single).then((v) {
+  //     data.removeWhere((c) => c.conversationID == v.conversationID);
+  //     currentConversationID.value = '';
+  //     currentChatPageController.value = null;
+  //     OpenIM.iMManager.conversationManager.simpleSort(data);
+  //   });
+  // }
+
+  // @override
+  // void onBlacklistDeleted(BlacklistInfo u) {
+  //   OpenIM.iMManager.conversationManager.getOneConversation(sourceID: u.userID!, sessionType: ConversationType.single).then((v) {
+  //     int index = data.indexWhere((c) => c.conversationID == v.conversationID);
+  //     if (index != -1) {
+  //       data[index] = v;
+  //     } else {
+  //       data.add(v);
+  //     }
+  //     OpenIM.iMManager.conversationManager.simpleSort(data);
+  //   });
+  // }
+
+  @override
   void onConversationChanged(List<ConversationInfo> list) {
+    for (var v in list) {
+      int index = data.indexWhere((element) => element.conversationID == v.conversationID);
+      if (index != -1) {
+        data[index] = v;
+      } else {
+        data.add(v);
+      }
+      if (!v.isValid && v.isSingleChat) {
+        data.removeWhere((c) => c.conversationID == v.conversationID);
+        currentConversationID.value = '';
+        currentChatPageController.value = null;
+      }
+    }
+    OpenIM.iMManager.conversationManager.simpleSort(data);
+  }
+
+  @override
+  void onNewConversation(List<ConversationInfo> list) {
     for (var v in list) {
       int index = data.indexWhere((element) => element.conversationID == v.conversationID);
       if (index != -1) {
@@ -68,7 +119,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   /// 跳转到聊天页面
   Future<void> toChatPage(ConversationInfo info) async {
-    currentConversationInfo = info;
+    currentConversationID.value = info.conversationID;
     AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: info.conversationID,
       count: 40,

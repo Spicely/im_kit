@@ -1,11 +1,9 @@
 part of im_kit;
 
-typedef UserNotificationCallback = void Function(TapUpDetails details, FullUserInfo user);
-
-typedef SelfNotificationCallback = void Function(TapUpDetails details, UserInfo user);
+typedef UserNotificationCallback = void Function(TapUpDetails details, String userID);
 
 /// 踢出群组
-TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
+TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
   List<dynamic> kickedUserList = detail['kickedUserList'];
   return TextSpan(
     children: [
@@ -16,12 +14,7 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
                 style: TextStyle(color: userColor),
                 recognizer: TapGestureRecognizer()
                   ..onTapUp = (details) async {
-                    if (v['userID'] == OpenIM.iMManager.uid) {
-                      onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
-                    } else {
-                      List<FullUserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
-                      onTap?.call(details, users[0]);
-                    }
+                    onTap?.call(details, v['userID'] ?? '');
                   }
                 // ..onTap = () async {
                 //   if (v['userID'] == OpenIM.iMManager.uid) {
@@ -40,7 +33,7 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
 }
 
 /// 撤回消息
-TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
+TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap}) {
   return TextSpan(
     children: [
       TextSpan(
@@ -48,13 +41,7 @@ TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallba
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
           ..onTapUp = (details) async {
-            if (extMsg.m.sendID == OpenIM.iMManager.uid) {
-              onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
-            } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [extMsg.m.sendID!]).then((users) {
-                onTap?.call(details, users.first);
-              });
-            }
+            onTap?.call(details, extMsg.m.sendID ?? '');
           },
       ),
       const TextSpan(text: '撤回了一条消息'),
@@ -63,8 +50,8 @@ TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallba
 }
 
 /// 邀请进群
-TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
-  List<dynamic> invitedUserList = detail['invitedUserList'];
+TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? userColor, UserNotificationCallback? onTap}) {
+  List<dynamic> invitedUserList = detail['invitedUserList'] ?? [];
   return TextSpan(
     children: [
       ...invitedUserList
@@ -74,12 +61,7 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
               style: TextStyle(color: userColor),
               recognizer: TapGestureRecognizer()
                 ..onTapUp = (details) async {
-                  if (v['userID'] == OpenIM.iMManager.uid) {
-                    onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
-                  } else {
-                    List<FullUserInfo> users = await OpenIM.iMManager.userManager.getUsersInfo(uidList: [v['userID']]);
-                    onTap?.call(details, users[0]);
-                  }
+                  onTap?.call(details, v['userID'] ?? '');
                 },
             ),
           )
@@ -90,7 +72,7 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
 }
 
 /// 修改了群组资料
-TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap, SelfNotificationCallback? onSelfTap}) {
+TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap}) {
   String? userId = detail['mutedUser']?['userID'] ?? detail['opUser']?['userID'] ?? detail['entrantUser']?['userID'] ?? detail['quitUser']?['userID'];
   String? nickname = detail['mutedUser']?['nickname'] ?? detail['opUser']?['nickname'] ?? detail['entrantUser']?['nickname'] ?? detail['quitUser']?['nickname'];
   return TextSpan(
@@ -100,13 +82,7 @@ TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userCol
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
           ..onTapUp = (details) async {
-            if (userId == OpenIM.iMManager.uid) {
-              onSelfTap?.call(details, OpenIM.iMManager.uInfo!);
-            } else {
-              OpenIM.iMManager.userManager.getUsersInfo(uidList: [userId!]).then((users) {
-                onTap?.call(details, users.first);
-              });
-            }
+            onTap?.call(details, userId ?? '');
           },
       ),
       TextSpan(text: _getTypeText(type)),
@@ -135,7 +111,6 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
           ..onTapDown = (details) {
-            print(details.globalPosition);
             // if (extMsg.m.sendID == OpenIM.iMManager.uid) {
             //   onTap?.call(OpenIM.iMManager.uInfo!);
             // } else {
@@ -202,11 +177,12 @@ TextSpan _getAtText(Message msg) {
       ...list.map((e) {
         if (e.type == ImAtType.emoji) {
           return WidgetSpan(
-            child: CachedImage(
-              assetUrl: 'assets/emoji/${e.text}.webp',
+            child: Image.asset(
+              'assets/emoji/${e.text}.webp',
               width: 15,
               height: 15,
               package: 'im_kit',
+              semanticLabel: '[${e.text}]',
             ),
           );
         } else {

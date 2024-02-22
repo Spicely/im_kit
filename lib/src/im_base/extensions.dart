@@ -2,13 +2,27 @@ part of im_kit;
 
 extension ExtensionAdvancedMessage on AdvancedMessage {
   Future<List<MessageExt>> toExt() async {
-    return Future.wait(messageList.map((e) => e.toExt()));
+    return Future.wait((messageList ?? []).map((e) => e.toExt()));
   }
 }
 
 extension ExtensionMessage on Message {
   Future<MessageExt> toExt() async {
     return await ImKitIsolateManager.toMessageExt(this);
+  }
+
+  /// 显示名称
+  String get name {
+    if (isGroupChat) {
+      return senderNickname ?? '';
+    } else {
+      try {
+        Map<String, dynamic> map = jsonDecode(senderNickname ?? '{}');
+        return Utils.getValue(map['remark'], map['nickname']) ?? '';
+      } catch (e) {
+        return senderNickname ?? '';
+      }
+    }
   }
 
   /// 消息类型
@@ -23,10 +37,10 @@ extension ExtensionMessage on Message {
         MessageType.merger => TextSpan(text: isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]'),
         MessageType.groupMutedNotification => const TextSpan(text: '群组开启禁言'),
         MessageType.groupCancelMutedNotification => const TextSpan(text: '群组取消禁言'),
-        MessageType.dismissGroupNotification => const TextSpan(text: '群组已被解散'),
-        MessageType.revokeMessageNotification => TextSpan(text: isSingleChat ? '[撤回消息]' : '${sendID == OpenIM.iMManager.uid ? '你' : senderNickname}: [撤回消息]'),
+        MessageType.revokeMessageNotification => TextSpan(text: isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]'),
         MessageType.text || MessageType.advancedText || MessageType.atText => _getAtText(this),
-        MessageType.friendApplicationApprovedNotification => const TextSpan(text: '[成为好友]'),
+        MessageType.revokeMessageNotification => TextSpan(text: '$senderNickname撤回了一条消息'),
+        MessageType.friendAddedNotification => const TextSpan(text: '添加好友成功'),
         MessageType.oaNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['notificationName']),
         300 => TextSpan(text: isSingleChat ? '[表情]' : '$senderNickname: [表情]'),
         MessageType.burnAfterReadingNotification => TextSpan(text: jsonDecode(notificationElem?.detail ?? '{}')['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭'),
@@ -52,6 +66,8 @@ extension ExtensionMessage on Message {
             // 82 => _getRedNotification(jsonDecode(notificationElem?.detail ?? '{}')),
             83 => const TextSpan(text: '[转账消息]'),
             84 => const TextSpan(text: '[红包退还消息]'),
+            2024 => const TextSpan(text: '[对方不是你的好友]', style: TextStyle(color: Colors.red)),
+            2025 => const TextSpan(text: '[对方拒收你的消息]', style: TextStyle(color: Colors.red)),
             _ => const TextSpan(text: '暂不支持的消息'),
           },
         _ => const TextSpan(text: '暂不支持的消息'),
@@ -69,9 +85,6 @@ extension ExtensionMessage on Message {
 
 extension ExtensionConversationInfo on ConversationInfo {
   String title({int? number}) {
-    if (userID == OpenIM.iMManager.uid) {
-      return '文件助手';
-    }
     if (isGroupChat) {
       return number != null && number != 0 ? '$showName($number)' : showName ?? '';
     } else {
@@ -91,4 +104,70 @@ extension ExtensionConversationInfo on ConversationInfo {
     }
     return false;
   }
+
+  /// 显示名称信息
+  UserName get name {
+    if (isGroupChat) {
+      return UserName(nickName: showName ?? '');
+    } else {
+      try {
+        Map<String, dynamic> map = jsonDecode(showName ?? '{}');
+        return UserName.fromJson(map);
+      } catch (e) {
+        return UserName(nickName: showName ?? '');
+      }
+    }
+  }
+
+  /// 显示名称
+  String get nickName => Utils.getValue(name.remark, name.nickName);
 }
+
+extension ExtensionUserInfo on UserInfo {
+  /// 显示名称信息
+  UserName get name {
+    try {
+      Map<String, dynamic> map = jsonDecode(getShowName());
+      return UserName.fromJson(map);
+    } catch (e) {
+      return UserName(nickName: getShowName());
+    }
+  }
+
+  /// 显示名称
+  String get nickName => Utils.getValue(name.remark, name.nickName);
+
+  /// 个性签名
+  String get signature {
+    try {
+      Map<String, dynamic> map = jsonDecode(Utils.getValue(ex, '{}'));
+      return map['desc'];
+    } catch (e) {
+      return '';
+    }
+  }
+}
+
+class UserName {
+  final String remark;
+  final String nickName;
+
+  UserName({this.remark = '', this.nickName = ''});
+
+  factory UserName.fromJson(Map<String, dynamic> json) {
+    return UserName(
+      remark: json['remark'] ?? '',
+      nickName: json['nickname'] ?? '',
+    );
+  }
+}
+// extension ExtensionUserInfo on UserInfo {
+//   String get showName {
+//     try {
+//       Map<String, dynamic> map = jsonDecode(nickName ?? '{}');
+//       return Utils.getValue(map['remark'], map['nickname']) ?? '';
+//     } catch (e) {
+//       return nickName ?? '';
+//     }
+//   }
+//  }

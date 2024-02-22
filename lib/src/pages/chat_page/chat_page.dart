@@ -72,31 +72,31 @@ class ChatPage extends StatelessWidget {
             () => EasyRefresh.builder(
               controller: controller.easyRefreshController,
               clipBehavior: Clip.none,
-              footer: BuilderFooter(
-                triggerOffset: 40,
-                infiniteOffset: 60,
-                clamping: false,
-                position: IndicatorPosition.above,
-                processedDuration: Duration.zero,
-                builder: (context, state) {
-                  return Stack(
-                    children: [
-                      SizedBox(height: state.offset, width: double.infinity),
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: double.infinity,
-                          height: 40,
-                          child: SpinKitCircle(size: 24, color: Theme.of(context).primaryColor),
-                        ),
-                      )
-                    ],
-                  );
-                },
-              ),
+              // footer: BuilderFooter(
+              //   triggerOffset: 40,
+              //   infiniteOffset: 60,
+              //   clamping: false,
+              //   position: IndicatorPosition.above,
+              //   processedDuration: Duration.zero,
+              //   builder: (context, state) {
+              //     return Stack(
+              //       children: [
+              //         SizedBox(height: state.offset, width: double.infinity),
+              //         Positioned(
+              //           bottom: 0,
+              //           left: 0,
+              //           right: 0,
+              //           child: Container(
+              //             alignment: Alignment.center,
+              //             width: double.infinity,
+              //             height: 40,
+              //             child: SpinKitCircle(size: 24, color: Theme.of(context).primaryColor),
+              //           ),
+              //         )
+              //       ],
+              //     );
+              //   },
+              // ),
               onLoad: controller.noMore.value ? null : controller.onLoad,
               childBuilder: (context, physics) => Obx(
                 () => ScrollablePositionedList.builder(
@@ -111,12 +111,12 @@ class ChatPage extends StatelessWidget {
                       message: controller.data[index],
                       selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
                       // onTap: controller.onTap,
-                      // sendLoadingWidget: const SizedBox(width: 15, height: 15, child: RiveAnimation.asset('assets/rive/timer.riv')),
+                      sendLoadingWidget: const SpinKitFadingCircle(size: 20, color: Colors.grey),
                       sendErrorWidget: GestureDetector(
                         onTap: () {
                           controller.onResend(controller.data[index]);
                         },
-                        child: const Icon(Icons.error, color: Colors.red),
+                        child: const Icon(Icons.error, color: Colors.red, size: 18),
                       ),
                       showSelect: controller.showSelect.value,
                       onTapDownFile: controller.onTapDownFile,
@@ -385,6 +385,7 @@ class ChatPage extends StatelessWidget {
                         children: [
                           SizedBox(
                             height: 46,
+                            width: double.infinity,
                             child: TabBar(
                               isScrollable: true,
                               controller: controller.tabController,

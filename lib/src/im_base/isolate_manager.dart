@@ -24,6 +24,9 @@ enum _PortMethod {
 
   downEmoji,
   checkEmoji,
+
+  /// 将saveBytes保存为文件
+  saveBytes,
 }
 
 /// 下载进度
@@ -117,12 +120,27 @@ class ImKitIsolateManager {
   }
 
   /// Uint8List保存到临时文件夹
-  static Future<String> saveBytesToTemp(Uint8List pngBytes) async {
-    Completer<String> completer = Completer<String>();
-    String path = join(ImCore.tempPath, '${const Uuid().v4()}.png');
-    File file = File(path);
-    await file.writeAsBytes(pngBytes);
-    completer.complete(path);
+  static Future<String> saveBytesToTemp(Uint8List bytes) async {
+    var completer = Completer<String>();
+
+    ReceivePort port = ReceivePort();
+
+    _isolateSendPort.send(_PortModel(
+      method: _PortMethod.saveBytes,
+      data: {'path': join(ImCore.tempPath, '${const Uuid().v4()}.jpeg'), 'bytes': bytes},
+      sendPort: port.sendPort,
+    ));
+
+    port.listen((msg) {
+      if (msg is PortResult<String>) {
+        if (msg.data != null) {
+          completer.complete(msg.data);
+        } else {
+          completer.completeError(msg.error!);
+        }
+        port.close();
+      }
+    });
     return completer.future;
   }
 
@@ -133,6 +151,49 @@ class ImKitIsolateManager {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// 获取本地文件
+  static Future<List<File>> getLocFile(String conversationID, Message message) async {
+    String dirPath = join(ImCore.dirPath, OpenIM.iMManager.uid, 'dec', conversationID);
+    switch (message.contentType) {
+      case MessageType.picture:
+      case MessageType.voice:
+      case MessageType.file:
+        {
+          String? url = message.pictureElem?.sourcePicture?.url ?? message.soundElem?.sourceUrl ?? message.fileElem?.sourceUrl;
+          if (url == null) {
+            return [File(Utils.getValue(message.pictureElem?.sourcePath ?? message.soundElem?.soundPath ?? message.fileElem?.filePath, ''))];
+          }
+
+          /// 获取文件名
+          String filename = url.split('/').last;
+          File file = File(join(dirPath, filename));
+          bool status = await file.exists();
+          if (status) {
+            return [file];
+          }
+          return [];
+        }
+      case MessageType.video:
+        {
+          String? snapUrl = message.videoElem?.snapshotUrl;
+          String? videoUrl = message.videoElem?.videoUrl;
+          if (snapUrl == null || videoUrl == null) {
+            return [File(Utils.getValue(message.videoElem?.snapshotPath, '')), File(Utils.getValue(message.videoElem?.videoPath, ''))];
+          }
+
+          /// 获取文件名
+          File snapFile = File(join(dirPath, snapUrl.split('/').last));
+          File videoFile = File(join(dirPath, videoUrl.split('/').last));
+          if (await snapFile.exists() && await videoFile.exists()) {
+            return [snapFile, videoFile];
+          }
+          return [];
+        }
+      default:
+        return [];
     }
   }
 
@@ -252,7 +313,8 @@ class ImKitIsolateManager {
         case MessageType.text:
         case MessageType.quote:
           {
-            String v = msg.atTextElem?.text ?? msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '';
+            String v = msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '';
+
             List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
 
             List<ImAtTextType> list = [];
@@ -314,8 +376,11 @@ class ImKitIsolateManager {
                 return '';
               },
             );
-            if (msg.contentType == MessageType.quote) {
-              ext.quoteMessage = await toMessageExt(msg.quoteElem!.quoteMessage!);
+            if (msg.contentType == MessageType.quote || (msg.contentType == MessageType.atText && msg.atTextElem?.quoteMessage != null)) {
+              Message? quoteMsg = msg.quoteElem?.quoteMessage ?? msg.atTextElem?.quoteMessage;
+              if (quoteMsg != null) {
+                ext.quoteMessage = await toMessageExt(quoteMsg);
+              }
             }
             ext.data = list;
           }
@@ -339,8 +404,7 @@ class ImKitIsolateManager {
             SignalingType.CustomSignalingTimeoutType
           ].contains(data['contentType']);
           ext.isRedEnvelope = [81, 82, 83].contains(data['contentType']);
-          ext.isBothDelete = [27].contains(data['contentType']);
-          ext.isGroupBothDelete = [77].contains(data['contentType']);
+          ext.isBothDelete = [27, 77].contains(data['contentType']);
           break;
 
         case MessageType.groupMemberMutedNotification:
@@ -423,6 +487,9 @@ class ImKitIsolateManager {
             case _PortMethod.copyFile:
               IsolateMethod.copyFile(msg);
               break;
+            case _PortMethod.saveBytes:
+              IsolateMethod.saveImageByUint8List(msg);
+              break;
           }
         } catch (e) {
           msg.sendPort?.send(PortResult(error: e.toString()));
@@ -457,5 +524,47 @@ class ImKitIsolateManager {
       }
     });
     return completer.future;
+  }
+
+  /// 全局删除消息群聊清楚消息
+  static _cleanPrivateChatAll() async {
+    try {
+      SearchResult result = await OpenIM.iMManager.messageManager.searchLocalMessages(
+        conversationID: null, // 根据会话查询，如果是全局搜索传null
+        messageTypeList: [MessageType.custom], // 消息类型列表
+        searchTimePosition: 0, // 搜索的起始时间点。默认为0即代表从现在开始搜索。UTC 时间戳，单位：秒
+        searchTimePeriod: 0, // 从起始时间点开始的过去时间范围，单位秒。默认为0即代表不限制时间范围，传24x60x60代表过去一天
+        pageIndex: 1, // 当前页数
+        count: 9999999999999, // 每页数量
+      );
+      if (result.searchResultItems == null || result.searchResultItems!.isEmpty) return;
+
+      for (var result in result.searchResultItems!) {
+        if (result.messageCount != 0) {
+          List<MessageExt> exts = await Future.wait((result.messageList ?? []).map((e) => e.toExt()).toList());
+          int index = exts.indexWhere((v) => v.ext.isBothDelete);
+          if (index != -1) {
+            OpenIM.iMManager.conversationManager.getMultipleConversation(
+              conversationIDList: [result.conversationID ?? ''], // 会话ID集合
+            ).then((conversation) {
+              OpenIM.iMManager.messageManager
+                  .getAdvancedHistoryMessageList(
+                conversationID: conversation.first.conversationID,
+                startMsg: result.messageList?[index], // 消息体
+                count: 999999999999999, // 每次拉取的数量
+              )
+                  .then((list) {
+                if (list.messageList.isEmpty) return;
+                for (var element in list.messageList) {
+                  OpenIM.iMManager.messageManager.deleteMessageFromLocalStorage(message: element);
+                }
+              });
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    }
   }
 }

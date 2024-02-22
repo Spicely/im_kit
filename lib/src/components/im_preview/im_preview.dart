@@ -71,7 +71,6 @@ class _ImPreviewState extends State<ImPreview> {
             scrollPhysics: const BouncingScrollPhysics(),
             builder: (BuildContext context, int index) {
               MessageExt message = messages[index];
-              final (w, h) = getSize(message);
               return PhotoViewGalleryPageOptions(
                 // imageProvider: message.ext.file == null ? NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? '') as ImageProvider<Object>? : FileImage(message.ext.file!),
                 imageProvider: NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? ''),
@@ -80,7 +79,7 @@ class _ImPreviewState extends State<ImPreview> {
                 maxScale: PhotoViewComputedScale.contained * 2,
                 heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
                 errorBuilder: (context, error, stackTrace) {
-                  return CachedImage(file: message.ext.file!, width: w, height: h, circular: 5, fit: BoxFit.cover);
+                  return CachedImage(file: message.ext.file!, circular: 5, fit: BoxFit.cover);
                 },
               );
             },

@@ -25,6 +25,7 @@ import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:html/parser.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:keyboard_height_plugin/keyboard_height_plugin.dart';
@@ -45,6 +46,7 @@ import 'package:uuid/uuid.dart';
 
 export 'package:intl/intl.dart';
 export 'package:popup_menu/popup_menu.dart';
+export 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 
 part 'src/components/im_button/im_button.dart';
 part 'src/components/im_loading/im_loading.dart';

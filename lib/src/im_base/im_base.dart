@@ -39,10 +39,10 @@ class ImBase extends StatelessWidget {
   final void Function(String)? onTapPhone;
 
   /// 点击下载文件
-  final void Function(BuildContext context, MessageExt message)? onTapDownFile;
+  final void Function(MessageExt message)? onTapDownFile;
 
   /// 点击播放视频
-  final void Function(BuildContext context, MessageExt message)? onTapPlayVideo;
+  final void Function(MessageExt message)? onTapPlayVideo;
 
   /// 点击复制
   final void Function(EditableTextState editableTextState)? onCopyTap;
@@ -205,9 +205,6 @@ class ImExtModel {
   /// 双向清除消息
   bool isBothDelete;
 
-  /// 群双向清除消息
-  bool isGroupBothDelete;
-
   /// 计时器
   Timer? timer;
 
@@ -241,7 +238,6 @@ class ImExtModel {
     this.isRedEnvelope = false,
     this.isSnapchat = false,
     this.isBothDelete = false,
-    this.isGroupBothDelete = false,
     this.timer,
     this.seconds = 30,
     this.showTime = false,
@@ -268,7 +264,6 @@ class ImExtModel {
       'isRedEnvelope': isRedEnvelope,
       'isSnapchat': isSnapchat,
       'isBothDelete': isBothDelete,
-      'isGroupBothDelete': isGroupBothDelete,
       'seconds': seconds,
       'showTime': showTime,
       'time': time,
@@ -287,31 +282,18 @@ class ImCore {
 
   static String _playID = '';
 
-  static String? userID;
-
   static late final SharedPreferences prefs;
 
   /// 临时缓存文件夹
   static String get tempPath => join(dirPath, 'Temp');
 
-  /// 临时缓存文件夹
-  static String get recvPath => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
-
   static init(String path) async {
     dirPath = path;
-    Directory(tempPath).create(recursive: true);
+    Directory(tempPath).createSync(recursive: true);
     if (Utils.isMobile) {
       _keyboardHeightPlugin = KeyboardHeightPlugin();
     }
     prefs = await SharedPreferences.getInstance();
-  }
-
-  /// 初始化用户文件夹
-  static void initUserFolder(String userID) {
-    /// 判断文件夹是否存在
-    if (!Directory(recvPath).existsSync()) {
-      Directory(recvPath).createSync(recursive: true);
-    }
   }
 
   /// 播放回调
@@ -416,6 +398,39 @@ class ImCore {
   static String fixAutoLines(String data) {
     return Characters(data).join('\u{200B}');
   }
+
+  /// 需要被忽略的消息
+  static final List<int> types = [
+    110,
+    111,
+    1000,
+    1501,
+    1502,
+    1503,
+    1504,
+    1505,
+    1506,
+    1507,
+    1508,
+    1509,
+    1510,
+    1511,
+    1514,
+    1515,
+    1201,
+    1202,
+    1203,
+    1204,
+    1205,
+    27,
+    77,
+    1701,
+    1512,
+    1513,
+    2023,
+    2024,
+    2025,
+  ];
 
   static const Map<String, String> emojiFaces = <String, String>{
     '[00]': 'ic_face_10000',
@@ -606,7 +621,7 @@ class SignalingType {
       return {"err": true};
     }
     try {
-      var data = jsonDecode(msg.textElem?.content ?? '{}');
+      var data = jsonDecode(msg.textElem!.content!);
       data = jsonDecode(data["data"]);
       return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
     } catch (e) {

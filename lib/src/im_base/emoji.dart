@@ -25,7 +25,7 @@ Widget _getEmoji(String text, {TextStyle? style, double? fontSize, int? maxLines
     },
     onNonMatch: (String n) {
       n = n.replaceAll('@-1', '@所有人 ');
-      list.add(TextSpan(text: ImCore.fixAutoLines(parse(n).body?.text ?? '')));
+      list.add(TextSpan(text: parse(n).body?.text ?? ''));
       return '';
     },
   );

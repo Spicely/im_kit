@@ -17,7 +17,7 @@ class ImQuoteItem extends ImBase {
     if ((quoteMsg.m.contentType == MessageType.location) || (quoteMsg.m.contentType == MessageType.file) || (quoteMsg.m.contentType == MessageType.card)) {
       return 180;
     }
-    return 228;
+    return 400;
   }
 
   @override
@@ -32,61 +32,70 @@ class ImQuoteItem extends ImBase {
       onTap: () {
         onQuoteMessageTap?.call(message);
       },
-      child: Container(
-        // margin: const EdgeInsets.only(top: 4),
-        padding: chatTheme.messageTheme.quotePadding,
-        decoration: BoxDecoration(
-          color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-          borderRadius: chatTheme.messageTheme.borderRadius,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              constraints: BoxConstraints(maxWidth: maxW),
-              // constraints: BoxConstraints(maxWidth: Get.width - 240.sp),
-              child: getQuoteContent(context),
-            ),
-            if (quoteMsg.m.contentType == MessageType.location)
-              Row(
-                children: [
-                  const SizedBox(width: 4),
-                  CachedImage(imageUrl: message.ext.data['url'] ?? '', height: 30, width: 30, circular: 2, fit: BoxFit.cover),
-                ],
+      child: Directionality(
+        textDirection: isMe ? TextDirection.ltr : TextDirection.ltr,
+        child: Container(
+          padding: chatTheme.messageTheme.quotePadding,
+          decoration: BoxDecoration(
+            color: chatTheme.messageTheme.backgroundColor,
+            borderRadius: chatTheme.messageTheme.borderRadius,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                constraints: BoxConstraints(maxWidth: maxW),
+                child: getQuoteContent(context),
               ),
-            if (quoteMsg.m.contentType == MessageType.file)
-              Row(
-                children: [
-                  const SizedBox(width: 4),
-                  Stack(
-                    children: [
-                      const CachedImage(
-                        width: 30,
-                        height: 30,
-                        assetUrl: 'assets/icons/msg_default.png',
-                      ),
-                      Positioned(
-                        top: 0,
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: suffix == null ? Image.asset('assets/icons/query.png', width: 20, height: 20) : Text(suffix, style: const TextStyle(fontSize: 10, color: Colors.white)),
+              if (quoteMsg.m.contentType == MessageType.location)
+                Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    CachedImage(imageUrl: message.ext.data?['url'] ?? '', height: 30, width: 30, circular: 2, fit: BoxFit.cover),
+                  ],
+                ),
+              if (quoteMsg.m.contentType == MessageType.file)
+                Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    Stack(
+                      children: [
+                        const CachedImage(
+                          width: 30,
+                          height: 30,
+                          assetUrl: 'assets/icons/msg_default.png',
+                          package: 'im_kit',
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            if (quoteMsg.m.contentType == MessageType.card)
-              Row(
-                children: [
-                  const SizedBox(width: 4),
-                  CachedImage(imageUrl: json.decode(quoteMsg.m.textElem!.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
-                ],
-              ),
-          ],
+                        Positioned(
+                          top: 0,
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: suffix == null
+                                ? Image.asset(
+                                    'assets/icons/query.png',
+                                    width: 20,
+                                    height: 20,
+                                    package: 'im_kit',
+                                  )
+                                : Text(suffix, style: const TextStyle(fontSize: 10, color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              if (quoteMsg.m.contentType == MessageType.card)
+                Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    CachedImage(imageUrl: json.decode(quoteMsg.m.textElem!.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -104,7 +113,7 @@ class ImQuoteItem extends ImBase {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${quoteMsg.m.senderNickname ?? ''}: ',
+              '${quoteMsg.m.name}: ',
               style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -125,7 +134,7 @@ class ImQuoteItem extends ImBase {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              '${quoteMsg.m.senderNickname ?? ''}: ',
+              '${quoteMsg.m.name}: ',
               style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -140,7 +149,7 @@ class ImQuoteItem extends ImBase {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${quoteMsg.m.senderNickname ?? ''}: ',
+              '${quoteMsg.m.name}: ',
               style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -176,7 +185,7 @@ class ImQuoteItem extends ImBase {
 
       case MessageType.merger:
         return Text(
-          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: [${language.chatRecord}] ${quoteMsg.m.mergeElem?.title ?? ''}'),
+          '${quoteMsg.m.name}: [${language.chatRecord}] ${quoteMsg.m.mergeElem?.title ?? ''}',
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -188,7 +197,7 @@ class ImQuoteItem extends ImBase {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${quoteMsg.m.senderNickname ?? ''}: ',
+              '${quoteMsg.m.name}: ',
               style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -200,7 +209,7 @@ class ImQuoteItem extends ImBase {
       case MessageType.card:
         var data = quoteMsg.ext.data;
         return Text(
-          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${data['nickname']}'),
+          '${quoteMsg.m.name}: ${data['nickname']}',
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -208,7 +217,7 @@ class ImQuoteItem extends ImBase {
 
       case MessageType.file:
         return Text(
-          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${quoteMsg.m.fileElem?.fileName ?? ''}'),
+          '${quoteMsg.m.name}: ${quoteMsg.m.fileElem?.fileName ?? ''}',
           style: TextStyle(fontSize: 12, color: gray),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -216,7 +225,7 @@ class ImQuoteItem extends ImBase {
       case MessageType.location:
         Map<String, dynamic> des = quoteMsg.ext.data;
         return Text(
-          ImCore.fixAutoLines('${quoteMsg.m.senderNickname ?? ''}: ${des['addr']}'),
+          '${quoteMsg.m.name}: ${des['addr']}',
           style: TextStyle(fontSize: 12, color: gray),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -228,7 +237,7 @@ class ImQuoteItem extends ImBase {
           TextSpan(
             children: [
               TextSpan(
-                text: '${quoteMsg.m.senderNickname ?? ''}: ',
+                text: '${quoteMsg.m.name}: ',
               ),
               TextSpan(
                   children: (quoteMsg.ext.data as List<ImAtTextType>?)?.map((e) {
@@ -248,6 +257,9 @@ class ImQuoteItem extends ImBase {
             ],
           ),
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
+          textAlign: TextAlign.left,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         );
 
       default:

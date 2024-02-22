@@ -71,17 +71,34 @@ class IsolateMethod {
     }
   }
 
-  /// 复制文件
+  /// Uint8List保存为文件
   static void saveImageByUint8List(_PortModel params) async {
-    String path = params.data['filePath'];
-    Uint8List bytes = params.data['uint8List'];
+    String path = params.data['path'];
+    Uint8List bytes = params.data['bytes'];
     try {
-      await File(path).writeAsBytes(bytes, flush: true);
+      final image = img.decodeImage(bytes);
+      final jpg = img.encodeJpg(image!);
+      await File(path).writeAsBytes(jpg);
       params.sendPort?.send(PortResult(data: path));
     } catch (e) {
       params.sendPort?.send(PortResult(error: e.toString()));
     }
   }
+
+  // /// 加密文件
+  // static Future<void> toMessageExt(_PortModel params) async {
+  //   try {
+  //     Message msg = params.data['msg'];
+  //     String uid = params.data['uid'];
+  //     ImCore.setUid(uid);
+
+  //     MessageExt extMsg = await _IsolateFun.toMessageExt(msg);
+
+  //     params.sendPort?.send(PortResult(data: extMsg));
+  //   } catch (e) {
+  //     params.sendPort?.send(PortResult(error: e.toString()));
+  //   }
+  // }
 
   /// 下载表情包
   static downEmoji(_PortModel params) async {

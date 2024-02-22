@@ -39,13 +39,7 @@ class ImVideo extends ImBase {
         children: [
           getSelectableView(
             context,
-            CachedImage(
-              imageUrl: msg.videoElem?.snapshotUrl,
-              file: ext.previewFile,
-              width: w,
-              height: h,
-              circular: 5,
-            ),
+            CachedImage(file: ext.previewFile, width: w, height: h, circular: 5),
           ),
           Positioned(
             left: 0,
@@ -57,9 +51,9 @@ class ImVideo extends ImBase {
                 onTap: () {
                   if (ext.isDownloading) return;
                   if (ext.file == null) {
-                    onTapDownFile?.call(context, message);
+                    onTapDownFile?.call(message);
                   } else {
-                    onTapPlayVideo?.call(context, message);
+                    onTapPlayVideo?.call(message);
                   }
                 },
                 child: Stack(
