@@ -52,7 +52,7 @@ class ImFile extends ImBase {
                               child: SizedBox(
                                 height: 40,
                                 child: Text(
-                                  filename ?? '',
+                                  ImCore.fixAutoLines(filename ?? ''),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 2,
                                   style: const TextStyle(fontSize: 14),
@@ -61,7 +61,7 @@ class ImFile extends ImBase {
                             ),
                             // 文件大小
                             Text(
-                              formatBytes(msg.fileElem?.fileSize ?? 0),
+                              ImCore.fixAutoLines(Utils.getFileSize(msg.fileElem?.fileSize ?? 0)),
                               style: const TextStyle(fontSize: 10, color: Color.fromRGBO(175, 175, 175, 1)),
                             ),
                           ],
@@ -122,24 +122,6 @@ class ImFile extends ImBase {
         ),
       ),
     );
-  }
-
-  /// 将字节数转化为MB
-  String formatBytes(int bytes) {
-    int kb = 1024;
-    int mb = kb * 1024;
-    int gb = mb * 1024;
-    if (bytes >= gb) {
-      return sprintf("%.1f GB", [bytes / gb]);
-    } else if (bytes >= mb) {
-      double f = bytes / mb;
-      return sprintf(f > 100 ? "%.0f MB" : "%.1f MB", [f]);
-    } else if (bytes > kb) {
-      double f = bytes / kb;
-      return sprintf(f > 100 ? "%.0f KB" : "%.1f KB", [f]);
-    } else {
-      return sprintf("%d B", [bytes]);
-    }
   }
 
   /// 获取文件后缀名

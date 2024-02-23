@@ -67,25 +67,21 @@ class _ImPreviewState extends State<ImPreview> {
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         children: [
-          PhotoViewGallery.builder(
-            scrollPhysics: const BouncingScrollPhysics(),
-            builder: (BuildContext context, int index) {
+          ExtendedImageGesturePageView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
               MessageExt message = messages[index];
-              return PhotoViewGalleryPageOptions(
-                // imageProvider: message.ext.file == null ? NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? '') as ImageProvider<Object>? : FileImage(message.ext.file!),
-                imageProvider: NetworkImage(message.m.pictureElem?.snapshotPicture?.url ?? ''),
-                initialScale: PhotoViewComputedScale.contained,
-                minScale: PhotoViewComputedScale.contained * 0.5,
-                maxScale: PhotoViewComputedScale.contained * 2,
-                heroAttributes: PhotoViewHeroAttributes(tag: ValueKey(message.m.clientMsgID)),
-                errorBuilder: (context, error, stackTrace) {
-                  return CachedImage(file: message.ext.file!, circular: 5, fit: BoxFit.cover);
+              return ExtendedImage.network(
+                message.m.pictureElem?.sourcePicture?.url ?? '',
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+                mode: ExtendedImageMode.gesture,
+                initEditorConfigHandler: (state) {
+                  return EditorConfig();
                 },
               );
             },
             itemCount: messages.length,
-            loadingBuilder: loadingBuilder,
-            pageController: pageController,
             onPageChanged: onPageChanged,
           ),
           if (!Utils.isDesktop) _buildBackBtn(),

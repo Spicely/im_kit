@@ -253,7 +253,7 @@ class ImExtModel {
       'isDownloading': isDownloading,
       'canDelete': canDelete,
       'createTime': createTime.millisecondsSinceEpoch,
-      'previewPath': previewFile,
+      'previewPath': previewFile?.path,
       'secretKey': secretKey,
       'width': width,
       'height': height,

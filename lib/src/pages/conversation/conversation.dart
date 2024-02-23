@@ -64,7 +64,7 @@ class Conversation extends StatelessWidget {
                                       circular: 46,
                                       fit: BoxFit.cover,
                                     ),
-                                    if (c.data[index].recvMsgOpt == 2 && (c.data[index].unreadCount ?? 0) > 0)
+                                    if (c.data[index].recvMsgOpt == 2 && (c.data[index].unreadCount) > 0)
                                       Positioned(
                                         right: -6,
                                         top: 0,
@@ -87,7 +87,7 @@ class Conversation extends StatelessWidget {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            c.data[index].title(),
+                                            ImCore.fixAutoLines(c.data[index].title()),
                                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500).useSystemChineseFont(),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -96,7 +96,7 @@ class Conversation extends StatelessWidget {
                                         SizedBox(
                                           width: 80,
                                           child: Text(
-                                            c.data[index].latestMsgSendTime?.formatDate() ?? '',
+                                            ImCore.fixAutoLines(c.data[index].latestMsgSendTime?.formatDate() ?? ''),
                                             style: const TextStyle(fontSize: 10, color: Color.fromRGBO(179, 179, 179, 1)).useSystemChineseFont(),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -112,8 +112,8 @@ class Conversation extends StatelessWidget {
                                           child: Text.rich(
                                             Utils.isNotEmpty(c.data[index].draftText)
                                                 ? TextSpan(children: [
-                                                    TextSpan(text: '[${language.draft}]', style: const TextStyle(color: Colors.red).useSystemChineseFont()),
-                                                    TextSpan(text: c.data[index].draftText, style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
+                                                    TextSpan(text: ImCore.fixAutoLines('[${language.draft}]'), style: const TextStyle(color: Colors.red).useSystemChineseFont()),
+                                                    TextSpan(text: ImCore.fixAutoLines(c.data[index].draftText ?? ''), style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
                                                   ])
                                                 : c.data[index].latestMsg?.type ?? const TextSpan(),
                                             style: const TextStyle(fontSize: 12, color: Color.fromRGBO(179, 179, 179, 1)),
@@ -129,8 +129,8 @@ class Conversation extends StatelessWidget {
                                               if (c.data[index].recvMsgOpt == 2) const CachedImage(assetUrl: 'assets/icons/not_disturb.png', width: 14, height: 14, package: 'im_kit'),
                                               if (c.data[index].recvMsgOpt != 2)
                                                 Badge.count(
-                                                  count: c.data[index].unreadCount ?? 0,
-                                                  isLabelVisible: (c.data[index].unreadCount ?? 0) > 0 ? true : false,
+                                                  count: c.data[index].unreadCount,
+                                                  isLabelVisible: (c.data[index].unreadCount) > 0 ? true : false,
                                                   backgroundColor: const Color.fromRGBO(254, 60, 60, 1),
                                                 ),
                                             ],

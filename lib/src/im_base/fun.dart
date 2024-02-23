@@ -10,10 +10,10 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
       ...kickedUserList
           .map(
             (v) => TextSpan(
-                text: v['userID'] == OpenIM.iMManager.uid ? '你${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}' : '${v['nickname']}${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}',
+                text: ImCore.fixAutoLines(v['userID'] == OpenIM.iMManager.uid ? '你${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}' : '${v['nickname']}${kickedUserList.indexOf(v) + 1 == kickedUserList.length ? '' : '、'}'),
                 style: TextStyle(color: userColor),
                 recognizer: TapGestureRecognizer()
-                  ..onTapUp = (details) async {
+                  ..onTapUp = (details) {
                     onTap?.call(details, v['userID'] ?? '');
                   }
                 // ..onTap = () async {
@@ -27,7 +27,7 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
                 ),
           )
           .toList(),
-      const TextSpan(text: '被踢出群组'),
+      TextSpan(text: ImCore.fixAutoLines('被踢出群组')),
     ],
   );
 }
@@ -37,14 +37,14 @@ TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallba
   return TextSpan(
     children: [
       TextSpan(
-        text: extMsg.m.sendID == OpenIM.iMManager.uid ? '你' : extMsg.m.senderNickname,
+        text: ImCore.fixAutoLines(extMsg.m.sendID == OpenIM.iMManager.uid ? '你' : extMsg.m.senderNickname ?? ''),
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
-          ..onTapUp = (details) async {
+          ..onTapUp = (details) {
             onTap?.call(details, extMsg.m.sendID ?? '');
           },
       ),
-      const TextSpan(text: '撤回了一条消息'),
+      TextSpan(text: ImCore.fixAutoLines('撤回了一条消息')),
     ],
   );
 }
@@ -57,10 +57,10 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
       ...invitedUserList
           .map(
             (v) => TextSpan(
-              text: v['userID'] == OpenIM.iMManager.uid ? '你${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}' : '${v['nickname']}${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}',
+              text: ImCore.fixAutoLines(v['userID'] == OpenIM.iMManager.uid ? '你${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}' : '${v['nickname']}${invitedUserList.indexOf(v) + 1 == invitedUserList.length ? '' : '、'}'),
               style: TextStyle(color: userColor),
               recognizer: TapGestureRecognizer()
-                ..onTapUp = (details) async {
+                ..onTapUp = (details) {
                   onTap?.call(details, v['userID'] ?? '');
                 },
             ),
@@ -78,14 +78,14 @@ TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userCol
   return TextSpan(
     children: [
       TextSpan(
-        text: userId == OpenIM.iMManager.uid ? '你' : nickname,
+        text: ImCore.fixAutoLines(userId == OpenIM.iMManager.uid ? '你' : nickname ?? ''),
         style: TextStyle(color: userColor),
         recognizer: TapGestureRecognizer()
-          ..onTapUp = (details) async {
+          ..onTapUp = (details) {
             onTap?.call(details, userId ?? '');
           },
       ),
-      TextSpan(text: _getTypeText(type)),
+      TextSpan(text: ImCore.fixAutoLines(_getTypeText(type))),
     ],
   );
 }
@@ -173,7 +173,7 @@ TextSpan _getAtText(Message msg) {
   );
   return TextSpan(
     children: [
-      msg.isGroupChat ? TextSpan(text: '${msg.senderNickname}：') : const TextSpan(),
+      msg.isGroupChat ? TextSpan(text: ImCore.fixAutoLines('${msg.senderNickname}: ')) : const TextSpan(),
       ...list.map((e) {
         if (e.type == ImAtType.emoji) {
           return WidgetSpan(
@@ -186,7 +186,7 @@ TextSpan _getAtText(Message msg) {
             ),
           );
         } else {
-          return TextSpan(text: e.text);
+          return TextSpan(text: ImCore.fixAutoLines(e.text));
         }
       }).toList(),
     ],

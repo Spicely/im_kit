@@ -812,11 +812,11 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 下载文件
-  void onTapDownFile(MessageExt ext) {}
+  void onTapDownFile(MessageExt extMsg) {}
 
   /// 点击播放视频
-  void onTapPlayVideo(MessageExt ext) {
-    Get.to(() => ImPlayer(message: ext));
+  void onTapPlayVideo(MessageExt extMsg) {
+    Get.to(() => ImPlayer(message: extMsg));
   }
 
   /// 点击图片
@@ -1078,7 +1078,15 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   void onAtTap(TapUpDetails details, String userID) {}
 
-  void onTapPhone(String phone) {}
+  void onTapPhone(String phone) {
+    Uri uri = Uri.parse('tel:$phone');
+    launchUrl(uri);
+  }
+
+  void onTapEmail(String email) {
+    Uri uri = Uri.parse('mailto:$email');
+    launchUrl(uri);
+  }
 
   void onForwardMessage(MessageExt extMsg) {}
 

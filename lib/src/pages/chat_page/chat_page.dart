@@ -125,6 +125,7 @@ class ChatPage extends StatelessWidget {
                       onNotificationUserTap: controller.onNotificationUserTap,
                       onTapUrl: controller.onUrlTap,
                       onAtTap: controller.onAtTap,
+                      onTapEmail: controller.onTapEmail,
                       onTapPhone: controller.onTapPhone,
                       onCardTap: controller.onCardTap,
                       onLocationTap: controller.onLocationTap,

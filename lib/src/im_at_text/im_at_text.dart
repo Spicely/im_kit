@@ -75,7 +75,7 @@ class ImAtText extends ImBase {
         );
       } else {
         return TextSpan(
-          text: e.text,
+          text: ImCore.fixAutoLines(e.text),
           style: TextStyle(color: atTypeColor(e, chatTheme)),
           recognizer: TapGestureRecognizer()
             ..onTapUp = (TapUpDetails details) {

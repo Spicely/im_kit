@@ -39,7 +39,13 @@ class ImVideo extends ImBase {
         children: [
           getSelectableView(
             context,
-            CachedImage(file: ext.previewFile, width: w, height: h, circular: 5),
+            CachedImage(
+              file: ext.previewFile,
+              imageUrl: msg.videoElem?.snapshotUrl,
+              width: w,
+              height: h,
+              circular: 5,
+            ),
           ),
           Positioned(
             left: 0,
@@ -65,17 +71,18 @@ class ImVideo extends ImBase {
                       bottom: 0,
                       top: 0,
                       child: Center(
-                          child: ext.isDownloading
-                              ? Text(
-                                  '${((ext.progress ?? 0) * 100).toStringAsFixed(1)}%',
-                                  style: const TextStyle(color: Colors.white),
-                                )
-                              : ext.file == null
-                                  ? Transform.rotate(
-                                      angle: -pi / 2,
-                                      child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.white),
-                                    )
-                                  : const Icon(Icons.play_arrow_rounded, size: 20, color: Colors.white)),
+                        child: ext.isDownloading
+                            ? Text(
+                                '${((ext.progress ?? 0) * 100).toStringAsFixed(1)}%',
+                                style: const TextStyle(color: Colors.white),
+                              )
+                            : ext.file == null
+                                ? Transform.rotate(
+                                    angle: -pi / 2,
+                                    child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.white),
+                                  )
+                                : const Icon(Icons.play_arrow_rounded, size: 20, color: Colors.white),
+                      ),
                     ),
                     Positioned(
                       left: 0,

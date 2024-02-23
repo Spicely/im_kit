@@ -251,7 +251,7 @@ class ImQuoteItem extends ImBase {
                     ),
                   );
                 } else {
-                  return TextSpan(text: e.text);
+                  return TextSpan(text: ImCore.fixAutoLines(e.text));
                 }
               }).toList()),
             ],

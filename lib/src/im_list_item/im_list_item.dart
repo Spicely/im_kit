@@ -355,7 +355,7 @@ class ImListItem extends StatelessWidget {
                                         }
                                       },
                                       child: Container(
-                                        constraints: const BoxConstraints(maxWidth: 500),
+                                        constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
                                         decoration: BoxDecoration(
                                           color: ImCore.noBgMsgType.contains(message.m.contentType)
                                               ? null

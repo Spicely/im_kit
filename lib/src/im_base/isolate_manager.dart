@@ -147,7 +147,17 @@ class ImKitIsolateManager {
   /// 保存文件到相册
   static Future<bool> saveFileToAlbum(String path) async {
     try {
-      await ImageGallerySaver.saveFile(path);
+      if (Utils.isMobile) {
+        await ImageGallerySaver.saveFile(path);
+      } else {
+        String? saveDir = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: '保存文件',
+          lockParentWindow: true,
+        );
+        if (saveDir != null) {
+          ImKitIsolateManager.copyFile(path, saveDir);
+        }
+      }
       return true;
     } catch (_) {
       return false;
@@ -272,13 +282,13 @@ class ImKitIsolateManager {
   }
 
   /// 复制文件
-  static Future<String> copyFile(String path, String savePath) {
+  static Future<String> copyFile(String path, String saveDir) {
     var completer = Completer<String>();
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
       method: _PortMethod.copyFile,
-      data: {'path': path, 'savePath': savePath},
+      data: {'path': path, 'saveDir': saveDir},
       sendPort: port.sendPort,
     ));
 
@@ -364,10 +374,10 @@ class ImKitIsolateManager {
                       list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
                     }
                   }
-                } else if (RegExp(phoneReg).hasMatch(value)) {
-                  list.add(ImAtTextType(type: ImAtType.phone, text: value));
                 } else if (RegExp(urlRge).hasMatch(value)) {
                   list.add(ImAtTextType(type: ImAtType.url, text: value));
+                } else if (RegExp(phoneReg).hasMatch(value)) {
+                  list.add(ImAtTextType(type: ImAtType.phone, text: value));
                 }
                 return '';
               },
