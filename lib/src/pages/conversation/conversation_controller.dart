@@ -135,7 +135,9 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   /// 跳转到聊天页面
   Future<void> toChatPage(ConversationInfo info) async {
-    currentConversationID.value = info.conversationID;
+    if (Utils.isDesktop) {
+      currentConversationID.value = info.conversationID;
+    }
     AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: info.conversationID,
       count: 40,
