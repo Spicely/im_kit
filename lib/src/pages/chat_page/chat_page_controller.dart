@@ -43,7 +43,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   UserInfo get uInfo => OpenIM.iMManager.uInfo!;
 
   /// 私聊用户信息
-  Rx<UserInfo?> chatUserInfo = Rx(null);
+  Rx<FullUserInfo?> chatUserInfo = Rx(null);
 
   RxInt currentIndex = (-1).obs;
 
@@ -245,29 +245,29 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
-  /// 已从黑名单移除
-  @override
-  void onBlacklistDeleted(BlacklistInfo u) {
-    if (u.userID == chatUserInfo.value?.userID) {
-      chatUserInfo.value?.isBlacklist = false;
-    }
-  }
+  // /// 已从黑名单移除
+  // @override
+  // void onBlacklistDeleted(BlacklistInfo u) {
+  //   if (u.userID == chatUserInfo.value?.userID) {
+  //     chatUserInfo.value?.isBlacklist = false;
+  //   }
+  // }
 
   /// 设置黑名单
   Future<void> setBlackStatus(bool status) async {
-    try {
-      chatUserInfo.value?.isBlacklist = status;
-      chatUserInfo.refresh();
-      if (status) {
-        await OpenIM.iMManager.friendshipManager.addBlacklist(uid: userID!);
-      } else {
-        await OpenIM.iMManager.friendshipManager.removeBlacklist(uid: userID!);
-      }
-    } catch (e) {
-      chatUserInfo.value?.isBlacklist = !status;
-      chatUserInfo.refresh();
-      MukaConfig.config.exceptionCapture.error(e);
-    }
+    // try {
+    //   chatUserInfo.value?.isBlacklist = status;
+    //   chatUserInfo.refresh();
+    //   if (status) {
+    //     await OpenIM.iMManager.friendshipManager.addBlacklist(uid: userID!);
+    //   } else {
+    //     await OpenIM.iMManager.friendshipManager.removeBlacklist(uid: userID!);
+    //   }
+    // } catch (e) {
+    //   chatUserInfo.value?.isBlacklist = !status;
+    //   chatUserInfo.refresh();
+    //   MukaConfig.config.exceptionCapture.error(e);
+    // }
   }
 
   @override
@@ -334,7 +334,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   Future<void> getData() async {
     if (isGroupChat) {
-      groupInfo.value = (await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [groupID!])).first;
+      groupInfo.value = (await OpenIM.iMManager.groupManager.getGroupsInfo(groupIDList: [groupID!])).first;
       if (isMember && groupInfo.value?.status == 3) {
         isMute.value = true;
       }
@@ -342,7 +342,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       showGroupMembers.value = groupMembers.take(6).toList();
     } else {
       if (userID == null) return;
-      chatUserInfo.value = (await OpenIM.iMManager.friendshipManager.getFriendsInfo(uidList: [userID!])).first;
+      chatUserInfo.value = (await OpenIM.iMManager.friendshipManager.getFriendsList(userIDList: [userID!])).first;
     }
 
     List<String> messageIds = [];
@@ -402,19 +402,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     if (ids.isEmpty) return;
 
     /// 群会话
-    if (Utils.isNotEmpty(groupID) || isGroupChat) {
-      // await OpenIM.iMManager.messageManager.markGroupMessageAsRead(
-      //   groupID: groupID ?? conversationInfo.value!.groupID!,
-      //   messageIDList: [],
-      // );
-      OpenIM.iMManager.messageManager.markC2CAndGroupMessageAsRead(userID: userID ?? uId, groupID: groupID ?? gId, messageIDList: []);
-    } else {
-      if (ids.isEmpty) return;
-      Utils.exceptionCapture(() async {
-        await OpenIM.iMManager.messageManager.markC2CMessageAsRead(userID: userID ?? uId!, messageIDList: ids);
-        // await OpenIM.iMManager.messageManager.markMessageAsReadByConID(conversationID: conversationID, messageIDList: []);
-        OpenIM.iMManager.messageManager.markC2CAndGroupMessageAsRead(userID: userID ?? uId, groupID: groupID ?? gId, messageIDList: []);
-      });
+    if (conversationInfo.value != null) {
+      OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversationInfo.value!.conversationID, messageIDList: ids);
     }
   }
 
@@ -436,14 +425,14 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         Uri fileUri = Uri.file(extMsg.ext.file!.path);
         launchUrl(fileUri);
       } else {
-        OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((paths) {
-          extMsg.ext.file = File(paths.first);
-          Uri fileUri = Uri.file(extMsg.ext.file!.path);
-          launchUrl(fileUri);
-        }).catchError((e) {
-          extMsg.ext.errorCode = ImExtErrorCode.downloadFailure;
-          updateMessage(extMsg);
-        });
+        // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((paths) {
+        //   extMsg.ext.file = File(paths.first);
+        //   Uri fileUri = Uri.file(extMsg.ext.file!.path);
+        //   launchUrl(fileUri);
+        // }).catchError((e) {
+        //   extMsg.ext.errorCode = ImExtErrorCode.downloadFailure;
+        //   updateMessage(extMsg);
+        // });
       }
     }
   }
@@ -461,21 +450,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     });
   }
 
-  @override
-  void onDownloadFileProgress(String taskId, int progress) {
-    int index = data.indexWhere((v) => v.m.clientMsgID == taskId);
-    if (index != -1) {
-      data[index].ext.progress = progress / 100;
-      data.refresh();
-      if (progress == 100) {
-        /// 延迟500ms 删除进度
-        Future.delayed(const Duration(milliseconds: 500), () {
-          data[index].ext.progress = null;
-          data.refresh();
-        });
-      }
-    }
-  }
+  // @override
+  // void onDownloadFileProgress(String taskId, int progress) {
+  //   int index = data.indexWhere((v) => v.m.clientMsgID == taskId);
+  //   if (index != -1) {
+  //     data[index].ext.progress = progress / 100;
+  //     data.refresh();
+  //     if (progress == 100) {
+  //       /// 延迟500ms 删除进度
+  //       Future.delayed(const Duration(milliseconds: 500), () {
+  //         data[index].ext.progress = null;
+  //         data.refresh();
+  //       });
+  //     }
+  //   }
+  // }
 
   @override
   void onClose() {
@@ -560,21 +549,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         updateMessage(extMsg);
       } else {
         if (extMsg.m.contentType == MessageType.file) return;
-        OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((value) {
-          if (value.length == 2) {
-            extMsg.ext.previewFile = File(value.first);
-            extMsg.ext.file = File(value.last);
-          } else {
-            extMsg.ext.file = File(value.first);
-          }
-          updateMessage(extMsg);
+        // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((value) {
+        //   if (value.length == 2) {
+        //     extMsg.ext.previewFile = File(value.first);
+        //     extMsg.ext.file = File(value.last);
+        //   } else {
+        //     extMsg.ext.file = File(value.first);
+        //   }
+        //   updateMessage(extMsg);
 
-          /// 查找引用消息
-        }).catchError((e) {
-          // extMsg.loadFailed = true;
-          updateMessage(extMsg);
-          debugPrint(e.toString());
-        });
+        //   /// 查找引用消息
+        // }).catchError((e) {
+        //   // extMsg.loadFailed = true;
+        //   updateMessage(extMsg);
+        //   debugPrint(e.toString());
+        // });
       }
     } else if (MessageType.quote == extMsg.m.contentType) {
       if (conversationInfo.value != null && [MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.quoteElem?.quoteMessage?.contentType)) {
@@ -588,21 +577,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           }
           updateMessage(extMsg);
         } else {
-          OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m.quoteElem!.quoteMessage!).then((value) {
-            if (value.length == 2) {
-              extMsg.m.quoteElem?.quoteMessage?.snapshotFile = File(value.first);
-              extMsg.m.quoteElem?.quoteMessage?.file = File(value.last);
-            } else {
-              extMsg.m.quoteElem?.quoteMessage?.file = File(value.first);
-            }
-            updateMessage(extMsg);
+          // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m.quoteElem!.quoteMessage!).then((value) {
+          //   if (value.length == 2) {
+          //     extMsg.m.quoteElem?.quoteMessage?.snapshotFile = File(value.first);
+          //     extMsg.m.quoteElem?.quoteMessage?.file = File(value.last);
+          //   } else {
+          //     extMsg.m.quoteElem?.quoteMessage?.file = File(value.first);
+          //   }
+          //   updateMessage(extMsg);
 
-            /// 查找引用消息
-          }).catchError((e) {
-            //  extMsg.m.loadFailed = true;
-            updateMessage(extMsg);
-            debugPrint(e.toString());
-          });
+          //   /// 查找引用消息
+          // }).catchError((e) {
+          //   //  extMsg.m.loadFailed = true;
+          //   updateMessage(extMsg);
+          //   debugPrint(e.toString());
+          // });
         }
       }
     }
@@ -661,8 +650,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   @override
-  void onRecvMessageRevoked(String msgId) {
-    int index = data.indexWhere((v) => v.m.clientMsgID == msgId);
+  void onNewRecvMessageRevoked(RevokedInfo info) {
+    int index = data.indexWhere((v) => v.m.clientMsgID == info.clientMsgID);
     if (index != -1) {
       data.removeAt(index);
     }
@@ -742,7 +731,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           conversationID: conversationInfo.value?.conversationID,
           startMsg: msgExt.m,
         );
-        List<MessageExt> newExts = (await Future.wait(result.messageList!.map((e) => e.toExt()))).reversed.toList();
+        List<MessageExt> newExts = (await Future.wait(result.messageList.map((e) => e.toExt()))).reversed.toList();
 
         /// 移除已经有了的数据
         newExts.removeWhere((v) => data.indexWhere((e) => e.m.clientMsgID == v.m.clientMsgID) != -1);
@@ -958,17 +947,17 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       );
       if (text != null) {
         switch (newMsg.contentType) {
-          case MessageType.at_text:
+          case MessageType.atText:
           case MessageType.text:
           case MessageType.quote:
-            newMsg.content = text;
-            newMsg.atElem?.text = text;
+            newMsg.textElem?.content = text;
+            newMsg.atTextElem?.text = text;
             newMsg.quoteElem?.text = text;
         }
       }
-      if ([MessageType.at_text, MessageType.text].contains(msg.m.contentType)) {
-        newMsg.content = text;
-        newMsg.atElem?.text = text;
+      if ([MessageType.atText, MessageType.text].contains(msg.m.contentType)) {
+        newMsg.textElem?.content = text;
+        newMsg.atTextElem?.text = text;
         newMsg.quoteElem?.text = text;
       }
       MessageExt extMsg = await newMsg.toExt();
@@ -1181,25 +1170,25 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   Future<void> onLoad() async {
     if (conversationInfo.value == null) return;
-    List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
+    AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
       conversationID: conversationInfo.value?.conversationID,
       count: loadNum,
       startMsg: data.last.m,
     );
-    if (list.length < loadNum) {
+    if (advancedMessage.messageList.length < loadNum) {
       noMore.value = true;
       easyRefreshController.finishLoad(IndicatorResult.noMore);
     } else {
       easyRefreshController.finishLoad(IndicatorResult.success);
     }
-    List<MessageExt> newExts = await Future.wait(list.reversed.map((e) => e.toExt()));
+    List<MessageExt> newExts = await Future.wait(advancedMessage.messageList.reversed.map((e) => e.toExt()));
     data.addAll(newExts);
-    if (list.length < loadNum) {
-      MessageExt encryptedNotification = await Message(
-        contentType: MessageType.encryptedNotification,
-        createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
-      ).toExt();
-      data.add(encryptedNotification);
+    if (advancedMessage.messageList.length < loadNum) {
+      // MessageExt encryptedNotification = await Message(
+      //   contentType: MessageType.encryptedNotification,
+      //   createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
+      // ).toExt();
+      // data.add(encryptedNotification);
     }
     for (var v in newExts) {
       downFile(v);
@@ -1329,7 +1318,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.messageManager.clearC2CHistoryMessageFromLocalAndSvr(uid: uId!);
       await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversationInfo.value!.conversationID);
-      await OpenIM.iMManager.friendshipManager.deleteFriend(uid: uId!);
+      await OpenIM.iMManager.friendshipManager.deleteFriend(userID: uId!);
       onSuccess?.call();
     });
   }
@@ -1338,18 +1327,18 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void doubleCleanMessage(MessageExt extMsg) {
     if (conversationInfo.value == null) return;
     Utils.exceptionCapture(() async {
-      List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
+      AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
         conversationID: conversationInfo.value?.conversationID,
         count: 999999999999999,
         startMsg: extMsg.m,
       );
-      if (list.isEmpty) return;
+      if (advancedMessage.messageList.isEmpty) return;
       if (isGroupChat) {
-        for (var v in list) {
+        for (var v in advancedMessage.messageList) {
           OpenIM.iMManager.messageManager.deleteMessageFromLocalStorage(message: v);
         }
       } else {
-        for (var v in list) {
+        for (var v in advancedMessage.messageList) {
           OpenIM.iMManager.messageManager.deleteMessageFromLocalAndSvr(message: v);
         }
       }
@@ -1413,10 +1402,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
         FocusManager.instance.primaryFocus?.unfocus();
       }
-      if (index != -1) {
+      if (index != -1 && conversationInfo.value != null) {
         data.removeAt(index);
-        await OpenIM.iMManager.messageManager.revokeMessage(message: message.m);
-        MessageExt revMsg = await Message(contentType: MessageType.revoke, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt();
+        await OpenIM.iMManager.messageManager.revokeMessage(conversationID: conversationInfo.value!.conversationID, clientMsgID: message.m.clientMsgID ?? '');
+        MessageExt revMsg = await Message(contentType: MessageType.revokeMessageNotification, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt();
         if (message.m.contentType == MessageType.text) {
           revMsg.ext.quoteMessage = message;
         }
@@ -1428,7 +1417,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   /// 重新编辑点击事件
   void onReEditTap(MessageExt extMsg) {
-    textEditingController.text = extMsg.m.content ?? '';
+    textEditingController.text = extMsg.m.textElem?.content ?? '';
   }
 
   void onMoreSelectShare() {}

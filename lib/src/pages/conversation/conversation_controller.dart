@@ -14,10 +14,10 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   final RxList<FriendApplicationInfo> applicationList = <FriendApplicationInfo>[].obs;
 
   /// 好友列表
-  final RxList<UserInfo> friendList = <UserInfo>[].obs;
+  final RxList<FullUserInfo> friendList = <FullUserInfo>[].obs;
 
   /// 黑名单列表
-  final RxList<UserInfo> blackList = <UserInfo>[].obs;
+  final RxList<BlacklistInfo> blackList = <BlacklistInfo>[].obs;
 
   /// 自己信息
   Rx<UserInfo> userInfo = Rx(OpenIM.iMManager.uInfo!);
@@ -43,7 +43,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
       int count = 0;
       for (var info in v) {
         if (info.recvMsgOpt == 0) {
-          count += info.unreadCount ?? 0;
+          count += info.unreadCount;
         }
       }
       unReadMsg.value = count;
@@ -188,7 +188,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     int index = groupList.indexWhere((v) => v.groupID == info.groupID);
     if (index != -1) {
       Utils.exceptionCapture(() async {
-        List<GroupInfo> groups = await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!]);
+        List<GroupInfo> groups = await OpenIM.iMManager.groupManager.getGroupsInfo(groupIDList: [info.groupID!]);
         if (groups.isNotEmpty) {
           groupList.add(groups.first);
         }
@@ -210,25 +210,25 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   @override
   void onSelfInfoUpdated(UserInfo info) {
-    userInfo.update((val) {
-      val?.birthTime = info.birthTime;
-      val?.createTime = info.createTime;
-      val?.gender = info.gender;
-      val?.userID = info.userID;
-      val?.allowAddFriend = info.allowAddFriend;
-      val?.allowBeep = info.allowBeep;
-      val?.blackInfo = info.blackInfo;
-      val?.faceURL = info.faceURL;
-      val?.email = info.email;
-      val?.birth = info.birth;
-      val?.phoneNumber = info.phoneNumber;
-      val?.ex = info.ex;
-    });
+    // userInfo.update((val) {
+    //   val?.birthTime = info.birthTime;
+    //   val?.createTime = info.createTime;
+    //   val?.gender = info.gender;
+    //   val?.userID = info.userID;
+    //   val?.allowAddFriend = info.allowAddFriend;
+    //   val?.allowBeep = info.allowBeep;
+    //   val?.blackInfo = info.blackInfo;
+    //   val?.faceURL = info.faceURL;
+    //   val?.email = info.email;
+    //   val?.birth = info.birth;
+    //   val?.phoneNumber = info.phoneNumber;
+    //   val?.ex = info.ex;
+    // });
   }
 
   /// 同意好友申请
   void agreeFriendApplication(FriendApplicationInfo applicationInfo) async {
-    await OpenIM.iMManager.friendshipManager.acceptFriendApplication(uid: applicationInfo.fromUserID!);
+    await OpenIM.iMManager.friendshipManager.acceptFriendApplication(userID: applicationInfo.fromUserID!);
     int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
     if (index != -1) {
       applicationList[index].handleResult = 1;
@@ -237,7 +237,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   /// 拒绝好友申请
   void rejectFriendApplication(FriendApplicationInfo applicationInfo) async {
-    await OpenIM.iMManager.friendshipManager.refuseFriendApplication(uid: applicationInfo.fromUserID!);
+    await OpenIM.iMManager.friendshipManager.refuseFriendApplication(userID: applicationInfo.fromUserID!);
     int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
     if (index != -1) {
       applicationList[index].handleResult = -1;
@@ -247,25 +247,25 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   ///移除黑名单好友
   void removeFriendFromBlacklist(String uid) {
     Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.friendshipManager.removeBlacklist(uid: uid);
+      await OpenIM.iMManager.friendshipManager.removeBlack(userID: uid);
       int index = blackList.indexWhere((v) => v.userID == uid);
       if (index != -1) {
         blackList.removeAt(index);
-        blackList.value = await OpenIM.iMManager.friendshipManager.getBlacklist();
+        blackList.value = await OpenIM.iMManager.friendshipManager.getBlackList();
       }
     });
   }
 
   @override
-  void onBlacklistAdded(BlacklistInfo u) {
+  void onBlackAdded(BlacklistInfo u) {
     int index = blackList.indexWhere((v) => v.userID == u.userID);
     if (index == -1) {
-      blackList.add(UserInfo.fromJson(u.toJson()));
+      blackList.add(u);
     }
   }
 
   @override
-  void onBlacklistDeleted(BlacklistInfo u) {
+  void onBlackDeleted(BlacklistInfo u) {
     blackList.removeWhere((v) => v.userID == u.userID);
   }
 
@@ -335,7 +335,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   /// 标记已读
   Future<void> markConversationRead(ConversationInfo conversation) async {
-    await OpenIM.iMManager.messageManager.markMessageAsReadByConID(conversationID: conversation.conversationID, messageIDList: []);
+    await OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversation.conversationID, messageIDList: []);
   }
 
   /// 免打扰

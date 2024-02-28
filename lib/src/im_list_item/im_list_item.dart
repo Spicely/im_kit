@@ -243,24 +243,24 @@ class ImListItem extends StatelessWidget {
       MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => beforeRenderView(const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         )),
-      MessageType.encryptedNotification => beforeRenderView(Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset('assets/icons/lock.png', width: 16, height: 16),
-                const Expanded(
-                  child: Text(
-                    '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        )),
+      // MessageType.encryptedNotification => beforeRenderView(Center(
+      //     child: Padding(
+      //       padding: const EdgeInsets.symmetric(horizontal: 50),
+      //       child: Row(
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           Image.asset('assets/icons/lock.png', width: 16, height: 16),
+      //           const Expanded(
+      //             child: Text(
+      //               '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+      //               style: TextStyle(fontSize: 12, color: Colors.grey),
+      //               textAlign: TextAlign.center,
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //     ),
+      //   )),
       MessageType.memberKickedNotification => beforeRenderView(Center(
           child: Text.rich(
             _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
@@ -273,7 +273,7 @@ class ImListItem extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         )),
-      MessageType.revoke => beforeRenderView(Center(
+      MessageType.revokeMessageNotification => beforeRenderView(Center(
           child: Text.rich(
             _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap, onReEditTap: onReEditTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -367,7 +367,7 @@ class ImListItem extends StatelessWidget {
                                 //     // ),
                                 //   ],
                                 // ),
-                                if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.at_text && message.m.quoteElem != null) && message.ext.quoteMessage != null)
+                                if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.atText && message.m.quoteElem != null) && message.ext.quoteMessage != null)
                                   Container(
                                     margin: const EdgeInsets.only(top: 5),
                                     child: ImQuoteItem(
@@ -433,7 +433,7 @@ class ImListItem extends StatelessWidget {
   Widget getTypeWidget() {
     switch (message.m.contentType) {
       case MessageType.text:
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
         return ImAtText(
           message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,

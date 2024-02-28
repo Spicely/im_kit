@@ -100,7 +100,7 @@ class ImQuote extends ImBase {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
       case MessageType.text:
         return Text.rich(

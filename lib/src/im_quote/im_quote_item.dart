@@ -96,7 +96,7 @@ class ImQuoteItem extends ImBase {
                 Row(
                   children: [
                     const SizedBox(width: 4),
-                    CachedImage(imageUrl: json.decode(quoteMsg.m.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
+                    CachedImage(imageUrl: quoteMsg.ext.data?['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
                   ],
                 ),
             ],
@@ -106,7 +106,7 @@ class ImQuoteItem extends ImBase {
     );
   }
 
-  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atElem?.atUsersInfo ?? [];
+  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atTextElem?.atUsersInfo ?? [];
 
   Widget getQuoteContent(BuildContext context) {
     Color gray = const Color.fromRGBO(126, 126, 126, 1);
@@ -233,7 +233,7 @@ class ImQuoteItem extends ImBase {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.at_text:
+      case MessageType.atText:
       case MessageType.quote:
       case MessageType.text:
         TextSpan span = TextSpan(

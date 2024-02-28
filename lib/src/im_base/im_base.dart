@@ -633,19 +633,19 @@ class SignalingType {
     }
   }
 
-  ///解析信令消息
-  static Map parseCallMessage(Message msg) {
-    if (msg.contentType != MessageType.custom) {
-      return {"err": true};
-    }
-    try {
-      var data = jsonDecode(msg.content!);
-      data = jsonDecode(data["data"]);
-      return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
-    } catch (e) {
-      return {"err": true};
-    }
-  }
+  // ///解析信令消息
+  // static Map parseCallMessage(Message msg) {
+  //   if (msg.contentType != MessageType.custom) {
+  //     return {"err": true};
+  //   }
+  //   try {
+  //     var data = jsonDecode(msg.content!);
+  //     data = jsonDecode(data["data"]);
+  //     return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
+  //   } catch (e) {
+  //     return {"err": true};
+  //   }
+  // }
 }
 
 enum MenuItemType {
