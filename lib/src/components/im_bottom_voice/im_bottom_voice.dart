@@ -89,7 +89,7 @@ class _ImBottomVoiceState extends State<ImBottomVoice> {
     return Stack(
       children: [
         Container(
-          height: double.infinity,
+          height: isRecording ? 65 + 240 : 240,
           width: double.infinity,
           color: const Color.fromRGBO(241, 241, 241, 1),
           child: Column(

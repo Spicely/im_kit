@@ -33,7 +33,7 @@ TextSpan _getMemberKickedNotification(Map<String, dynamic> detail, {Color? userC
 }
 
 /// 撤回消息
-TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap}) {
+TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallback? onTap, Function(MessageExt)? onReEditTap}) {
   return TextSpan(
     children: [
       TextSpan(
@@ -45,6 +45,15 @@ TextSpan _getRevoke(MessageExt extMsg, {Color? userColor, UserNotificationCallba
           },
       ),
       TextSpan(text: ImCore.fixAutoLines('撤回了一条消息')),
+      if (extMsg.m.sendID == OpenIM.iMManager.uid && extMsg.ext.quoteMessage != null)
+        TextSpan(
+          text: ImCore.fixAutoLines(' 重新编辑'),
+          style: TextStyle(color: userColor),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () {
+              onReEditTap?.call(extMsg.ext.quoteMessage!);
+            },
+        ),
     ],
   );
 }
@@ -128,8 +137,8 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
 }
 
 TextSpan _getAtText(Message msg) {
-  String v = msg.atTextElem?.text ?? msg.textElem?.content ?? '';
-  List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
+  String v = msg.atElem?.text ?? msg.content ?? '';
+  List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
 
   List<ImAtTextType> list = [];
 

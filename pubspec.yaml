@@ -11,20 +11,19 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_openim_sdk_ffi:
-    path: ../../../flutter_openim_sdk_ffi
-  flutter_muka:
-    path: ../../../flutter_muka
+    path: ../../../../im/flutter_openim_sdk_ffi
   # flutter_muka:
-  #   git:
-  #     url: https://github.com/Spicely/flutter_muka.git
-  #     ref: v3
+  #   path: ../../../flutter_muka
+  flutter_muka:
+    git:
+      url: https://github.com/Spicely/flutter_muka.git
+      ref: v3
   path:
   get:
   audioplayers:
   record: ^5.0.1
   image_gallery_saver:
   card_swiper: 
-  photo_view: 
   image: 
   html:
   lottie:
@@ -32,7 +31,6 @@ dependencies:
   encrypt: 
   pointycastle:
   popup_menu: 
-  chinese_font_library: 
   media_kit:
   media_kit_video:
   media_kit_libs_video:
@@ -47,10 +45,11 @@ dependencies:
   url_launcher:
   easy_refresh:
   pasteboard: 
-  fluent_ui: 
   scrollable_positioned_list:
-  keyboard_height_plugin:
-  shared_preferences:
+  fluent_ui: 
+  chinese_font_library:
+  desktop_multi_window:
+  window_manager:
 
 dev_dependencies:
   flutter_test:

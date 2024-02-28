@@ -20,6 +20,11 @@ class ImBase extends StatelessWidget {
 
   final MessageExt message;
 
+  /// 是否显示选择按钮
+  final bool showSelect;
+
+  final bool showBackground;
+
   final void Function(MenuItemProvider, MessageExt)? onClickMenu;
 
   ImExtModel get ext => message.ext;
@@ -44,24 +49,6 @@ class ImBase extends StatelessWidget {
   /// 点击播放视频
   final void Function(MessageExt message)? onTapPlayVideo;
 
-  /// 点击复制
-  final void Function(EditableTextState editableTextState)? onCopyTap;
-
-  /// 点击删除
-  final void Function(MessageExt message)? onDeleteTap;
-
-  /// 点击转发
-  final void Function(MessageExt message)? onForwardTap;
-
-  /// 点击回复
-  final void Function(MessageExt message)? onQuoteTap;
-
-  /// 点击多选
-  final void Function(MessageExt message)? onMultiSelectTap;
-
-  /// 点击撤回
-  final void Function(MessageExt message)? onRevokeTap;
-
   /// 引用消息点击
   final void Function(MessageExt message)? onQuoteMessageTap;
 
@@ -69,20 +56,56 @@ class ImBase extends StatelessWidget {
 
   Widget getSelectableView(BuildContext context, Widget child) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    return SelectableText.rich(
-      TextSpan(
-        children: [WidgetSpan(child: child)],
+    // return Container(
+    //   constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
+    //   decoration: BoxDecoration(
+    //     color: ImCore.noBgMsgType.contains(message.m.contentType)
+    //         ? null
+    //         : isMe
+    //             ? chatTheme.messageTheme.meBackgroundColor
+    //             : chatTheme.messageTheme.backgroundColor,
+    //     borderRadius: chatTheme.messageTheme.borderRadius,
+    //   ),
+    //   padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
+    //   child: child,
+    // );
+    return Container(
+      constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
+      child: SelectableText.rich(
+        onTap: () {
+          onTap?.call(message);
+        },
+        TextSpan(
+          children: [
+            WidgetSpan(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: showBackground
+                      ? ImCore.noBgMsgType.contains(msg.contentType)
+                          ? null
+                          : isMe
+                              ? chatTheme.messageTheme.meBackgroundColor
+                              : chatTheme.messageTheme.backgroundColor
+                      : null,
+                  borderRadius: chatTheme.messageTheme.borderRadius,
+                ),
+                padding: ImCore.noPadMsgType.contains(msg.contentType) ? null : chatTheme.messageTheme.padding,
+                child: child,
+              ),
+            ),
+          ],
+        ),
+        style: chatTheme.textStyle,
+        contextMenuBuilder: (BuildContext context, EditableTextState state) {
+          if (contextMenuBuilder == null) {
+            return AdaptiveTextSelectionToolbar.editableText(
+              editableTextState: state,
+            );
+          } else {
+            return contextMenuBuilder!(context, message, state);
+          }
+        },
       ),
-      style: chatTheme.textStyle,
-      contextMenuBuilder: (BuildContext context, EditableTextState state) {
-        if (contextMenuBuilder == null) {
-          return AdaptiveTextSelectionToolbar.editableText(
-            editableTextState: state,
-          );
-        } else {
-          return contextMenuBuilder!(context, message, state);
-        }
-      },
     );
   }
 
@@ -90,6 +113,7 @@ class ImBase extends StatelessWidget {
     super.key,
     required this.isMe,
     required this.message,
+    required this.showSelect,
     this.onClickMenu,
     this.onTap,
     this.onTapUrl,
@@ -97,14 +121,9 @@ class ImBase extends StatelessWidget {
     this.onTapPhone,
     this.onTapDownFile,
     this.onTapPlayVideo,
-    this.onCopyTap,
-    this.onDeleteTap,
-    this.onForwardTap,
-    this.onQuoteTap,
-    this.onMultiSelectTap,
-    this.onRevokeTap,
     this.onQuoteMessageTap,
     this.contextMenuBuilder,
+    this.showBackground = true,
   });
 
   @override
@@ -275,25 +294,24 @@ class ImExtModel {
 class ImCore {
   static final a.AudioPlayer _player = a.AudioPlayer();
 
-  static late final KeyboardHeightPlugin _keyboardHeightPlugin;
-
   /// 文件路径
   static String dirPath = '';
 
   static String _playID = '';
 
-  static late final SharedPreferences prefs;
+  static String? _uid;
 
   /// 临时缓存文件夹
   static String get tempPath => join(dirPath, 'Temp');
 
-  static init(String path) async {
+  static init(String path) {
     dirPath = path;
     Directory(tempPath).createSync(recursive: true);
-    if (Utils.isMobile) {
-      _keyboardHeightPlugin = KeyboardHeightPlugin();
-    }
-    prefs = await SharedPreferences.getInstance();
+  }
+
+  /// 设置用户id
+  static void setUid(String? uid) {
+    _uid = uid;
   }
 
   /// 播放回调
@@ -621,7 +639,7 @@ class SignalingType {
       return {"err": true};
     }
     try {
-      var data = jsonDecode(msg.textElem!.content!);
+      var data = jsonDecode(msg.content!);
       data = jsonDecode(data["data"]);
       return {"contentType": data["contentType"], "signaling_id": data["signaling_id"], "channelName": data["channelName"], "call_duration": data["call_duration"], "signaling_call_seq": data["signaling_call_seq"], "err": false};
     } catch (e) {

@@ -5,9 +5,10 @@ class ImVoice extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onTap,
-    super.onRevokeTap,
+    required super.showSelect,
     super.contextMenuBuilder,
+    super.onTap,
+    super.showBackground,
   });
 
   @override

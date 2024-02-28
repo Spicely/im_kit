@@ -41,25 +41,6 @@ class _ImPreviewState extends State<ImPreview> {
     super.initState();
   }
 
-  (double w, double h) getSize(MessageExt message) {
-    double width = message.m.pictureElem?.sourcePicture?.width?.toDouble() ?? 240.0;
-    double height = message.m.pictureElem?.sourcePicture?.height?.toDouble() ?? 240.0;
-
-    /// 获取宽高比
-    double ratio = width / height;
-
-    /// 如果宽高比大于1，说明是横图，需要限制宽度
-    if (ratio > 1) {
-      width = 240.0;
-      height = width / ratio;
-    } else {
-      height = 240.0;
-      width = height * ratio;
-    }
-
-    return (width, height);
-  }
-
   @override
   Widget build(BuildContext context) {
     ImLanguage language = ImKitTheme.of(context).language;
@@ -71,13 +52,13 @@ class _ImPreviewState extends State<ImPreview> {
             physics: const BouncingScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
               MessageExt message = messages[index];
-              return ExtendedImage.network(
-                message.m.pictureElem?.sourcePicture?.url ?? '',
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
+              return ExtendedImage.file(
+                message.ext.file!,
+                fit: BoxFit.contain,
                 mode: ExtendedImageMode.gesture,
+                filterQuality: FilterQuality.high,
                 initEditorConfigHandler: (state) {
-                  return EditorConfig();
+                  return EditorConfig(maxScale: 6.0);
                 },
               );
             },

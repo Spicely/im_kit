@@ -10,14 +10,10 @@ class ImKitThemeData {
   /// 多语言
   final ImLanguage language;
 
-  /// 会话主题
-  final ImConversationTheme conversationTheme;
-
   const ImKitThemeData({
     this.subtitleColor = const Color(0xff999999),
     this.chatTheme = const ImChatTheme(),
     this.language = const ImLanguage(),
-    this.conversationTheme = const ImConversationTheme(),
   });
 }
 

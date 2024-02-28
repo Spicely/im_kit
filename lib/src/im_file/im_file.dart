@@ -8,8 +8,8 @@ class ImFile extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
+    required super.showSelect,
     super.onTap,
-    super.onRevokeTap,
     this.onDoubleTap,
     super.contextMenuBuilder,
   });
@@ -20,9 +20,6 @@ class ImFile extends ImBase {
     String? filename = msg.fileElem?.fileName;
     String? suffix = getSuffix();
     return GestureDetector(
-      onTap: () {
-        onTap?.call(message);
-      },
       onDoubleTap: () {
         onDoubleTap?.call(message);
       },
@@ -122,6 +119,24 @@ class ImFile extends ImBase {
         ),
       ),
     );
+  }
+
+  /// 将字节数转化为MB
+  String formatBytes(int bytes) {
+    int kb = 1024;
+    int mb = kb * 1024;
+    int gb = mb * 1024;
+    if (bytes >= gb) {
+      return sprintf("%.1f GB", [bytes / gb]);
+    } else if (bytes >= mb) {
+      double f = bytes / mb;
+      return sprintf(f > 100 ? "%.0f MB" : "%.1f MB", [f]);
+    } else if (bytes > kb) {
+      double f = bytes / kb;
+      return sprintf(f > 100 ? "%.0f KB" : "%.1f KB", [f]);
+    } else {
+      return sprintf("%d B", [bytes]);
+    }
   }
 
   /// 获取文件后缀名

@@ -2,7 +2,7 @@ part of im_kit;
 
 extension ExtensionAdvancedMessage on AdvancedMessage {
   Future<List<MessageExt>> toExt() async {
-    return Future.wait((messageList).map((e) => e.toExt()));
+    return Future.wait((messageList ?? []).map((e) => e.toExt()));
   }
 }
 
@@ -37,9 +37,9 @@ extension ExtensionMessage on Message {
         MessageType.merger => TextSpan(text: ImCore.fixAutoLines(isSingleChat ? '[合并消息]' : '$senderNickname: [合并消息]')),
         MessageType.groupMutedNotification => TextSpan(text: ImCore.fixAutoLines('群组开启禁言')),
         MessageType.groupCancelMutedNotification => TextSpan(text: ImCore.fixAutoLines('群组取消禁言')),
-        MessageType.revokeMessageNotification => TextSpan(text: ImCore.fixAutoLines(isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]')),
-        MessageType.text || MessageType.advancedText || MessageType.atText => _getAtText(this),
-        MessageType.revokeMessageNotification => TextSpan(text: ImCore.fixAutoLines('$senderNickname撤回了一条消息')),
+        MessageType.advancedRevoke => TextSpan(text: ImCore.fixAutoLines(isSingleChat ? '[撤回消息]' : '$senderNickname: [撤回消息]')),
+        MessageType.text || MessageType.advancedText || MessageType.at_text => _getAtText(this),
+        MessageType.revoke => TextSpan(text: ImCore.fixAutoLines('$senderNickname撤回了一条消息')),
         MessageType.friendAddedNotification => TextSpan(text: ImCore.fixAutoLines('添加好友成功')),
         MessageType.oaNotification => TextSpan(text: ImCore.fixAutoLines(jsonDecode(notificationElem?.detail ?? '{}')['notificationName'])),
         300 => TextSpan(text: ImCore.fixAutoLines(isSingleChat ? '[表情]' : '$senderNickname: [表情]')),

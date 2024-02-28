@@ -319,13 +319,13 @@ class ImKitIsolateManager {
     ext.isPrivateChat = msg.attachedInfoElem?.isPrivateChat ?? false;
     try {
       switch (msg.contentType) {
-        case MessageType.atText:
+        case MessageType.at_text:
         case MessageType.text:
         case MessageType.quote:
           {
-            String v = msg.atTextElem?.text ?? msg.quoteElem?.text ?? msg.textElem?.content ?? '';
+            String v = msg.atElem?.text ?? msg.atElem?.text ?? msg.quoteElem?.text ?? msg.content ?? '';
 
-            List<AtUserInfo> atUsersInfo = msg.atTextElem?.atUsersInfo ?? [];
+            List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
 
             List<ImAtTextType> list = [];
 
@@ -386,8 +386,8 @@ class ImKitIsolateManager {
                 return '';
               },
             );
-            if (msg.contentType == MessageType.quote || (msg.contentType == MessageType.atText && msg.atTextElem?.quoteMessage != null)) {
-              Message? quoteMsg = msg.quoteElem?.quoteMessage ?? msg.atTextElem?.quoteMessage;
+            if (msg.contentType == MessageType.quote || (msg.contentType == MessageType.at_text && msg.atElem?.quoteMessage != null)) {
+              Message? quoteMsg = msg.quoteElem?.quoteMessage ?? msg.atElem?.quoteMessage;
               if (quoteMsg != null) {
                 ext.quoteMessage = await toMessageExt(quoteMsg);
               }
@@ -438,7 +438,7 @@ class ImKitIsolateManager {
 
           break;
         case 300:
-          Map<String, dynamic> map = jsonDecode(msg.textElem?.content ?? '{}');
+          Map<String, dynamic> map = jsonDecode(msg.content ?? '{}');
           ext.data = jsonDecode(map['data'] ?? '{}');
 
           /// 获取文件名
@@ -459,7 +459,7 @@ class ImKitIsolateManager {
           ext.height = height;
           break;
         default:
-          var data = json.decode(msg.textElem?.content ?? '{}');
+          var data = json.decode(msg.content ?? '{}');
           ext.data = data;
       }
 
@@ -558,14 +558,15 @@ class ImKitIsolateManager {
               conversationIDList: [result.conversationID ?? ''], // 会话ID集合
             ).then((conversation) {
               OpenIM.iMManager.messageManager
-                  .getAdvancedHistoryMessageList(
-                conversationID: conversation.first.conversationID,
+                  .getHistoryMessageList(
+                userID: Utils.getValue(conversation.first.userID, null), // 单聊对象的userID
+                groupID: Utils.getValue(conversation.first.groupID, null), // 群聊的组id
                 startMsg: result.messageList?[index], // 消息体
                 count: 999999999999999, // 每次拉取的数量
               )
                   .then((list) {
-                if (list.messageList.isEmpty) return;
-                for (var element in list.messageList) {
+                if (list.isEmpty) return;
+                for (var element in list) {
                   OpenIM.iMManager.messageManager.deleteMessageFromLocalStorage(message: element);
                 }
               });

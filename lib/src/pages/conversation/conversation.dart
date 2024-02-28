@@ -63,8 +63,9 @@ class Conversation extends StatelessWidget {
                                       height: 46,
                                       circular: 46,
                                       fit: BoxFit.cover,
+                                      filterQuality: FilterQuality.high,
                                     ),
-                                    if (c.data[index].recvMsgOpt == 2 && (c.data[index].unreadCount) > 0)
+                                    if (c.data[index].recvMsgOpt == 2 && (c.data[index].unreadCount ?? 0) > 0)
                                       Positioned(
                                         right: -6,
                                         top: 0,
@@ -129,8 +130,8 @@ class Conversation extends StatelessWidget {
                                               if (c.data[index].recvMsgOpt == 2) const CachedImage(assetUrl: 'assets/icons/not_disturb.png', width: 14, height: 14, package: 'im_kit'),
                                               if (c.data[index].recvMsgOpt != 2)
                                                 Badge.count(
-                                                  count: c.data[index].unreadCount,
-                                                  isLabelVisible: (c.data[index].unreadCount) > 0 ? true : false,
+                                                  count: c.data[index].unreadCount ?? 0,
+                                                  isLabelVisible: (c.data[index].unreadCount ?? 0) > 0 ? true : false,
                                                   backgroundColor: const Color.fromRGBO(254, 60, 60, 1),
                                                 ),
                                             ],

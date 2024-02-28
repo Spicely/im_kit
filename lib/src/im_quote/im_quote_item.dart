@@ -1,12 +1,17 @@
 part of im_kit;
 
 class ImQuoteItem extends ImBase {
+  /// 语音点击事件
+  final void Function(MessageExt message)? onVoiceTap;
+
   const ImQuoteItem({
     super.key,
     required super.isMe,
     required super.message,
+    required super.showSelect,
     super.onQuoteMessageTap,
-    super.onRevokeTap,
+    super.contextMenuBuilder,
+    this.onVoiceTap,
   });
 
   MessageExt get quoteMsg => message.ext.quoteMessage!
@@ -91,7 +96,7 @@ class ImQuoteItem extends ImBase {
                 Row(
                   children: [
                     const SizedBox(width: 4),
-                    CachedImage(imageUrl: json.decode(quoteMsg.m.textElem!.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
+                    CachedImage(imageUrl: json.decode(quoteMsg.m.content!)['faceURL'] ?? '', height: 30, width: 30, circular: 4, fit: BoxFit.cover),
                   ],
                 ),
             ],
@@ -101,7 +106,7 @@ class ImQuoteItem extends ImBase {
     );
   }
 
-  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atTextElem?.atUsersInfo ?? [];
+  List<AtUserInfo> get atUsersInfo => quoteMsg.m.atElem?.atUsersInfo ?? [];
 
   Widget getQuoteContent(BuildContext context) {
     Color gray = const Color.fromRGBO(126, 126, 126, 1);
@@ -140,7 +145,14 @@ class ImQuoteItem extends ImBase {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 4),
-            // ImVoice(message: message, controller: serverData),
+            ImVoice(
+              message: quoteMsg,
+              isMe: true,
+              showSelect: showSelect,
+              showBackground: false,
+              onTap: onVoiceTap,
+              contextMenuBuilder: contextMenuBuilder,
+            ),
           ],
         );
       case MessageType.video:
@@ -155,31 +167,22 @@ class ImQuoteItem extends ImBase {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(width: 4),
-            InkWell(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (BuildContext context) => ImPlayer(message: quoteMsg),
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: CachedImage(file: ext.previewFile, width: 40, height: 40, circular: 5),
                   ),
-                );
-              },
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: CachedImage(file: ext.previewFile, width: 40, height: 40, circular: 5),
+                  const Positioned.fill(
+                    child: Center(
+                      child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
                     ),
-                    const Positioned.fill(
-                      child: Center(
-                        child: Icon(Icons.play_arrow, color: Colors.white, size: 20),
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
-            )
+            ),
           ],
         );
 
@@ -230,32 +233,33 @@ class ImQuoteItem extends ImBase {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.atText:
+      case MessageType.at_text:
       case MessageType.quote:
       case MessageType.text:
+        TextSpan span = TextSpan(
+          children: [
+            TextSpan(
+              text: '${quoteMsg.m.name}: ',
+            ),
+            TextSpan(
+                children: (quoteMsg.ext.data as List<ImAtTextType>?)?.map((e) {
+              if (e.type == ImAtType.emoji) {
+                return WidgetSpan(
+                  child: CachedImage(
+                    assetUrl: 'assets/emoji/${e.text}.webp',
+                    width: 25,
+                    height: 25,
+                    package: 'im_kit',
+                  ),
+                );
+              } else {
+                return TextSpan(text: ImCore.fixAutoLines(e.text));
+              }
+            }).toList()),
+          ],
+        );
         return Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: '${quoteMsg.m.name}: ',
-              ),
-              TextSpan(
-                  children: (quoteMsg.ext.data as List<ImAtTextType>?)?.map((e) {
-                if (e.type == ImAtType.emoji) {
-                  return WidgetSpan(
-                    child: CachedImage(
-                      assetUrl: 'assets/emoji/${e.text}.webp',
-                      width: 25,
-                      height: 25,
-                      package: 'im_kit',
-                    ),
-                  );
-                } else {
-                  return TextSpan(text: ImCore.fixAutoLines(e.text));
-                }
-              }).toList()),
-            ],
-          ),
+          span,
           style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
           textAlign: TextAlign.left,
           maxLines: 2,

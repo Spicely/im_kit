@@ -7,7 +7,23 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   final Rx<dynamic> currentChatPageController = Rx<dynamic>(null);
 
+  /// 待处理申请数
+  final RxInt applicationCount = 0.obs;
+
+  /// 申请列表
+  final RxList<FriendApplicationInfo> applicationList = <FriendApplicationInfo>[].obs;
+
+  /// 好友列表
+  final RxList<UserInfo> friendList = <UserInfo>[].obs;
+
+  /// 黑名单列表
+  final RxList<UserInfo> blackList = <UserInfo>[].obs;
+
+  /// 自己信息
   Rx<UserInfo> userInfo = Rx(OpenIM.iMManager.uInfo!);
+
+  ///已加入群组
+  final RxList<GroupInfo> groupList = <GroupInfo>[].obs;
 
   /// 未读消息
   RxInt unReadMsg = 0.obs;
@@ -27,7 +43,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
       int count = 0;
       for (var info in v) {
         if (info.recvMsgOpt == 0) {
-          count += info.unreadCount;
+          count += info.unreadCount ?? 0;
         }
       }
       unReadMsg.value = count;
@@ -146,14 +162,134 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
         title: '通知',
         content: '你正在删除和${info.showName}的聊天记录，这将删除和${info.showName}的所有聊天记录。清空后不可找回，确定要清空当前对话的历史记录吗？',
         onConfirm: () {
-          Utils.exceptionCapture(() async {
-            OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: info.conversationID);
-            data.remove(info);
-            Get.back();
-          });
+          OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: info.conversationID);
+          data.remove(info);
+          Get.back();
         },
       ),
     );
+  }
+
+  @override
+  void onFriendApplicationAdded(FriendApplicationInfo u) {
+    applicationList.add(u);
+  }
+
+  @override
+  onJoinedGroupAdded(GroupInfo info) {
+    int index = groupList.indexWhere((v) => v.groupID == info.groupID);
+    if (index != -1) {
+      groupList.add(info);
+    }
+  }
+
+  @override
+  void onGroupApplicationAccepted(GroupApplicationInfo info) {
+    int index = groupList.indexWhere((v) => v.groupID == info.groupID);
+    if (index != -1) {
+      Utils.exceptionCapture(() async {
+        List<GroupInfo> groups = await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!]);
+        if (groups.isNotEmpty) {
+          groupList.add(groups.first);
+        }
+      });
+    }
+  }
+
+  @override
+  void onFriendInfoChanged(FriendInfo u) {
+    int index = friendList.indexWhere((v) => v.userID == u.userID);
+    if (index != -1) {
+      OpenIM.iMManager.userManager.getUsersInfo(uidList: [u.userID!]).then((value) {
+        if (value.isNotEmpty) {
+          friendList[index] = value.first;
+        }
+      });
+    }
+  }
+
+  @override
+  void onSelfInfoUpdated(UserInfo info) {
+    userInfo.update((val) {
+      val?.birthTime = info.birthTime;
+      val?.createTime = info.createTime;
+      val?.gender = info.gender;
+      val?.userID = info.userID;
+      val?.allowAddFriend = info.allowAddFriend;
+      val?.allowBeep = info.allowBeep;
+      val?.blackInfo = info.blackInfo;
+      val?.faceURL = info.faceURL;
+      val?.email = info.email;
+      val?.birth = info.birth;
+      val?.phoneNumber = info.phoneNumber;
+      val?.ex = info.ex;
+    });
+  }
+
+  /// 同意好友申请
+  void agreeFriendApplication(FriendApplicationInfo applicationInfo) async {
+    await OpenIM.iMManager.friendshipManager.acceptFriendApplication(uid: applicationInfo.fromUserID!);
+    int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
+    if (index != -1) {
+      applicationList[index].handleResult = 1;
+    }
+  }
+
+  /// 拒绝好友申请
+  void rejectFriendApplication(FriendApplicationInfo applicationInfo) async {
+    await OpenIM.iMManager.friendshipManager.refuseFriendApplication(uid: applicationInfo.fromUserID!);
+    int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
+    if (index != -1) {
+      applicationList[index].handleResult = -1;
+    }
+  }
+
+  ///移除黑名单好友
+  void removeFriendFromBlacklist(String uid) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.friendshipManager.removeBlacklist(uid: uid);
+      int index = blackList.indexWhere((v) => v.userID == uid);
+      if (index != -1) {
+        blackList.removeAt(index);
+        blackList.value = await OpenIM.iMManager.friendshipManager.getBlacklist();
+      }
+    });
+  }
+
+  @override
+  void onBlacklistAdded(BlacklistInfo u) {
+    int index = blackList.indexWhere((v) => v.userID == u.userID);
+    if (index == -1) {
+      blackList.add(UserInfo.fromJson(u.toJson()));
+    }
+  }
+
+  @override
+  void onBlacklistDeleted(BlacklistInfo u) {
+    blackList.removeWhere((v) => v.userID == u.userID);
+  }
+
+  /// 清除聊天页面
+  void clearChatPage() {
+    currentChatPageController.value = null;
+    currentConversationID.value = '';
+  }
+
+  /// 会话置顶
+  Future<void> setConversationTop(ConversationInfo conversation) async {
+    // Get.context?.contextMenuOverlay.hide();
+    await OpenIM.iMManager.conversationManager.pinConversation(
+      conversationID: conversation.conversationID,
+      isPinned: !conversation.isPinned!,
+    );
+  }
+
+  @override
+  void onGroupInfoChanged(GroupInfo info) {
+    int index = groupList.indexWhere((v) => v.groupID == info.groupID);
+    if (index != -1) {
+      groupList[index] = info;
+    }
   }
 
   void onTapDown(TapDownDetails dragDownDetails, ConversationInfo info) {
@@ -174,48 +310,36 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   void onPointerRightDown(ConversationInfo conversationInfo, PointerDownEvent event) {}
 
   /// 消息置顶设置
-  void pinConversation(ConversationInfo conversation, bool status) {
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.conversationManager.pinConversation(
-        conversationID: conversation.conversationID,
-        isPinned: status,
-      );
-    });
+  Future<void> pinConversation(ConversationInfo conversation, bool status) async {
+    await OpenIM.iMManager.conversationManager.pinConversation(
+      conversationID: conversation.conversationID,
+      isPinned: status,
+    );
   }
 
   /// copy群号
-  void copyGroupID(ConversationInfo conversation) {
-    Utils.exceptionCapture(() async {
-      await Clipboard.setData(ClipboardData(text: conversation.groupID ?? ''));
-    });
+  Future<void> copyGroupID(ConversationInfo conversation) async {
+    Clipboard.setData(ClipboardData(text: conversation.groupID ?? ''));
   }
 
   /// copyID
-  void copyID(ConversationInfo conversation) {
-    Utils.exceptionCapture(() async {
-      await Clipboard.setData(ClipboardData(text: conversation.userID ?? ''));
-    });
+  Future<void> copyID(ConversationInfo conversation) async {
+    Clipboard.setData(ClipboardData(text: conversation.userID ?? ''));
   }
 
   /// 删除会话
-  void removeConversation(ConversationInfo conversation) {
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversation.conversationID);
-      data.removeWhere((v) => v.conversationID == conversation.conversationID);
-    });
+  Future<void> removeConversation(ConversationInfo conversation) async {
+    await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversation.conversationID);
+    data.removeWhere((v) => v.conversationID == conversation.conversationID);
   }
 
   /// 标记已读
-  void markConversationRead(ConversationInfo conversation) {
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversation.conversationID, messageIDList: []);
-    });
+  Future<void> markConversationRead(ConversationInfo conversation) async {
+    await OpenIM.iMManager.messageManager.markMessageAsReadByConID(conversationID: conversation.conversationID, messageIDList: []);
   }
 
   /// 免打扰
-  void setConversationRecvMessageOpt(ConversationInfo conversation, int status) {
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
-    });
+  Future<void> setConversationRecvMessageOpt(ConversationInfo conversation, int status) async {
+    await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
   }
 }

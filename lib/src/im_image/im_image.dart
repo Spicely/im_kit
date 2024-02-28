@@ -5,36 +5,47 @@ class ImImage extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onDeleteTap,
-    super.onForwardTap,
-    super.onQuoteTap,
-    super.onMultiSelectTap,
-    super.onRevokeTap,
+    required super.showSelect,
     super.onTap,
     super.contextMenuBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Hero(
-      key: message.ext.key,
-      tag: ValueKey(msg.clientMsgID),
-      child: getSelectableView(
-        context,
-        GestureDetector(
-          onTap: () {
-            onTap?.call(message);
-          },
-          child: CachedImage(
-            imageUrl: msg.pictureElem?.snapshotPicture?.url,
-            file: ext.file,
-            width: message.ext.width,
-            height: message.ext.height,
-            circular: 5,
-            fit: BoxFit.cover,
+    return Stack(
+      children: [
+        Hero(
+          /// 在桌面应该开启单独窗口 所以不需要Hero
+          key: Utils.isMobile ? message.ext.key : null,
+          tag: ValueKey(msg.clientMsgID),
+          child: getSelectableView(
+            context,
+            CachedImage(
+              file: ext.file,
+              width: message.ext.width,
+              height: message.ext.height,
+              circular: 5,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+            ),
           ),
         ),
-      ),
+        Positioned(
+          bottom: 4,
+          right: 6,
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

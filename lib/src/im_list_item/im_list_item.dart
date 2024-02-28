@@ -31,6 +31,9 @@ class ImListItem extends StatelessWidget {
   /// 文件信息点击
   final void Function(MessageExt message)? onFileTap;
 
+  /// 合并消息点击
+  final void Function(MessageExt message)? onMergerTap;
+
   /// 群是否被解散
   final bool isGroupDissolution;
 
@@ -61,6 +64,9 @@ class ImListItem extends StatelessWidget {
   /// 电话点击事件
   final void Function(String)? onTapPhone;
 
+  /// 重新编辑点击事件
+  final void Function(MessageExt message)? onReEditTap;
+
   /// 点击播放视频
   final void Function(MessageExt message)? onTapPlayVideo;
 
@@ -78,9 +84,6 @@ class ImListItem extends StatelessWidget {
   /// 不允许通过群获取成员资料
   final bool lookMemberInfo;
 
-  /// 消息撤回点击事件
-  final Function(MessageExt extMsg)? onRevokeMessage;
-
   /// 文件保存之后
   final Function(bool status)? onAfterSave;
 
@@ -90,20 +93,8 @@ class ImListItem extends StatelessWidget {
   /// 复制消息提示事件
   final Function(String text)? onCopyTip;
 
-  /// 删除消息
-  final Function(MessageExt extMsg)? onDeleteMessage;
-
-  /// 转发消息
-  final Function(MessageExt extMsg)? onForwardMessage;
-
-  /// 消息引用\回复
-  final Function(MessageExt extMsg)? onQuoteMessage;
-
   /// 重新发送事件
   final Function(MessageExt extMsg)? onResend;
-
-  /// 多选事件
-  final Function(MessageExt extMsg)? onMultiSelectTap;
 
   /// 引用消息点击
   final void Function(MessageExt message)? onQuoteMessageTap;
@@ -119,9 +110,6 @@ class ImListItem extends StatelessWidget {
 
   /// 双击点击消息体
   final void Function(MessageExt message)? onDoubleTapFile;
-
-  /// 鼠标右键点击事件
-  final void Function(PointerDownEvent event, MessageExt extMsg)? onPointerRightDown;
 
   final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
 
@@ -155,15 +143,11 @@ class ImListItem extends StatelessWidget {
     this.showSelect = false,
     this.isGroupDissolution = false,
     this.lookMemberInfo = false,
-    this.onRevokeMessage,
     this.onAfterSave,
     this.onTagUserTap,
     this.onCopyTip,
-    this.onDeleteMessage,
-    this.onMultiSelectTap,
-    this.onForwardMessage,
-    this.onQuoteMessage,
     this.onResend,
+    this.onMergerTap,
     this.onMessageSelect,
     this.onQuoteMessageTap,
     this.highlight = false,
@@ -171,9 +155,9 @@ class ImListItem extends StatelessWidget {
     this.onAvatarTap,
     this.onAvatarLongPress,
     this.onDoubleTapFile,
-    this.onPointerRightDown,
     this.contextMenuBuilder,
     this.showNotification = true,
+    this.onReEditTap,
   });
 
   @override
@@ -229,14 +213,13 @@ class ImListItem extends StatelessWidget {
   }
 
   Widget getContentType(BuildContext context) {
-    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     ImAvatarTheme avatarTheme = ImKitTheme.of(context).chatTheme.avatarTheme;
 
     return switch (message.m.contentType) {
       MessageType.custom => switch (message.ext.data['contentType']) {
           27 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '双方聊天记录已清空'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
           77 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '群主清除了聊天记录'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
-          81 => ImRedEnv(isMe: isMe, message: message),
+          81 => ImRedEnv(isMe: isMe, message: message, showSelect: showSelect),
           82 => beforeRenderView(
               Center(
                 child: Text.rich(
@@ -260,24 +243,24 @@ class ImListItem extends StatelessWidget {
       MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => beforeRenderView(const Center(
           child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
         )),
-      // MessageType.encryptedNotification => beforeRenderView(Center(
-      //     child: Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 50),
-      //       child: Row(
-      //         crossAxisAlignment: CrossAxisAlignment.start,
-      //         children: [
-      //           Image.asset('assets/icons/lock.png', width: 16, height: 16),
-      //           const Expanded(
-      //             child: Text(
-      //               '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-      //               style: TextStyle(fontSize: 12, color: Colors.grey),
-      //               textAlign: TextAlign.center,
-      //             ),
-      //           ),
-      //         ],
-      //       ),
-      //     ),
-      //   )),
+      MessageType.encryptedNotification => beforeRenderView(Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 50),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset('assets/icons/lock.png', width: 16, height: 16),
+                const Expanded(
+                  child: Text(
+                    '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )),
       MessageType.memberKickedNotification => beforeRenderView(Center(
           child: Text.rich(
             _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
@@ -290,9 +273,9 @@ class ImListItem extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         )),
-      MessageType.revokeMessageNotification => beforeRenderView(Center(
+      MessageType.revoke => beforeRenderView(Center(
           child: Text.rich(
-            _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap),
+            _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap, onReEditTap: onReEditTap),
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         )),
@@ -322,6 +305,7 @@ class ImListItem extends StatelessWidget {
                   height: avatarTheme.height,
                   circular: avatarTheme.circular,
                   fit: avatarTheme.fit,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
               const SizedBox(width: 6),
@@ -338,7 +322,7 @@ class ImListItem extends StatelessWidget {
                               child: Text(message.m.senderNickname ?? '', style: const TextStyle(fontSize: 11, color: Colors.grey)),
                             ),
                           GestureDetector(
-                            onTap: _onTap,
+                            // onTap: _onTap,
                             onDoubleTap: () {
                               onDoubleTap?.call(message);
                             },
@@ -348,26 +332,7 @@ class ImListItem extends StatelessWidget {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Listener(
-                                      onPointerDown: (PointerDownEvent event) {
-                                        if (event.buttons == 2) {
-                                          onPointerRightDown?.call(event, message);
-                                        }
-                                      },
-                                      child: Container(
-                                        constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
-                                        decoration: BoxDecoration(
-                                          color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                              ? null
-                                              : isMe
-                                                  ? chatTheme.messageTheme.meBackgroundColor
-                                                  : chatTheme.messageTheme.backgroundColor,
-                                          borderRadius: chatTheme.messageTheme.borderRadius,
-                                        ),
-                                        padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                        child: getTypeWidget(),
-                                      ),
-                                    ),
+                                    getTypeWidget(),
                                     const SizedBox(width: 10),
                                     SizedBox(child: getStatusWidget()),
                                   ],
@@ -402,13 +367,16 @@ class ImListItem extends StatelessWidget {
                                 //     // ),
                                 //   ],
                                 // ),
-                                if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.atText && message.m.quoteElem != null) && message.ext.quoteMessage != null)
+                                if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.at_text && message.m.quoteElem != null) && message.ext.quoteMessage != null)
                                   Container(
                                     margin: const EdgeInsets.only(top: 5),
                                     child: ImQuoteItem(
                                       isMe: isMe,
                                       message: message,
+                                      showSelect: showSelect,
                                       onQuoteMessageTap: onQuoteMessageTap,
+                                      onVoiceTap: onVoiceTap,
+                                      contextMenuBuilder: contextMenuBuilder,
                                     ),
                                   ),
                               ],
@@ -465,73 +433,43 @@ class ImListItem extends StatelessWidget {
   Widget getTypeWidget() {
     switch (message.m.contentType) {
       case MessageType.text:
-      case MessageType.atText:
+      case MessageType.at_text:
       case MessageType.quote:
-        return Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: ImAtText(
-            message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
-            isMe: isMe,
-            onClickMenu: onClickMenu,
-            textMenuItems: textMenuItems,
-            onTapEmail: onTapEmail,
-            onTapUrl: onTapUrl,
-            onTapPhone: onTapPhone,
-            onAtTap: onAtTap,
-            onDeleteTap: onDeleteMessage,
-            onForwardTap: onForwardMessage,
-            onMultiSelectTap: onMultiSelectTap,
-            onQuoteTap: onQuoteMessage,
-            onRevokeTap: onRevokeMessage,
-            contextMenuBuilder: contextMenuBuilder,
-          ),
+        return ImAtText(
+          message: onBuildBeforeMsg != null ? onBuildBeforeMsg!.call(message) : message,
+          isMe: isMe,
+          showSelect: showSelect,
+          onClickMenu: onClickMenu,
+          textMenuItems: textMenuItems,
+          onTapEmail: onTapEmail,
+          onTapUrl: onTapUrl,
+          onTapPhone: onTapPhone,
+          onAtTap: onAtTap,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.picture:
-        return Stack(
-          children: [
-            ImImage(
-              message: message,
-              isMe: isMe,
-              onTap: onPictureTap,
-              onDeleteTap: onDeleteMessage,
-              onForwardTap: onForwardMessage,
-              onMultiSelectTap: onMultiSelectTap,
-              onQuoteTap: onQuoteMessage,
-              onRevokeTap: onRevokeMessage,
-              contextMenuBuilder: contextMenuBuilder,
-            ),
-            Positioned(
-              bottom: 4,
-              right: 6,
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                ),
-              ),
-            ),
-          ],
+        return ImImage(
+          message: message,
+          showSelect: showSelect,
+          isMe: isMe,
+          onTap: onPictureTap,
+          contextMenuBuilder: contextMenuBuilder,
         );
 
       case MessageType.file:
         return ImFile(
           message: message,
+          showSelect: showSelect,
           isMe: isMe,
           onTap: onFileTap,
-          onRevokeTap: onRevokeMessage,
           onDoubleTap: onDoubleTapFile,
           contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.voice:
         return ImVoice(
           message: message,
+          showSelect: showSelect,
           isMe: isMe,
-          onRevokeTap: onRevokeMessage,
           onTap: onVoiceTap,
           contextMenuBuilder: contextMenuBuilder,
         );
@@ -540,10 +478,10 @@ class ImListItem extends StatelessWidget {
           children: [
             ImVideo(
               message: message,
+              showSelect: showSelect,
               isMe: isMe,
               onTapDownFile: onTapDownFile,
               onTapPlayVideo: onTapPlayVideo,
-              onRevokeTap: onRevokeMessage,
               contextMenuBuilder: contextMenuBuilder,
             ),
             Positioned(
@@ -572,56 +510,32 @@ class ImListItem extends StatelessWidget {
       case MessageType.card:
         return ImCard(
           message: message,
+          showSelect: showSelect,
           isMe: isMe,
           onTap: onCardTap,
-          onRevokeTap: onRevokeMessage,
           contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.location:
-        return Stack(
-          children: [
-            ImLocation(
-              message: message,
-              isMe: isMe,
-              onTap: onLocationTap,
-              onRevokeTap: onRevokeMessage,
-              contextMenuBuilder: contextMenuBuilder,
-            ),
-            Positioned(
-              bottom: 4,
-              right: 6,
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                      if (isMe) const SizedBox(width: 1),
-                      if (isMe && message.m.isRead!) const Icon(Icons.done_all, size: 12, color: Colors.blue),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+        return ImLocation(
+          message: message,
+          showSelect: showSelect,
+          isMe: isMe,
+          onTap: onLocationTap,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.merger:
         return ImMerge(
           message: message,
+          showSelect: showSelect,
           isMe: isMe,
-          onRevokeTap: onRevokeMessage,
+          onTap: onMergerTap,
           contextMenuBuilder: contextMenuBuilder,
         );
       case 300:
         return ImCustomFace(
           message: message,
+          showSelect: showSelect,
           isMe: isMe,
-          onRevokeTap: onRevokeMessage,
         );
       default:
         return const Text('暂不支持的消息');
@@ -630,12 +544,12 @@ class ImListItem extends StatelessWidget {
 
   void _onTap() {
     _onSelectTap();
-    onTap?.call(message);
-    switch (message.m.contentType) {
-      case MessageType.voice:
-        onVoiceTap?.call(message);
-        break;
-    }
+    // onTap?.call(message);
+    // switch (message.m.contentType) {
+    //   case MessageType.voice:
+    //     onVoiceTap?.call(message);
+    //     break;
+    // }
   }
 
   /// 头像点击

@@ -66,6 +66,6 @@ class SystemNotificationController extends GetxController with OpenIMListener {
   }
 
   void markMessage() {
-    OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversationInfo.value.conversationID, messageIDList: []);
+    OpenIM.iMManager.messageManager.markMessageAsReadByConID(conversationID: conversationInfo.value.conversationID, messageIDList: []);
   }
 }

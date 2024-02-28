@@ -22,8 +22,8 @@ class ImQuote extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
+    required super.showSelect,
     this.padding,
-    super.onRevokeTap,
   });
 
   @override
@@ -100,7 +100,7 @@ class ImQuote extends ImBase {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         );
-      case MessageType.atText:
+      case MessageType.at_text:
       case MessageType.quote:
       case MessageType.text:
         return Text.rich(

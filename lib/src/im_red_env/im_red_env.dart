@@ -5,7 +5,7 @@ class ImRedEnv extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onRevokeTap,
+    required super.showSelect,
   });
 
   @override

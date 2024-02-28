@@ -44,18 +44,13 @@ class ImAtText extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
+    required super.showSelect,
     super.onClickMenu,
     this.textMenuItems,
     super.onTapUrl,
     super.onTapEmail,
     super.onTapPhone,
     this.onAtTap,
-    super.onCopyTap,
-    super.onDeleteTap,
-    super.onForwardTap,
-    super.onQuoteTap,
-    super.onMultiSelectTap,
-    super.onRevokeTap,
     super.contextMenuBuilder,
   });
 
@@ -66,11 +61,12 @@ class ImAtText extends ImBase {
         children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
       if (e.type == ImAtType.emoji) {
         return WidgetSpan(
-          child: CachedImage(
-            assetUrl: 'assets/emoji/${e.text}.webp',
+          child: Image.asset(
+            'assets/emoji/${e.text}.webp',
             width: 25,
             height: 25,
             package: 'im_kit',
+            semanticLabel: e.text,
           ),
         );
       } else {
@@ -102,20 +98,32 @@ class ImAtText extends ImBase {
       }
     }).toList());
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: SelectableText.rich(
-        textSpan,
-        style: chatTheme.textStyle,
-        contextMenuBuilder: (BuildContext context, EditableTextState state) {
-          if (contextMenuBuilder == null) {
-            return AdaptiveTextSelectionToolbar.editableText(
-              editableTextState: state,
-            );
-          } else {
-            return contextMenuBuilder!(context, message, state);
-          }
-        },
+    return Container(
+      constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
+      decoration: BoxDecoration(
+        color: ImCore.noBgMsgType.contains(msg.contentType)
+            ? null
+            : isMe
+                ? chatTheme.messageTheme.meBackgroundColor
+                : chatTheme.messageTheme.backgroundColor,
+        borderRadius: chatTheme.messageTheme.borderRadius,
+      ),
+      padding: ImCore.noPadMsgType.contains(msg.contentType) ? null : chatTheme.messageTheme.padding,
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: SelectableText.rich(
+          textSpan,
+          style: chatTheme.textStyle,
+          contextMenuBuilder: (BuildContext context, EditableTextState state) {
+            if (contextMenuBuilder == null) {
+              return AdaptiveTextSelectionToolbar.editableText(
+                editableTextState: state,
+              );
+            } else {
+              return contextMenuBuilder!(context, message, state);
+            }
+          },
+        ),
       ),
     );
   }

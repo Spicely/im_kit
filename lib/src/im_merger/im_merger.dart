@@ -5,23 +5,24 @@ class ImMerge extends ImBase {
     super.key,
     required super.isMe,
     required super.message,
-    super.onRevokeTap,
+    required super.showSelect,
+    super.onTap,
     super.contextMenuBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        borderRadius: chatTheme.messageTheme.borderRadius,
-        color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-      ),
-      child: getSelectableView(
-        context,
-        Column(
+    return getSelectableView(
+      context,
+      Container(
+        width: 220,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          borderRadius: chatTheme.messageTheme.borderRadius,
+          color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
+        ),
+        child: Column(
           crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
