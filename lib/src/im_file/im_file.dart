@@ -1,22 +1,19 @@
 part of im_kit;
 
 class ImFile extends ImBase {
-  // 双击点击消息体
-  final void Function(MessageExt message)? onDoubleTap;
-
   const ImFile({
     super.key,
     required super.isMe,
     required super.message,
     required super.showSelect,
     super.onTap,
-    this.onDoubleTap,
+    super.onDoubleTap,
     super.contextMenuBuilder,
+    super.showBackground,
   });
 
   @override
   Widget build(BuildContext context) {
-    ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
     String? filename = msg.fileElem?.fileName;
     String? suffix = getSuffix();
     return GestureDetector(
@@ -30,12 +27,8 @@ class ImFile extends ImBase {
             getSelectableView(
               context,
               Container(
-                decoration: BoxDecoration(
-                  color: isMe ? chatTheme.messageTheme.meBackgroundColor : chatTheme.messageTheme.backgroundColor,
-                  borderRadius: chatTheme.messageTheme.borderRadius,
-                ),
-                width: 220,
-                height: 80,
+                width: showBackground ? 220 : 160,
+                height: showBackground ? 80 : 60,
                 padding: const EdgeInsets.all(12),
                 child: Directionality(
                   textDirection: TextDirection.ltr,
@@ -98,7 +91,7 @@ class ImFile extends ImBase {
                             ),
                         ],
                       ),
-                      const SizedBox(width: 10),
+                      if (showBackground) const SizedBox(width: 10),
                     ],
                   ),
                 ),

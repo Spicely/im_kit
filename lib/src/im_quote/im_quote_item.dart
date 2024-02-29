@@ -11,6 +11,7 @@ class ImQuoteItem extends ImBase {
     required super.showSelect,
     super.onQuoteMessageTap,
     super.contextMenuBuilder,
+    super.onDoubleTap,
     this.onVoiceTap,
   });
 
@@ -18,20 +19,9 @@ class ImQuoteItem extends ImBase {
     ..ext.file = message.ext.file
     ..ext.previewFile = ext.previewFile;
 
-  double get maxW {
-    if ((quoteMsg.m.contentType == MessageType.location) || (quoteMsg.m.contentType == MessageType.file) || (quoteMsg.m.contentType == MessageType.card)) {
-      return 180;
-    }
-    return 400;
-  }
-
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    String? filename = quoteMsg.m.fileElem?.fileName;
-
-    /// 获取文件后缀名
-    String? suffix = filename?.substring(filename.lastIndexOf('.') + 1, filename.length);
 
     return GestureDetector(
       onTap: () {
@@ -50,7 +40,7 @@ class ImQuoteItem extends ImBase {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                constraints: BoxConstraints(maxWidth: maxW),
+                constraints: const BoxConstraints(maxWidth: 400),
                 child: getQuoteContent(context),
               ),
               if (quoteMsg.m.contentType == MessageType.location)
@@ -58,38 +48,6 @@ class ImQuoteItem extends ImBase {
                   children: [
                     const SizedBox(width: 4),
                     CachedImage(imageUrl: message.ext.data?['url'] ?? '', height: 30, width: 30, circular: 2, fit: BoxFit.cover),
-                  ],
-                ),
-              if (quoteMsg.m.contentType == MessageType.file)
-                Row(
-                  children: [
-                    const SizedBox(width: 4),
-                    Stack(
-                      children: [
-                        const CachedImage(
-                          width: 30,
-                          height: 30,
-                          assetUrl: 'assets/icons/msg_default.png',
-                          package: 'im_kit',
-                        ),
-                        Positioned(
-                          top: 0,
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: suffix == null
-                                ? Image.asset(
-                                    'assets/icons/query.png',
-                                    width: 20,
-                                    height: 20,
-                                    package: 'im_kit',
-                                  )
-                                : Text(suffix, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               if (quoteMsg.m.contentType == MessageType.card)
@@ -219,11 +177,24 @@ class ImQuoteItem extends ImBase {
         );
 
       case MessageType.file:
-        return Text(
-          '${quoteMsg.m.name}: ${quoteMsg.m.fileElem?.fileName ?? ''}',
-          style: TextStyle(fontSize: 12, color: gray),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${quoteMsg.m.name}: ',
+              style: const TextStyle(fontSize: 12, color: Color.fromRGBO(126, 126, 126, 1)),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            ImFile(
+              isMe: isMe,
+              message: quoteMsg,
+              showSelect: false,
+              contextMenuBuilder: contextMenuBuilder,
+              showBackground: false,
+              onDoubleTap: onDoubleTap,
+            ),
+          ],
         );
       case MessageType.location:
         Map<String, dynamic> des = quoteMsg.ext.data;

@@ -56,7 +56,6 @@ class _ImPreviewState extends State<ImPreview> {
                 message.ext.file!,
                 fit: BoxFit.contain,
                 mode: ExtendedImageMode.gesture,
-                filterQuality: FilterQuality.high,
                 initEditorConfigHandler: (state) {
                   return EditorConfig(maxScale: 6.0);
                 },

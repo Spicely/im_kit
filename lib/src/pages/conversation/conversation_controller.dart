@@ -22,7 +22,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   /// 自己信息
   Rx<UserInfo> userInfo = Rx(OpenIM.iMManager.uInfo!);
 
-  ///已加入群组
+  /// 已加入群组
   final RxList<GroupInfo> groupList = <GroupInfo>[].obs;
 
   /// 未读消息
