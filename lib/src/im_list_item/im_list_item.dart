@@ -377,6 +377,7 @@ class ImListItem extends StatelessWidget {
                                       onQuoteMessageTap: onQuoteMessageTap,
                                       onVoiceTap: onVoiceTap,
                                       contextMenuBuilder: contextMenuBuilder,
+                                      onDoubleTap: onDoubleTapFile,
                                     ),
                                   ),
                               ],

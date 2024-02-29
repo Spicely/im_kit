@@ -339,6 +339,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         isMute.value = true;
       }
       groupMembers.value = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: groupID!);
+
+      /// 依据管理员排序
+      groupMembers.sort((a, b) {
+        if (a.roleLevel == GroupRoleLevel.owner) {
+          return -1;
+        } else if (b.roleLevel == GroupRoleLevel.owner) {
+          return 1;
+        } else if (a.roleLevel == GroupRoleLevel.admin) {
+          return -1;
+        } else if (b.roleLevel == GroupRoleLevel.admin) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
       showGroupMembers.value = groupMembers.take(6).toList();
     } else {
       if (userID == null) return;
@@ -443,8 +458,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
         FocusManager.instance.primaryFocus?.unfocus();
       }
-      await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path);
-      onSuccess?.call();
+      bool status = await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path, fileName: extMsg.m.fileElem?.fileName);
+      if (status) {
+        onSuccess?.call();
+      }
     }, error: (e) {
       onError?.call(e);
     });
@@ -907,6 +924,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           'route': 'CHAT_RECORD',
           'userInfo': OpenIM.iMManager.uInfo?.toJson(),
           'params': extMsg.toJson(),
+          'random': const Uuid().v4(),
         }));
         window
           ..setFrame(const Offset(0, 0) & const Size(840, 900))

@@ -60,12 +60,12 @@ class IsolateMethod {
   // }
 
   /// 获取唯一的文件路径
-  static Future<String> _getUniqueFilePath(String filePath, String saveDir) async {
-    String fileName = basename(filePath);
+  static Future<String> _getUniqueFilePath(String filePath, String saveDir, {String? fileName}) async {
+    String name = fileName ?? basename(filePath);
     String directory = saveDir;
     String newFilePath = join(directory, fileName);
-    String ext = extension(fileName);
-    String baseName = basenameWithoutExtension(fileName);
+    String ext = extension(name);
+    String baseName = basenameWithoutExtension(name);
     int count = 1;
     while (await File(newFilePath).exists()) {
       String newName = '${baseName}_$count$ext';
@@ -79,8 +79,9 @@ class IsolateMethod {
   static void copyFile(_PortModel params) async {
     String path = params.data['path'];
     String saveDir = params.data['saveDir'];
+    String? fileName = params.data['fileName'];
 
-    String sPath = await _getUniqueFilePath(path, saveDir);
+    String sPath = await _getUniqueFilePath(path, saveDir, fileName: fileName);
     try {
       await File(path).copy(sPath);
       params.sendPort?.send(PortResult(data: sPath));

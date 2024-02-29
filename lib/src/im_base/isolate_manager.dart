@@ -145,7 +145,7 @@ class ImKitIsolateManager {
   }
 
   /// 保存文件到相册
-  static Future<bool> saveFileToAlbum(String path) async {
+  static Future<bool> saveFileToAlbum(String path, {String? fileName}) async {
     try {
       if (Utils.isMobile) {
         await ImageGallerySaver.saveFile(path);
@@ -155,7 +155,9 @@ class ImKitIsolateManager {
           lockParentWindow: true,
         );
         if (saveDir != null) {
-          ImKitIsolateManager.copyFile(path, saveDir);
+          ImKitIsolateManager.copyFile(path, saveDir, fileName: fileName);
+        } else {
+          return false;
         }
       }
       return true;
@@ -282,13 +284,13 @@ class ImKitIsolateManager {
   }
 
   /// 复制文件
-  static Future<String> copyFile(String path, String saveDir) {
+  static Future<String> copyFile(String path, String saveDir, {String? fileName}) {
     var completer = Completer<String>();
 
     ReceivePort port = ReceivePort();
     _isolateSendPort.send(_PortModel(
       method: _PortMethod.copyFile,
-      data: {'path': path, 'saveDir': saveDir},
+      data: {'path': path, 'saveDir': saveDir, 'fileName': fileName},
       sendPort: port.sendPort,
     ));
 
