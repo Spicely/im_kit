@@ -1,6 +1,7 @@
 part of im_kit;
 
 class ImKitThemeData {
+
   /// 副标题颜色
   final Color subtitleColor;
 
