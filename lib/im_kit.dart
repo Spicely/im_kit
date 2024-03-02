@@ -21,7 +21,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:fluent_ui/fluent_ui.dart' show ListTile, ListTileSelectionMode, FluentThemeData, FluentTheme, Tooltip, TooltipThemeData;
+import 'package:fluent_ui/fluent_ui.dart' show ListTile, ListTileSelectionMode, FluentThemeData, FluentTheme;
 import 'package:flutter_muka/flutter_muka.dart';
 import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart' hide Response;

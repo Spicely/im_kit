@@ -719,6 +719,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
         }
+        if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+          MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+          return;
+        }
 
         MessageExt extMsg = await msg.toExt();
         extMsg.ext.file = File(file.path);
@@ -879,7 +883,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
           }
-
+          if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+            MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+            return;
+          }
           MessageExt extMsg = await msg.toExt();
           extMsg.ext.file = File(file.path!);
           if (dest != null) {
@@ -891,6 +898,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
     }
   }
+
+  void onAvatarRightTap(Offset position, String userID) {}
 
   /// 下载文件
   void onTapDownFile(MessageExt extMsg) {}
@@ -1377,9 +1386,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 解散群聊
-  void dismissGroup() {
+  void dismissGroup({Function? onSuccess}) {
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.groupManager.dismissGroup(groupID: gId!);
+      onSuccess?.call();
     });
   }
 

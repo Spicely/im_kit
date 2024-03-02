@@ -105,6 +105,9 @@ class ImListItem extends StatelessWidget {
   /// 头像点击事件
   final void Function(TapUpDetails details, String userID)? onAvatarTap;
 
+  /// 头像右键点击事件
+  final void Function(Offset position, String userID)? onAvatarRightTap;
+
   /// 头像长按事件
   final void Function(String userID)? onAvatarLongPress;
 
@@ -154,6 +157,7 @@ class ImListItem extends StatelessWidget {
     this.onVoiceTap,
     this.onAvatarTap,
     this.onAvatarLongPress,
+    this.onAvatarRightTap,
     this.onDoubleTapFile,
     this.contextMenuBuilder,
     this.showNotification = true,
@@ -230,82 +234,106 @@ class ImListItem extends StatelessWidget {
             ),
           2024 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '对方不是你的好友'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
           2025 => beforeRenderView(const Center(child: Text.rich(TextSpan(text: '对方拒收你的消息'), style: TextStyle(fontSize: 12, color: Colors.grey)))),
-          _ => beforeRenderView(const Center(
-              child: Text('暂不支持的消息', style: TextStyle(fontSize: 12, color: Colors.grey)),
-            ))
+          _ => beforeRenderView(
+              const Center(child: Text('暂不支持的消息', style: TextStyle(fontSize: 12, color: Colors.grey))),
+            )
         },
-      MessageType.groupMutedNotification => beforeRenderView(const Center(
-          child: Text('群组开启禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        )),
-      MessageType.groupCancelMutedNotification => beforeRenderView(const Center(
-          child: Text('群组取消禁言', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        )),
-      MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => beforeRenderView(const Center(
-          child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey)),
-        )),
-      MessageType.encryptedNotification => beforeRenderView(Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset('assets/icons/lock.png', width: 16, height: 16),
-                const Expanded(
-                  child: Text(
-                    '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                    textAlign: TextAlign.center,
+      MessageType.groupMutedNotification => beforeRenderView(
+          const Center(child: Text('群组开启禁言', style: TextStyle(fontSize: 12, color: Colors.grey))),
+        ),
+      MessageType.groupCancelMutedNotification => beforeRenderView(
+          const Center(child: Text('群组取消禁言', style: TextStyle(fontSize: 12, color: Colors.grey))),
+        ),
+      MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => beforeRenderView(
+          const Center(child: Text('你们已成为好友，可以开始聊天了', style: TextStyle(fontSize: 12, color: Colors.grey))),
+        ),
+      MessageType.encryptedNotification => beforeRenderView(
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset('assets/icons/lock.png', width: 16, height: 16),
+                  const Expanded(
+                    child: Text(
+                      '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        )),
-      MessageType.memberKickedNotification => beforeRenderView(Center(
-          child: Text.rich(
-            _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+      MessageType.memberKickedNotification => beforeRenderView(
+          Center(
+            child: Text.rich(
+              _getMemberKickedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ),
-        )),
+        ),
       MessageType.burnAfterReadingNotification => beforeRenderView(Center(
           child: Text(
             message.ext.data?['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭',
             style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         )),
-      MessageType.revoke => beforeRenderView(Center(
-          child: Text.rich(
-            _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap, onReEditTap: onReEditTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+      MessageType.revoke => beforeRenderView(
+          Center(
+            child: Text.rich(
+              _getRevoke(message, userColor: Colors.blue, onTap: onNotificationUserTap, onReEditTap: onReEditTap),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ),
-        )),
-      MessageType.groupInfoSetNotification || MessageType.groupCreatedNotification || MessageType.groupMemberCancelMutedNotification || MessageType.groupMemberMutedNotification || MessageType.memberEnterNotification || MessageType.memberQuitNotification => Center(
-          child: beforeRenderView(Text.rich(
-            _getNotification(message.ext.data, message.m.contentType!, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          )),
         ),
-      MessageType.memberInvitedNotification => beforeRenderView(Center(
-          child: Text.rich(
-            _getMemberInvitedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+      MessageType.groupOwnerTransferredNotification ||
+      MessageType.groupInfoSetNotification ||
+      MessageType.groupCreatedNotification ||
+      MessageType.groupMemberCancelMutedNotification ||
+      MessageType.groupMemberMutedNotification ||
+      MessageType.memberEnterNotification ||
+      MessageType.memberQuitNotification =>
+        Center(
+          child: beforeRenderView(
+            Text.rich(
+              _getNotification(message.ext.data, message.m.contentType!, userColor: Colors.blue, onTap: onNotificationUserTap),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ),
-        )),
+        ),
+      MessageType.memberInvitedNotification => beforeRenderView(
+          Center(
+            child: Text.rich(
+              _getMemberInvitedNotification(message.ext.data, userColor: Colors.blue, onTap: onNotificationUserTap),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ),
+        ),
       _ => GestureDetector(
           onTap: _onSelectTap,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTapUp: _onAvatarTap,
-                onLongPress: _onAvatarLongPress,
-                child: CachedImage(
-                  imageUrl: message.m.senderFaceUrl,
-                  width: avatarTheme.width,
-                  height: avatarTheme.height,
-                  circular: avatarTheme.circular,
-                  fit: avatarTheme.fit,
-                  filterQuality: FilterQuality.high,
+              Listener(
+                onPointerDown: (PointerDownEvent event) {
+                  if (event.buttons == 2 && message.m.isGroupChat) {
+                    onAvatarRightTap?.call(event.position, message.m.sendID!);
+                  }
+                },
+                child: GestureDetector(
+                  onTapUp: _onAvatarTap,
+                  onLongPress: _onAvatarLongPress,
+                  child: CachedImage(
+                    imageUrl: message.m.senderFaceUrl,
+                    width: avatarTheme.width,
+                    height: avatarTheme.height,
+                    circular: avatarTheme.circular,
+                    fit: avatarTheme.fit,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),

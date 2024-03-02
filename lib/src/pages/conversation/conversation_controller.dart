@@ -11,7 +11,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   final RxInt applicationCount = 0.obs;
 
   /// 申请列表
-  final RxList<FriendApplicationInfo> applicationList = <FriendApplicationInfo>[].obs;
+  final RxList<ApplicationInfo> applicationList = <ApplicationInfo>[].obs;
 
   /// 好友列表
   final RxList<UserInfo> friendList = <UserInfo>[].obs;
@@ -38,6 +38,9 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     OpenIMManager.addListener(this);
     ImKitIsolateManager.addListener(this);
     super.onInit();
+    ever(applicationList, (v) {
+      applicationCount.value = v.where((e) => e.handleResult == 0).length;
+    });
     ever(data, (v) {
       // 统计未读数
       int count = 0;
@@ -100,6 +103,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   @override
   void onConversationChanged(List<ConversationInfo> list) {
     for (var v in list) {
+      if (!v.isValid) return;
       int index = data.indexWhere((element) => element.conversationID == v.conversationID);
       if (index != -1) {
         data[index] = v;
@@ -130,6 +134,19 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   Future<void> getData() async {
     data.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
+    blackList.value = await OpenIM.iMManager.friendshipManager.getBlacklist();
+    List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getRecvFriendApplicationList();
+    List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
+    applicationList.addAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
+    applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
+
+    /// 依据reqTime排序
+    applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
+    applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
+
+    friendList.value = await OpenIM.iMManager.friendshipManager.getFriendList();
+    groupList.value = await OpenIM.iMManager.groupManager.getJoinedGroupList();
+
     OpenIM.iMManager.conversationManager.simpleSort(data);
   }
 
@@ -172,15 +189,20 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   @override
   void onFriendApplicationAdded(FriendApplicationInfo u) {
-    applicationList.add(u);
+    applicationList.insert(0, u.toApplicationInfo());
   }
 
   @override
-  onJoinedGroupAdded(GroupInfo info) {
+  void onJoinedGroupAdded(GroupInfo info) {
     int index = groupList.indexWhere((v) => v.groupID == info.groupID);
     if (index != -1) {
       groupList.add(info);
     }
+  }
+
+  @override
+  void onGroupApplicationAdded(GroupApplicationInfo info) {
+    applicationList.insert(0, info.toApplicationInfo());
   }
 
   @override
@@ -227,24 +249,43 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   }
 
   /// 同意好友申请
-  void agreeFriendApplication(FriendApplicationInfo applicationInfo) async {
-    await OpenIM.iMManager.friendshipManager.acceptFriendApplication(uid: applicationInfo.fromUserID!);
-    int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
-    if (index != -1) {
-      applicationList[index].handleResult = 1;
-    }
+  void agreeFriendApplication(ApplicationInfo applicationInfo) {
+    Utils.exceptionCapture(() async {
+      int index = -1;
+      if (applicationInfo.type == ApplicationInfoType.friend) {
+        await OpenIM.iMManager.friendshipManager.acceptFriendApplication(uid: applicationInfo.id!);
+        index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
+      } else {
+        await OpenIM.iMManager.groupManager.acceptGroupApplication(gid: applicationInfo.groupID!, uid: applicationInfo.id!);
+        index = applicationList.indexWhere((v) => v.groupID == applicationInfo.groupID);
+      }
+      if (index != -1) {
+        applicationList[index].handleResult = 1;
+        applicationList.refresh();
+      }
+    });
   }
 
   /// 拒绝好友申请
-  void rejectFriendApplication(FriendApplicationInfo applicationInfo) async {
-    await OpenIM.iMManager.friendshipManager.refuseFriendApplication(uid: applicationInfo.fromUserID!);
-    int index = applicationList.indexWhere((v) => v.fromUserID == applicationInfo.fromUserID);
-    if (index != -1) {
-      applicationList[index].handleResult = -1;
-    }
+  void rejectFriendApplication(ApplicationInfo applicationInfo) {
+    Utils.exceptionCapture(() async {
+      int index = -1;
+      if (applicationInfo.type == ApplicationInfoType.friend) {
+        await OpenIM.iMManager.friendshipManager.refuseFriendApplication(uid: applicationInfo.id!);
+        index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
+      } else {
+        await OpenIM.iMManager.groupManager.refuseGroupApplication(gid: applicationInfo.groupID!, uid: applicationInfo.id!);
+        index = applicationList.indexWhere((v) => v.groupID == applicationInfo.groupID);
+      }
+      index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
+      if (index != -1) {
+        applicationList[index].handleResult = -1;
+        applicationList.refresh();
+      }
+    });
   }
 
-  ///移除黑名单好友
+  /// 移除黑名单好友
   void removeFriendFromBlacklist(String uid) {
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.friendshipManager.removeBlacklist(uid: uid);

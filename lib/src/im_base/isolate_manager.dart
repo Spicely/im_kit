@@ -429,6 +429,7 @@ class ImKitIsolateManager {
         case MessageType.burnAfterReadingNotification:
         case MessageType.memberQuitNotification:
         case MessageType.oaNotification:
+        case MessageType.groupOwnerTransferredNotification:
           var data = json.decode(msg.notificationElem?.detail ?? '{}');
           ext.data = data;
           ext.isSnapchat = data['isPrivate'] ?? false;
