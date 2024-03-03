@@ -339,6 +339,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         isMute.value = true;
       }
       groupMembers.value = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: groupID!);
+
+      /// 依据管理员排序
+      groupMembers.sort((a, b) {
+        if (a.roleLevel == GroupRoleLevel.owner) {
+          return -1;
+        } else if (b.roleLevel == GroupRoleLevel.owner) {
+          return 1;
+        } else if (a.roleLevel == GroupRoleLevel.admin) {
+          return -1;
+        } else if (b.roleLevel == GroupRoleLevel.admin) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
       showGroupMembers.value = groupMembers.take(6).toList();
     } else {
       if (userID == null) return;
@@ -443,8 +458,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
         FocusManager.instance.primaryFocus?.unfocus();
       }
-      await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path);
-      onSuccess?.call();
+      bool status = await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path, fileName: extMsg.m.fileElem?.fileName);
+      if (status) {
+        onSuccess?.call();
+      }
     }, error: (e) {
       onError?.call(e);
     });
@@ -691,6 +708,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
         }
+        if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+          MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+          return;
+        }
 
         MessageExt extMsg = await msg.toExt();
         extMsg.ext.file = File(file.path);
@@ -851,7 +872,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
           }
-
+          if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+            MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+            return;
+          }
           MessageExt extMsg = await msg.toExt();
           extMsg.ext.file = File(file.path!);
           if (dest != null) {
@@ -863,6 +887,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
     }
   }
+
+  void onAvatarRightTap(Offset position, String userID) {}
 
   /// 下载文件
   void onTapDownFile(MessageExt extMsg) {}
@@ -907,6 +933,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           'route': 'CHAT_RECORD',
           'userInfo': OpenIM.iMManager.uInfo?.toJson(),
           'params': extMsg.toJson(),
+          'random': const Uuid().v4(),
         }));
         window
           ..setFrame(const Offset(0, 0) & const Size(840, 900))
@@ -1348,9 +1375,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 解散群聊
-  void dismissGroup() {
+  void dismissGroup({Function? onSuccess}) {
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.groupManager.dismissGroup(groupID: gId!);
+      onSuccess?.call();
     });
   }
 

@@ -148,6 +148,69 @@ extension ExtensionUserInfo on UserInfo {
   }
 }
 
+extension ExtensionGroupApplicationInfo on GroupApplicationInfo {
+  /// 转到ApplicationInfo
+  ApplicationInfo toApplicationInfo() {
+    String reason = '';
+    try {
+      Map<String, dynamic> map = jsonDecode(reqMsg ?? '');
+      reason = map['reason'];
+    } catch (e) {
+      reason = reqMsg ?? '';
+    }
+    return ApplicationInfo(
+      type: ApplicationInfoType.group,
+      id: userID,
+      groupID: groupID,
+      nickname: nickname,
+      faceUrl: groupFaceURL,
+      userFaceURL: userFaceURL,
+      gender: gender,
+      handleResult: handleResult,
+      reqMsg: reason,
+      handledMsg: handledMsg,
+      reqTime: reqTime,
+      handleUserID: handleUserID,
+      handledTime: handledTime,
+      ex: ex,
+      joinSource: joinSource,
+    );
+  }
+}
+
+extension ExtensionFriendApplicationInfo on FriendApplicationInfo {
+  /// 转到ApplicationInfo
+  ApplicationInfo toApplicationInfo() {
+    String reason = '';
+    try {
+      Map<String, dynamic> map = jsonDecode(reqMsg ?? '');
+      reason = map['reason'];
+    } catch (e) {
+      reason = reqMsg ?? '';
+    }
+    return ApplicationInfo(
+      type: ApplicationInfoType.friend,
+      id: fromUserID,
+      nickname: fromNickname,
+      faceUrl: fromFaceURL,
+      userFaceURL: fromFaceURL,
+      // gender: fromGender,
+      handleResult: handleResult,
+      reqMsg: reason,
+      handledMsg: handleMsg,
+      reqTime: createTime,
+      handleUserID: handlerUserID,
+      handledTime: handleTime,
+      ex: ex,
+    );
+  }
+}
+
+enum ApplicationInfoType {
+  group,
+  friend,
+}
+
 class UserName {
   final String remark;
   final String nickName;
@@ -161,13 +224,90 @@ class UserName {
     );
   }
 }
-// extension ExtensionUserInfo on UserInfo {
-//   String get showName {
-//     try {
-//       Map<String, dynamic> map = jsonDecode(nickName ?? '{}');
-//       return Utils.getValue(map['remark'], map['nickname']) ?? '';
-//     } catch (e) {
-//       return nickName ?? '';
-//     }
-//   }
-//  }
+
+class ApplicationInfo {
+  String? id;
+
+  /// 群ID
+  String? groupID;
+
+  /// 头像
+  String? faceUrl;
+
+  /// 昵称
+  String? nickname;
+
+  /// 发起入群申请的用户头像
+  String? userFaceURL;
+
+  /// 发起入群申请的用户性别
+  int? gender;
+
+  /// 处理结果：-1：拒绝，1：同意
+  int? handleResult;
+
+  /// 请求说明
+  String? reqMsg;
+
+  /// 处理结果说明
+  String? handledMsg;
+
+  /// 请求时间
+  int? reqTime;
+
+  /// 处理者用户ID
+  String? handleUserID;
+
+  /// 处理时间
+  int? handledTime;
+
+  /// 扩展信息
+  String? ex;
+
+  /// 2：通过邀请  3：通过搜索  4：通过二维码
+  int? joinSource;
+
+  final ApplicationInfoType type;
+
+  ApplicationInfo({
+    required this.type,
+    this.id,
+    this.groupID,
+    this.nickname,
+    this.faceUrl,
+    this.userFaceURL,
+    this.gender,
+    this.handleResult,
+    this.reqMsg,
+    this.handledMsg,
+    this.reqTime,
+    this.handleUserID,
+    this.handledTime,
+    this.ex,
+    this.joinSource,
+  });
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['nickname'] = nickname;
+    data['faceUrl'] = faceUrl;
+    data['userFaceURL'] = userFaceURL;
+    data['gender'] = gender;
+    data['handleResult'] = handleResult;
+    data['reqMsg'] = reqMsg;
+    data['handledMsg'] = handledMsg;
+    data['reqTime'] = reqTime;
+    data['handleUserID'] = handleUserID;
+    data['handledTime'] = handledTime;
+    data['ex'] = ex;
+    data['joinSource'] = joinSource;
+    return data;
+  }
+
+  /// 已同意
+  bool get isAgreed => handleResult == 1;
+
+  /// 已拒绝
+  bool get isRejected => handleResult == -1;
+}

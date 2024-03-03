@@ -142,6 +142,7 @@ class ChatPage extends StatelessWidget {
                             onAvatarTap: controller.onAvatarTap,
                             onAvatarLongPress: controller.onAvatarLongPress,
                             onDoubleTapFile: controller.onDoubleTapFile,
+                            onAvatarRightTap: controller.onAvatarRightTap,
                             highlight: controller.currentIndex.value == index,
                             contextMenuBuilder: controller.contextMenuBuilder,
                             sendSuccessWidget: Text(

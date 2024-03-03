@@ -52,6 +52,9 @@ class ImBase extends StatelessWidget {
   /// 引用消息点击
   final void Function(MessageExt message)? onQuoteMessageTap;
 
+  // 双击点击消息体
+  final void Function(MessageExt message)? onDoubleTap;
+
   final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
 
   Widget getSelectableView(BuildContext context, Widget child) {
@@ -86,10 +89,14 @@ class ImBase extends StatelessWidget {
                           : isMe
                               ? chatTheme.messageTheme.meBackgroundColor
                               : chatTheme.messageTheme.backgroundColor
-                      : null,
+                      : Colors.grey.withOpacity(0.1),
                   borderRadius: chatTheme.messageTheme.borderRadius,
                 ),
-                padding: ImCore.noPadMsgType.contains(msg.contentType) ? null : chatTheme.messageTheme.padding,
+                padding: showBackground
+                    ? ImCore.noPadMsgType.contains(msg.contentType)
+                        ? null
+                        : chatTheme.messageTheme.padding
+                    : null,
                 child: child,
               ),
             ),
@@ -123,6 +130,7 @@ class ImBase extends StatelessWidget {
     this.onTapPlayVideo,
     this.onQuoteMessageTap,
     this.contextMenuBuilder,
+    this.onDoubleTap,
     this.showBackground = true,
   });
 

@@ -82,8 +82,8 @@ TextSpan _getMemberInvitedNotification(Map<String, dynamic> detail, {Color? user
 
 /// 修改了群组资料
 TextSpan _getNotification(Map<String, dynamic> detail, int type, {Color? userColor, UserNotificationCallback? onTap}) {
-  String? userId = detail['mutedUser']?['userID'] ?? detail['opUser']?['userID'] ?? detail['entrantUser']?['userID'] ?? detail['quitUser']?['userID'];
-  String? nickname = detail['mutedUser']?['nickname'] ?? detail['opUser']?['nickname'] ?? detail['entrantUser']?['nickname'] ?? detail['quitUser']?['nickname'];
+  String? userId = detail['newGroupOwner']?['userID'] ?? detail['mutedUser']?['userID'] ?? detail['opUser']?['userID'] ?? detail['entrantUser']?['userID'] ?? detail['quitUser']?['userID'];
+  String? nickname = detail['newGroupOwner']?['nickname'] ?? detail['mutedUser']?['nickname'] ?? detail['opUser']?['nickname'] ?? detail['entrantUser']?['nickname'] ?? detail['quitUser']?['nickname'];
   return TextSpan(
     children: [
       TextSpan(
@@ -107,6 +107,7 @@ String _getTypeText(int type) {
     MessageType.memberEnterNotification => '进入群组',
     MessageType.groupInfoSetNotification => '修改了群组资料',
     MessageType.memberQuitNotification => '退出了群聊',
+    MessageType.groupOwnerTransferredNotification => '成为新的群主',
     _ => '暂不支持的消息',
   };
 }
