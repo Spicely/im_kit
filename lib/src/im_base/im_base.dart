@@ -307,8 +307,6 @@ class ImCore {
 
   static String _playID = '';
 
-  static String? _uid;
-
   /// 临时缓存文件夹
   static String get tempPath => join(dirPath, 'Temp');
 
@@ -317,9 +315,18 @@ class ImCore {
     Directory(tempPath).createSync(recursive: true);
   }
 
-  /// 设置用户id
-  static void setUid(String? uid) {
-    _uid = uid;
+  /// 用户目录
+  static String get _userDir => join(dirPath, 'FileRecv', OpenIM.iMManager.uid);
+
+  /// 会话目录
+  static String userDir(String id) {
+    String dir = join(_userDir, id);
+    if (Directory(dir).existsSync()) {
+      return dir;
+    } else {
+      Directory(dir).createSync();
+      return dir;
+    }
   }
 
   /// 播放回调

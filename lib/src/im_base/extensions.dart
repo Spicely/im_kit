@@ -51,6 +51,7 @@ extension ExtensionMessage on Message {
         MessageType.groupCreatedNotification ||
         MessageType.groupMemberCancelMutedNotification ||
         MessageType.groupInfoSetNotification ||
+        MessageType.groupOwnerTransferredNotification ||
         MessageType.memberQuitNotification =>
           _getNotification(jsonDecode(notificationElem?.detail ?? '{}'), contentType!),
         MessageType.custom => switch (jsonDecode(customElem?.data ?? '{}')['contentType']) {
@@ -175,6 +176,24 @@ extension ExtensionGroupApplicationInfo on GroupApplicationInfo {
       ex: ex,
       joinSource: joinSource,
     );
+  }
+}
+
+extension ExtensionGroupInfo on GroupInfo {
+  /// 0 id名称都允许搜索
+  ///
+  /// 1 Id允许搜索 名称不允许搜索
+  ///
+  /// 2 名称允许搜索 Id不允许搜索
+  ///
+  /// 3 都不允许
+  int get searchType {
+    try {
+      Map<String, dynamic> map = jsonDecode(ex ?? '{}');
+      return map['search_opt'];
+    } catch (e) {
+      return 0;
+    }
   }
 }
 

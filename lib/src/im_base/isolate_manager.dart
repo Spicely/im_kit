@@ -16,8 +16,8 @@ part of im_kit;
  */
 
 enum _PortMethod {
-  // /// 下载多文件
-  // downloadFiles,
+  /// 下载多文件
+  downloadFiles,
 
   /// 复制文件
   copyFile,
@@ -81,16 +81,17 @@ class _PortModel {
 }
 
 class DownloadItem {
-  final String path;
   final String url;
-  final String secretKey;
-  final String savePath;
+
+  /// 保存目录
+  final String saveDir;
+
+  final String? secretKey;
 
   DownloadItem({
-    required this.path,
     required this.url,
-    required this.secretKey,
-    required this.savePath,
+    required this.saveDir,
+    this.secretKey,
   });
 }
 
@@ -224,31 +225,32 @@ class ImKitIsolateManager {
     });
   }
 
-  // /// 下载多文件
-  // static void downloadFiles(String id, List<DownloadItem> data) {
-  //   ReceivePort port = ReceivePort();
-  //   _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: {'id': id, 'data': data}, sendPort: port.sendPort));
-  //   port.listen((msg) {
-  //     if (msg is PortProgress) {
-  //       for (ImKitListen listener in _listeners) {
-  //         listener.onDownloadProgress(id, msg.progress);
-  //       }
-  //     } else {
-  //       if (msg is PortResult) {
-  //         if (msg.data != null) {
-  //           for (ImKitListen listener in _listeners) {
-  //             listener.onDownloadSuccess(id, msg.data!);
-  //           }
-  //         } else {
-  //           for (ImKitListen listener in _listeners) {
-  //             listener.onDownloadFailure(id, msg.error!);
-  //           }
-  //         }
-  //       }
-  //       port.close();
-  //     }
-  //   });
-  // }
+  /// 下载多文件
+  static void downloadFiles(String id, List<DownloadItem> data) {
+    ReceivePort port = ReceivePort();
+    _isolateSendPort.send(_PortModel(method: _PortMethod.downloadFiles, data: {'id': id, 'data': data}, sendPort: port.sendPort));
+    port.listen((msg) {
+      if (msg is PortProgress) {
+        for (ImKitListen listener in _listeners) {
+          listener.onDownloadProgress(id, msg.progress);
+        }
+      } else {
+        if (msg is PortResult) {
+          if (msg.data != null) {
+            for (ImKitListen listener in _listeners) {
+              print(id);
+              listener.onDownloadSuccess(id, msg.data!);
+            }
+          } else {
+            for (ImKitListen listener in _listeners) {
+              listener.onDownloadFailure(id, msg.error!);
+            }
+          }
+        }
+        port.close();
+      }
+    });
+  }
 
   /// 下载压缩包
   ///
@@ -487,9 +489,9 @@ class ImKitIsolateManager {
       if (msg is _PortModel) {
         try {
           switch (msg.method) {
-            // case _PortMethod.downloadFiles:
-            //   IsolateMethod.downloadFiles(msg);
-            //   break;
+            case _PortMethod.downloadFiles:
+              IsolateMethod.downloadFiles(msg);
+              break;
             case _PortMethod.downEmoji:
               IsolateMethod.downEmoji(msg);
               break;

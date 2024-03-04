@@ -29,7 +29,7 @@ class ImPreview extends StatefulWidget {
 
 class _ImPreviewState extends State<ImPreview> {
   late List<MessageExt> messages;
-  late PageController pageController;
+  late ExtendedPageController pageController;
   int currentIndex = 0;
 
   @override
@@ -37,7 +37,7 @@ class _ImPreviewState extends State<ImPreview> {
     /// 排除掉非图片消息
     messages = widget.messages.where((v) => v.m.contentType == MessageType.picture).toList();
     currentIndex = messages.indexWhere((v) => v.m.clientMsgID == widget.currentMessage.m.clientMsgID);
-    pageController = PageController(initialPage: currentIndex);
+    pageController = ExtendedPageController(initialPage: currentIndex);
     super.initState();
   }
 
@@ -50,6 +50,7 @@ class _ImPreviewState extends State<ImPreview> {
         children: [
           ExtendedImageGesturePageView.builder(
             physics: const BouncingScrollPhysics(),
+            controller: pageController,
             itemBuilder: (BuildContext context, int index) {
               MessageExt message = messages[index];
               return ExtendedImage.file(

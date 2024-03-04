@@ -305,26 +305,30 @@ class ImListItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Listener(
-                onPointerDown: (PointerDownEvent event) {
-                  if (event.buttons == 2 && message.m.isGroupChat) {
-                    onAvatarRightTap?.call(event.position, message.m.sendID!);
-                  }
-                },
-                child: GestureDetector(
-                  onTapUp: _onAvatarTap,
-                  onLongPress: _onAvatarLongPress,
-                  child: CachedImage(
-                    imageUrl: message.m.senderFaceUrl,
-                    width: avatarTheme.width,
-                    height: avatarTheme.height,
-                    circular: avatarTheme.circular,
-                    fit: avatarTheme.fit,
-                    filterQuality: FilterQuality.high,
+              Row(
+                children: [
+                  Listener(
+                    onPointerDown: (PointerDownEvent event) {
+                      if (event.buttons == 2 && message.m.isGroupChat) {
+                        onAvatarRightTap?.call(event.position, message.m.sendID!);
+                      }
+                    },
+                    child: GestureDetector(
+                      onTapUp: _onAvatarTap,
+                      onLongPress: _onAvatarLongPress,
+                      child: CachedImage(
+                        imageUrl: message.m.senderFaceUrl,
+                        width: avatarTheme.width,
+                        height: avatarTheme.height,
+                        circular: avatarTheme.circular,
+                        fit: avatarTheme.fit,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 6),
+                ],
               ),
-              const SizedBox(width: 6),
               Expanded(
                 child: Row(
                   children: [
@@ -353,36 +357,6 @@ class ImListItem extends StatelessWidget {
                                     SizedBox(child: getStatusWidget()),
                                   ],
                                 ),
-                                // Stack(
-                                //   children: [
-                                //     Container(
-                                //       decoration: BoxDecoration(
-                                //         color: ImCore.noBgMsgType.contains(message.m.contentType)
-                                //             ? null
-                                //             : isMe
-                                //             ? chatTheme.messageTheme.meBackgroundColor
-                                //             : chatTheme.messageTheme.backgroundColor,
-                                //         borderRadius: chatTheme.messageTheme.borderRadius,
-                                //       ),
-                                //       padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-                                //       child:getTypeWidget(),
-                                //     ),
-                                //     // Positioned(
-                                //     //   bottom: 4,
-                                //     //   right: 6,
-                                //     //   child: Directionality(
-                                //     //     textDirection: TextDirection.ltr,
-                                //     //     child: Row(
-                                //     //       children: [
-                                //     //         Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-                                //     //         if (isMe) const SizedBox(width: 1),
-                                //     //         if (isMe && message.m.isRead!) const Icon(Icons.done_all, size: 12, color: Colors.blue),
-                                //     //       ],
-                                //     //     ),
-                                //     //   ),
-                                //     // ),
-                                //   ],
-                                // ),
                                 if (message.m.contentType == MessageType.quote || (message.m.contentType == MessageType.atText && message.m.quoteElem != null) && message.ext.quoteMessage != null)
                                   Container(
                                     margin: const EdgeInsets.only(top: 5),
@@ -405,11 +379,11 @@ class ImListItem extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              SizedBox(
-                width: avatarTheme.width,
-                height: avatarTheme.height,
-              ),
+              // const SizedBox(width: 6),
+              // SizedBox(
+              //   width: avatarTheme.width,
+              //   height: avatarTheme.height,
+              // ),
             ],
           ),
         )

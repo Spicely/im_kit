@@ -56,7 +56,7 @@ class ImChatAppBarTheme {
 
   const ImChatAppBarTheme({
     this.backgroundColor = Colors.white,
-    this.centerTitle = true,
+    this.centerTitle = false,
     this.style = const TextStyle(fontSize: 16, color: Colors.black),
     this.iconTheme = const IconThemeData(color: Colors.black),
   });

@@ -37,6 +37,7 @@ class ChatPage extends StatelessWidget {
               ? null
               : AppBar(
                   backgroundColor: chatTheme.appBarTheme.backgroundColor,
+                  toolbarOpacity: 0.8,
                   iconTheme: chatTheme.appBarTheme.iconTheme,
                   leading: Obx(
                     () => Visibility(
