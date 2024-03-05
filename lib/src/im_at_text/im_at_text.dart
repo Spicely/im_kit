@@ -54,6 +54,14 @@ class ImAtText extends ImBase {
     super.contextMenuBuilder,
   });
 
+  double get width {
+    if (Utils.isMobile) {
+      return showSelect ? Get.mediaQuery.size.width * 0.7 - 30 : Get.mediaQuery.size.width * 0.7;
+    } else {
+      return showSelect ? 470 : 500;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
@@ -99,7 +107,7 @@ class ImAtText extends ImBase {
     }).toList());
 
     return Container(
-      constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
+      constraints: BoxConstraints(maxWidth: width),
       decoration: BoxDecoration(
         color: ImCore.noBgMsgType.contains(msg.contentType)
             ? null

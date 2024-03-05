@@ -6,58 +6,57 @@ part of im_kit;
 const ROADOM_STR = "bwGO8X5gdaM5dsV@";
 
 class IsolateMethod {
-  // /// 下载多文件
-  // static Future<void> downloadFiles(_PortModel params) async {
-  //   try {
-  //     Map<String, dynamic> progressMap = {};
-  //     List<DownloadItem> items = params.data['data'];
-  //     String id = params.data['id'];
+  /// 下载多文件
+  static Future<void> downloadFiles(_PortModel params) async {
+    try {
+      Map<String, dynamic> progressMap = {};
+      List<DownloadItem> items = params.data['data'];
+      String id = params.data['id'];
 
-  //     /// 先判断本地文件是否存在
-  //     bool status = items.every((v) => File(v.path).existsSync());
-  //     if (status) {
-  //       params.sendPort?.send(PortResult(data: items.map((e) => e.path).toList()));
-  //       return;
-  //     }
+      /// 先判断本地文件是否存在
+      bool status = items.every((v) => File(join(v.saveDir, basename(v.url))).existsSync());
+      if (status) {
+        params.sendPort?.send(PortResult(data: items.map((v) => join(v.saveDir, basename(v.url))).toList()));
+        return;
+      }
 
-  //     /// 判断下载文件是否存在
-  //     status = items.every((v) => File(v.savePath).existsSync());
-  //     if (status) {
-  //       params.sendPort?.send(PortResult(data: items.map((e) => e.savePath).toList()));
-  //       return;
-  //     }
+      /// 判断下载文件是否存在
+      status = items.every((v) => File(join(v.saveDir, basename(v.url))).existsSync());
+      if (status) {
+        params.sendPort?.send(PortResult(data: items.map((v) => join(v.saveDir, basename(v.url))).toList()));
+        return;
+      }
 
-  //     await Future.wait(items.map((e) {
-  //       progressMap[id] = {'count': 0, 'total': 0};
-  //       return e.url.isEmpty
-  //           ? Future.value('')
-  //           : Dio().get(
-  //               e.url,
-  //               options: Options(responseType: ResponseType.bytes),
-  //               onReceiveProgress: (count, total) {
-  //                 progressMap[id] = {'count': count, 'total': total};
-  //                 double progress = 0;
-  //                 progressMap.forEach((key, value) {
-  //                   if (value['total'] == 0) return;
-  //                   progress += value['count'] / value['total'];
-  //                 });
-  //                 params.sendPort?.send(PortProgress(progress / progressMap.length));
-  //               },
-  //             ).then((res) {
-  //               Uint8List u = Uint8List.fromList(res.data);
-  //               if (e.savePath.isNotEmpty) {
-  //                 ImKitIsolateManager.writeFileByU8Async(e.savePath, ImKitIsolateManager.decFileNoPath(keyStr: e.secretKey, fileByte: u));
-  //               }
-  //             }).catchError((e) {
-  //               throw e;
-  //             });
-  //     }).toList());
-  //     progressMap.remove(id);
-  //     params.sendPort?.send(PortResult(data: items.map((e) => e.savePath).toList()));
-  //   } catch (e) {
-  //     params.sendPort?.send(PortResult(error: e.toString()));
-  //   }
-  // }
+      await Future.wait(items.map((v) {
+        progressMap[id] = {'count': 0, 'total': 0};
+        return Dio().get(
+          v.url,
+          options: Options(responseType: ResponseType.bytes),
+          onReceiveProgress: (count, total) {
+            progressMap[id] = {'count': count, 'total': total};
+            double progress = 0;
+            progressMap.forEach((key, value) {
+              if (value['total'] == 0) return;
+              progress += value['count'] / value['total'];
+            });
+            params.sendPort?.send(PortProgress(progress / progressMap.length));
+          },
+        ).then((res) {
+          print(join(v.saveDir, basename(v.url)));
+          Uint8List u = Uint8List.fromList(res.data);
+          print(u.length);
+          File(join(v.saveDir, basename(v.url))).writeAsBytes(u, flush: true);
+          return v.url;
+        }).catchError((e) {
+          throw e;
+        });
+      }).toList());
+      progressMap.remove(id);
+      params.sendPort?.send(PortResult(data: items.map((v) => join(v.saveDir, basename(v.url))).toList()));
+    } catch (e) {
+      params.sendPort?.send(PortResult(error: e.toString()));
+    }
+  }
 
   /// 获取唯一的文件路径
   static Future<String> _getUniqueFilePath(String filePath, String saveDir, {String? fileName}) async {

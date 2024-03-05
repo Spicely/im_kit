@@ -18,7 +18,7 @@ class ChatPageItem {
   });
 }
 
-class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener {
+class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
   late Rx<ConversationInfo?> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -66,6 +66,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   /// 是否能管理群
   bool get isCanAdmin => gInfo?.roleLevel != GroupRoleLevel.member;
+
+  /// 是否能发言
+  bool get isCanSpeak => !isMuteUser.value || !isMute.value || isCanAdmin;
 
   /// 不允许通过群获取成员资料
   bool get lookMemberInfo => isSingleChat
@@ -176,6 +179,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void onInit() {
     OpenIMManager.addListener(this);
     windowManager.addListener(this);
+    ImKitIsolateManager.addListener(this);
     textEditingController.addListener(_checkHistoryAction);
 
     ImCore.onPlayerStateChanged(onPlayerStateChanged);
@@ -186,7 +190,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         fieldType.value = ImChatPageFieldType.none;
       }
     });
-    isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
     search.addListener(() {
       if (search.text.isEmpty) {
         if (showAllGroupMembers.value) {
@@ -288,6 +291,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   Future<void> onKeyEvent(RawKeyEvent event) async {
+    if (!isCanSpeak) return;
+
     /// shift + enter 换行
     if (event is RawKeyDownEvent && event.isShiftPressed && event.logicalKey == LogicalKeyboardKey.enter) {
       return;
@@ -332,46 +337,44 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     atUserMap.removeWhere((v) => v.userID == id);
   }
 
-  Future<void> getData() async {
-    if (isGroupChat) {
-      groupInfo.value = (await OpenIM.iMManager.groupManager.getGroupsInfo(groupIDList: [groupID!])).first;
-      if (isMember && groupInfo.value?.status == 3) {
-        isMute.value = true;
+  void getData() {
+    Utils.exceptionCapture(() async {
+      /// 下载文件
+      for (var v in data) {
+        downFile(v);
+        startTimer(v);
       }
-      groupMembers.value = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: groupID!);
+      if (isGroupChat) {
+        groupInfo.value = (await OpenIM.iMManager.groupManager.getGroupsInfo(groupIDList: [groupID!])).first;
 
-      /// 依据管理员排序
-      groupMembers.sort((a, b) {
-        if (a.roleLevel == GroupRoleLevel.owner) {
-          return -1;
-        } else if (b.roleLevel == GroupRoleLevel.owner) {
-          return 1;
-        } else if (a.roleLevel == GroupRoleLevel.admin) {
-          return -1;
-        } else if (b.roleLevel == GroupRoleLevel.admin) {
-          return 1;
-        } else {
-          return 0;
+        groupMembers.value = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: groupID!);
+        if (groupInfo.value?.status == 3) {
+          isMute.value = true;
         }
-      });
-      showGroupMembers.value = groupMembers.take(6).toList();
-    } else {
-      if (userID == null) return;
-      chatUserInfo.value = (await OpenIM.iMManager.friendshipManager.getFriendsList(userIDList: [userID!])).first;
-    }
+        isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
 
-    List<String> messageIds = [];
-
-    /// 下载文件
-    for (var v in data) {
-      if (!v.m.isRead! && !_types.contains(v.m.contentType)) {
-        messageIds.add(v.m.clientMsgID!);
+        /// 依据管理员排序
+        groupMembers.sort((a, b) {
+          if (a.roleLevel == GroupRoleLevel.owner) {
+            return -1;
+          } else if (b.roleLevel == GroupRoleLevel.owner) {
+            return 1;
+          } else if (a.roleLevel == GroupRoleLevel.admin) {
+            return -1;
+          } else if (b.roleLevel == GroupRoleLevel.admin) {
+            return 1;
+          } else {
+            return 0;
+          }
+        });
+        showGroupMembers.value = groupMembers.take(6).toList();
+      } else {
+        if (userID == null || OpenIM.iMManager.uid == userID) return;
+        chatUserInfo.value = (await OpenIM.iMManager.friendshipManager.getFriendsList(userIDList: [userID!])).first;
       }
-      downFile(v);
 
-      startTimer(v);
-    }
-    markMessageAsRead(data);
+      markMessageAsRead(data);
+    });
   }
 
   void _checkHistoryAction() {
@@ -487,6 +490,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void onClose() {
     OpenIMManager.removeListener(this);
     windowManager.removeListener(this);
+    ImKitIsolateManager.removeListener(this);
     textEditingController.removeListener(_checkHistoryAction);
     for (var i in data) {
       if (i.ext.isPrivateChat) {
@@ -540,6 +544,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   void downFile(MessageExt extMsg) async {
+    String saveDir = ImCore.userDir(conversationInfo.value!.conversationID);
     // if (MessageTypeExtend.customDiyEmoji == extMsg.m.contentType) {
     //   Map<String, dynamic> map = jsonDecode(extMsg.m.content ?? '{}');
     //   map = jsonDecode(map['data'] ?? '{}');
@@ -555,63 +560,52 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     // }
     if (extMsg.m.clientMsgID == null) return;
     if (conversationInfo.value != null && [MessageType.picture, MessageType.video, MessageType.voice, MessageType.file].contains(extMsg.m.contentType)) {
-      List<File> locFiles = await ImKitIsolateManager.getLocFile(conversationInfo.value!.conversationID, extMsg.m);
-      if (locFiles.isNotEmpty) {
-        if (locFiles.length == 2) {
-          extMsg.ext.previewFile = locFiles.first;
-          extMsg.ext.file = locFiles.last;
-        } else {
-          extMsg.ext.file = locFiles.first;
-        }
-        updateMessage(extMsg);
-      } else {
-        if (extMsg.m.contentType == MessageType.file) return;
-        // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((value) {
-        //   if (value.length == 2) {
-        //     extMsg.ext.previewFile = File(value.first);
-        //     extMsg.ext.file = File(value.last);
-        //   } else {
-        //     extMsg.ext.file = File(value.first);
-        //   }
-        //   updateMessage(extMsg);
-
-        //   /// 查找引用消息
-        // }).catchError((e) {
-        //   // extMsg.loadFailed = true;
-        //   updateMessage(extMsg);
-        //   debugPrint(e.toString());
-        // });
-      }
+      ImKitIsolateManager.downloadFiles(
+        extMsg.m.clientMsgID!,
+        [
+          DownloadItem(
+            url: extMsg.m.fileElem?.sourceUrl ?? extMsg.m.videoElem?.snapshotUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '',
+            saveDir: saveDir,
+          ),
+          if (extMsg.m.videoElem?.videoUrl != null)
+            DownloadItem(
+              url: extMsg.m.videoElem!.videoUrl!,
+              saveDir: saveDir,
+            ),
+        ],
+      );
     } else if (MessageType.quote == extMsg.m.contentType) {
       if (conversationInfo.value != null && [MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.quoteElem?.quoteMessage?.contentType)) {
-        List<File> locFiles = await ImKitIsolateManager.getLocFile(conversationInfo.value!.conversationID, extMsg.m.quoteElem!.quoteMessage!);
-        if (locFiles.isNotEmpty) {
-          if (locFiles.length == 2) {
-            extMsg.ext.previewFile = locFiles.first;
-            extMsg.ext.file = locFiles.last;
-          } else {
-            extMsg.ext.file = locFiles.first;
-          }
-          updateMessage(extMsg);
-        } else {
-          // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m.quoteElem!.quoteMessage!).then((value) {
-          //   if (value.length == 2) {
-          //     extMsg.m.quoteElem?.quoteMessage?.snapshotFile = File(value.first);
-          //     extMsg.m.quoteElem?.quoteMessage?.file = File(value.last);
-          //   } else {
-          //     extMsg.m.quoteElem?.quoteMessage?.file = File(value.first);
-          //   }
-          //   updateMessage(extMsg);
-
-          //   /// 查找引用消息
-          // }).catchError((e) {
-          //   //  extMsg.m.loadFailed = true;
-          //   updateMessage(extMsg);
-          //   debugPrint(e.toString());
-          // });
-        }
+        ImKitIsolateManager.downloadFiles(
+          extMsg.m.clientMsgID!,
+          [
+            DownloadItem(
+              url: extMsg.m.fileElem?.sourceUrl ?? extMsg.m.videoElem?.snapshotUrl ?? extMsg.m.pictureElem?.sourcePicture?.url ?? extMsg.m.soundElem?.sourceUrl ?? '',
+              saveDir: saveDir,
+            ),
+            if (extMsg.m.videoElem?.videoUrl != null)
+              DownloadItem(
+                url: extMsg.m.videoElem!.videoUrl!,
+                saveDir: saveDir,
+              ),
+          ],
+        );
       }
     }
+  }
+
+  /// 下载成功
+  @override
+  void onDownloadSuccess(String id, List<String> paths) {
+    MessageExt? extMsg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
+    if (extMsg == null) return;
+    if (paths.length == 2) {
+      extMsg.ext.previewFile = File(paths.first);
+      extMsg.ext.file = File(paths.last);
+    } else {
+      extMsg.ext.file = File(paths.first);
+    }
+    updateMessage(extMsg);
   }
 
   @override
@@ -622,8 +616,14 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       } else {
         /// 更新群成员信息
         int index = groupMembers.indexWhere((v) => v.userID == info.userID);
+        int i = showGroupMembers.indexWhere((v) => v.userID == info.userID);
         if (index != -1) {
           groupMembers[index] = info;
+          groupMembers.refresh();
+        }
+        if (i != -1) {
+          showGroupMembers[i] = info;
+          groupMembers.refresh();
         }
       }
     }
@@ -655,15 +655,59 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
-  Future<void> setGroupInfo({String? groupName, String? notification, String? introduction, String? faceUrl, String? ex}) async {
-    await OpenIM.iMManager.groupManager.setGroupInfo(
-      groupID: gId!,
-      introduction: introduction,
-      notification: notification,
-      faceUrl: faceUrl,
-      groupName: groupName,
-      ex: ex,
-    );
+  /// 保存群设置
+  void setGroupInfo({String? groupName, String? notification, String? introduction, String? faceUrl, String? ex, Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.groupManager.setGroupInfo(
+        groupID: gId!,
+        introduction: introduction,
+        notification: notification,
+        faceUrl: faceUrl,
+        groupName: groupName,
+        ex: ex,
+      );
+      onSuccess?.call();
+      if (groupName != null) groupInfo.value?.groupName = groupName;
+      if (notification != null) groupInfo.value?.notification = notification;
+      if (introduction != null) groupInfo.value?.introduction = introduction;
+      if (faceUrl != null) groupInfo.value?.faceURL = faceUrl;
+      if (ex != null) groupInfo.value?.ex = ex;
+      groupInfo.refresh();
+    });
+  }
+
+  /// 设置群成员管理员
+  void setGroupMemberRoleLevel({required String userID, required int roleLevel, Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.groupManager.setGroupMemberRoleLevel(
+        groupID: gId!,
+        userID: userID,
+        roleLevel: roleLevel,
+      );
+      onSuccess?.call();
+      int index = groupMembers.indexWhere((v) => v.userID == userID);
+      if (index != -1) {
+        groupMembers[index].roleLevel = roleLevel;
+        groupMembers.refresh();
+      }
+    });
+  }
+
+  /// 禁言用户
+  void setGroupMemberMute({required String userID, required int seconds, Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.groupManager.changeGroupMemberMute(
+        groupID: gId!,
+        userID: userID,
+        seconds: seconds,
+      );
+      onSuccess?.call();
+      int index = groupMembers.indexWhere((v) => v.userID == userID);
+      if (index != -1) {
+        groupMembers[index].muteEndTime = seconds;
+        groupMembers.refresh();
+      }
+    });
   }
 
   @override
@@ -708,6 +752,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
         }
+        if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+          MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+          return;
+        }
 
         MessageExt extMsg = await msg.toExt();
         extMsg.ext.file = File(file.path);
@@ -722,8 +770,23 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   @override
   void onGroupInfoChanged(GroupInfo info) {
-    groupInfo = Rx(info);
-    if (isMember && info.status == 3) {
+    if (groupInfo.value == null) return;
+    groupInfo.update((val) {
+      val?.needVerification = info.needVerification;
+      val?.notificationUpdateTime = info.notificationUpdateTime;
+      val?.notificationUserID = info.notificationUserID;
+      val?.introduction = info.introduction;
+      val?.notification = info.notification;
+      val?.groupName = info.groupName;
+      val?.groupType = info.groupType;
+      val?.groupID = info.groupID;
+      val?.faceURL = info.faceURL;
+      val?.lookMemberInfo = info.lookMemberInfo;
+      val?.status = info.status;
+      val?.createTime = info.createTime;
+      val?.ex = info.ex;
+    });
+    if (info.status == 3) {
       isMute.value = true;
       fieldType.value = ImChatPageFieldType.none;
     } else {
@@ -868,7 +931,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
           }
-
+          if (Utils.getValue(msg.fileElem?.fileSize, 0) == 0) {
+            MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+            return;
+          }
           MessageExt extMsg = await msg.toExt();
           extMsg.ext.file = File(file.path!);
           if (dest != null) {
@@ -880,6 +946,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
     }
   }
+
+  void onAvatarRightTap(Offset position, String userID) {}
 
   /// 下载文件
   void onTapDownFile(MessageExt extMsg) {}
@@ -1012,9 +1080,15 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void updateGroupMemberInfo(GroupMembersInfo info) {
     if (isGroupChat) {
       int index = groupMembers.indexWhere((v) => v.userID == info.userID);
+      int i = showGroupMembers.indexWhere((v) => v.userID == info.userID);
       if (index != -1) {
         groupMembers[index] = info;
         isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
+        groupMembers.refresh();
+      }
+      if (i != -1) {
+        showGroupMembers[index] = info;
+        showGroupMembers.refresh();
       }
     }
   }
@@ -1035,8 +1109,18 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     return (muteEndTime - DateTime.now().millisecondsSinceEpoch / 1000) ~/ 3600;
   }
 
-  Future<void> setGroupVerification(int needVerification) async {
-    await OpenIM.iMManager.groupManager.setGroupVerification(groupID: gId!, needVerification: needVerification);
+  /// 设置群验证
+  void setGroupVerification(bool needVerification, {Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      groupInfo.value?.needVerification = needVerification ? 1 : 2;
+      groupInfo.refresh();
+      await OpenIM.iMManager.groupManager.setGroupVerification(groupID: gId!, needVerification: needVerification ? 1 : 2);
+      onSuccess?.call();
+    }, error: (e) {
+      groupInfo.value?.needVerification = !needVerification ? 1 : 2;
+      groupInfo.refresh();
+      MukaConfig.config.exceptionCapture.error(e);
+    });
   }
 
   Future<void> changeGroupMute(bool mute) async {
@@ -1366,9 +1450,11 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 解散群聊
-  void dismissGroup() {
+  void dismissGroup({Function? onSuccess}) {
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.groupManager.dismissGroup(groupID: gId!);
+      await OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: conversationInfo.value!.conversationID);
+      onSuccess?.call();
     });
   }
 
@@ -1444,6 +1530,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   /// 重新发送
   void onResend(MessageExt message) async {
+    if (!isCanSpeak) return;
     try {
       message.m.status = MessageStatus.sending;
       await updateMessage(message);
@@ -1513,5 +1600,58 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       FocusManager.instance.primaryFocus?.unfocus();
     }
     showSelect.value = !showSelect.value;
+  }
+
+  /// 全体禁言
+  void setAllMute(bool mute, {Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.groupManager.changeGroupMute(groupID: gId!, mute: mute);
+      onSuccess?.call();
+    });
+  }
+
+  /// 转让群
+  void transferGroupOwner(String userID, {Function? onSuccess}) {
+    Utils.exceptionCapture(() async {
+      await OpenIM.iMManager.groupManager.transferGroupOwner(gid: gId!, uid: userID);
+
+      /// 更新群成员信息
+      int index = groupMembers.indexWhere((v) => v.userID == OpenIM.iMManager.uid);
+      int i = showGroupMembers.indexWhere((v) => v.userID == OpenIM.iMManager.uid);
+      if (index != -1) {
+        groupMembers[index].roleLevel = GroupRoleLevel.member;
+        groupMembers.refresh();
+      }
+      if (i != -1) {
+        showGroupMembers[i].roleLevel = GroupRoleLevel.member;
+        groupMembers.refresh();
+      }
+      onSuccess?.call();
+    });
+  }
+
+  /// 设置群搜索
+  void setGroupSearchType(int type, {Function? onSuccess}) {
+    /// 原始数据
+    String? ex = groupInfo.value?.ex;
+    Utils.exceptionCapture(() async {
+      Map<String, dynamic> map;
+      try {
+        map = jsonDecode(groupInfo.value?.ex ?? '{}');
+      } catch (e) {
+        map = {};
+      }
+      map['search_opt'] = type;
+      String currentEx = jsonEncode(map);
+      groupInfo.value?.ex = currentEx;
+      groupInfo.refresh();
+      await OpenIM.iMManager.groupManager.setGroupInfo(groupID: gId!, ex: currentEx);
+
+      onSuccess?.call();
+    }, error: (e) {
+      groupInfo.value?.ex = ex;
+      groupInfo.refresh();
+      MukaConfig.config.exceptionCapture.error(e);
+    });
   }
 }
