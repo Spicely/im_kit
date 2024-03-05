@@ -238,7 +238,6 @@ class ImKitIsolateManager {
         if (msg is PortResult) {
           if (msg.data != null) {
             for (ImKitListen listener in _listeners) {
-              print(id);
               listener.onDownloadSuccess(id, msg.data!);
             }
           } else {

@@ -42,9 +42,7 @@ class IsolateMethod {
             params.sendPort?.send(PortProgress(progress / progressMap.length));
           },
         ).then((res) {
-          print(join(v.saveDir, basename(v.url)));
           Uint8List u = Uint8List.fromList(res.data);
-          print(u.length);
           File(join(v.saveDir, basename(v.url))).writeAsBytes(u, flush: true);
           return v.url;
         }).catchError((e) {
@@ -60,9 +58,9 @@ class IsolateMethod {
 
   /// 获取唯一的文件路径
   static Future<String> _getUniqueFilePath(String filePath, String saveDir, {String? fileName}) async {
-    String name = fileName ?? basename(filePath);
+    String name = Utils.getValue(fileName, basename(filePath));
     String directory = saveDir;
-    String newFilePath = join(directory, fileName);
+    String newFilePath = join(directory, name);
     String ext = extension(name);
     String baseName = basenameWithoutExtension(name);
     int count = 1;

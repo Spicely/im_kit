@@ -49,8 +49,8 @@ class _ImPreviewState extends State<ImPreview> {
       body: Stack(
         children: [
           ExtendedImageGesturePageView.builder(
-            physics: const BouncingScrollPhysics(),
             controller: pageController,
+            physics: const BouncingScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
               MessageExt message = messages[index];
               return ExtendedImage.file(

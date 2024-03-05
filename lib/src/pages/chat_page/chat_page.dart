@@ -73,85 +73,53 @@ class ChatPage extends StatelessWidget {
             children: [
               Expanded(
                 child: Obx(
-                  () => EasyRefresh.builder(
-                    controller: controller.easyRefreshController,
-                    clipBehavior: Clip.none,
-                    // footer: BuilderFooter(
-                    //   triggerOffset: 40,
-                    //   infiniteOffset: 60,
-                    //   clamping: false,
-                    //   position: IndicatorPosition.above,
-                    //   processedDuration: Duration.zero,
-                    //   builder: (context, state) {
-                    //     return Stack(
-                    //       children: [
-                    //         SizedBox(height: state.offset, width: double.infinity),
-                    //         Positioned(
-                    //           bottom: 0,
-                    //           left: 0,
-                    //           right: 0,
-                    //           child: Container(
-                    //             alignment: Alignment.center,
-                    //             width: double.infinity,
-                    //             height: 40,
-                    //             child: SpinKitCircle(size: 24, color: Theme.of(context).primaryColor),
-                    //           ),
-                    //         )
-                    //       ],
-                    //     );
-                    //   },
-                    // ),
-                    onLoad: controller.noMore.value ? null : controller.onLoad,
-                    childBuilder: (context, physics) => Obx(
-                      () => ScrollablePositionedList.builder(
-                        itemCount: controller.data.length,
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        physics: physics,
-                        reverse: true,
-                        shrinkWrap: true,
-                        itemScrollController: controller.itemScrollController,
-                        itemBuilder: (context, index) => Obx(
-                          () => ImListItem(
-                            message: controller.data[index],
-                            selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
-                            // onTap: controller.onTap,
-                            sendLoadingWidget: const SpinKitFadingCircle(size: 20, color: Colors.grey),
-                            sendErrorWidget: GestureDetector(
-                              onTap: () {
-                                controller.onResend(controller.data[index]);
-                              },
-                              child: const Icon(Icons.error, color: Colors.red, size: 18),
-                            ),
-                            showSelect: controller.showSelect.value,
-                            onTapDownFile: controller.onTapDownFile,
-                            onTapPlayVideo: controller.onTapPlayVideo,
-                            onPictureTap: controller.onPictureTap,
-                            onNotificationUserTap: controller.onNotificationUserTap,
-                            onTapUrl: controller.onUrlTap,
-                            onAtTap: controller.onAtTap,
-                            onTapEmail: controller.onTapEmail,
-                            onTapPhone: controller.onTapPhone,
-                            onCardTap: controller.onCardTap,
-                            onLocationTap: controller.onLocationTap,
-                            onFileTap: controller.onFileTap,
-                            onMergerTap: controller.onMergerTap,
-                            onCopyTip: controller.onCopyTip,
-                            onReEditTap: controller.onReEditTap,
-                            onMessageSelect: controller.onMessageSelect,
-                            onQuoteMessageTap: controller.onQuoteMessageTap,
-                            onVoiceTap: controller.onVoiceTap,
-                            onAvatarTap: controller.onAvatarTap,
-                            onAvatarLongPress: controller.onAvatarLongPress,
-                            onDoubleTapFile: controller.onDoubleTapFile,
-                            onAvatarRightTap: controller.onAvatarRightTap,
-                            highlight: controller.currentIndex.value == index,
-                            contextMenuBuilder: controller.contextMenuBuilder,
-                            sendSuccessWidget: Text(
-                              controller.data[index].m.isRead == true ? '已读' : '未读',
-                              style: const TextStyle(fontSize: 10, color: Colors.grey),
-                            ),
-                          ),
+                  () => ListView.builder(
+                    itemCount: controller.data.length,
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    reverse: true,
+                    shrinkWrap: true,
+                    controller: controller.scrollController,
+                    itemBuilder: (context, index) => Obx(
+                      () => ImListItem(
+                        message: controller.data[index],
+                        selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
+                        sendLoadingWidget: const SpinKitFadingCircle(size: 20, color: Colors.grey),
+                        sendErrorWidget: GestureDetector(
+                          onTap: () {
+                            controller.onResend(controller.data[index]);
+                          },
+                          child: const Icon(Icons.error, color: Colors.red, size: 18),
                         ),
+                        showSelect: controller.showSelect.value,
+                        onTapDownFile: controller.onTapDownFile,
+                        onTapPlayVideo: controller.onTapPlayVideo,
+                        onPictureTap: controller.onPictureTap,
+                        onNotificationUserTap: controller.onNotificationUserTap,
+                        onTapUrl: controller.onUrlTap,
+                        onAtTap: controller.onAtTap,
+                        onTapEmail: controller.onTapEmail,
+                        onTapPhone: controller.onTapPhone,
+                        onCardTap: controller.onCardTap,
+                        onLocationTap: controller.onLocationTap,
+                        onFileTap: controller.onFileTap,
+                        onMergerTap: controller.onMergerTap,
+                        onCopyTip: controller.onCopyTip,
+                        onReEditTap: controller.onReEditTap,
+                        onMessageSelect: controller.onMessageSelect,
+                        onQuoteMessageTap: controller.onQuoteMessageTap,
+                        onVoiceTap: controller.onVoiceTap,
+                        onAvatarTap: controller.onAvatarTap,
+                        onAvatarLongPress: controller.onAvatarLongPress,
+                        onDoubleTapFile: controller.onDoubleTapFile,
+                        onAvatarRightTap: controller.onAvatarRightTap,
+                        highlight: controller.currentIndex.value == index,
+                        contextMenuBuilder: controller.contextMenuBuilder,
+                        sendSuccessWidget: controller.isInit
+                            ? Text(
+                                controller.data[index].m.isRead == true ? '已读' : '未读',
+                                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                              )
+                            : null,
                       ),
                     ),
                   ),
