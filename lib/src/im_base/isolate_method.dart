@@ -61,9 +61,9 @@ class IsolateMethod {
 
   /// 获取唯一的文件路径
   static Future<String> _getUniqueFilePath(String filePath, String saveDir, {String? fileName}) async {
-    String name = fileName ?? basename(filePath);
+    String name = Utils.getValue(fileName, basename(filePath));
     String directory = saveDir;
-    String newFilePath = join(directory, fileName);
+    String newFilePath = join(directory, name);
     String ext = extension(name);
     String baseName = basenameWithoutExtension(name);
     int count = 1;

@@ -330,3 +330,21 @@ class ApplicationInfo {
   /// 已拒绝
   bool get isRejected => handleResult == -1;
 }
+
+// ignore_for_file: constant_identifier_names
+
+abstract class MultiWindowRoutes {
+  MultiWindowRoutes._();
+
+  /// 图片
+  static const PICTURE_PREVIEW = 'PICTURE_PREVIEW';
+
+  /// 视频
+  static const VIDEO_PREVIEW = 'VIDEO_PREVIEW';
+
+  /// 聊天记录
+  static const CHAT_RECORD = 'CHAT_RECORD';
+
+  /// 历史消息
+  static const HISTORY_MESSAGE = 'HISTORY_MESSAGE';
+}

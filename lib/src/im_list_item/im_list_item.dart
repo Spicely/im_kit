@@ -252,16 +252,11 @@ class ImListItem extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 50),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset('assets/icons/lock.png', width: 16, height: 16),
-                  const Expanded(
-                    child: Text(
-                      '消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                  Image.asset('assets/icons/lock.png', width: 16, height: 16, package: 'im_kit'),
+                  const Text('消息和通话记录都会进行端到端加密，任何人或者组织都无法读取或收听', style: TextStyle(fontSize: 12, color: Colors.grey), textAlign: TextAlign.center),
                 ],
               ),
             ),

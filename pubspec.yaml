@@ -21,7 +21,7 @@ dependencies:
   path:
   get:
   audioplayers:
-  record: ^5.0.1
+  record:
   image_gallery_saver:
   card_swiper: 
   image: 
@@ -43,9 +43,7 @@ dependencies:
   desktop_drop: 
   screen_capturer:
   url_launcher:
-  easy_refresh:
   pasteboard: 
-  scrollable_positioned_list:
   fluent_ui: 
   chinese_font_library:
   desktop_multi_window:

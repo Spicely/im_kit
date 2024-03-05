@@ -307,19 +307,12 @@ class ImCore {
 
   static String _playID = '';
 
-  static String? _uid;
-
   /// 临时缓存文件夹
   static String get tempPath => join(dirPath, 'Temp');
 
   static init(String path) {
     dirPath = path;
     Directory(tempPath).createSync(recursive: true);
-  }
-
-  /// 设置用户id
-  static void setUid(String? uid) {
-    _uid = uid;
   }
 
   /// 播放回调
