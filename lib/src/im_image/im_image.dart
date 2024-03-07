@@ -15,8 +15,6 @@ class ImImage extends ImBase {
     return Stack(
       children: [
         Hero(
-          /// 在桌面应该开启单独窗口 所以不需要Hero
-          key: Utils.isMobile ? message.ext.key : null,
           tag: ValueKey(msg.clientMsgID),
           child: getSelectableView(
             context,

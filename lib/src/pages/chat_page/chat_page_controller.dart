@@ -25,7 +25,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   late TabController tabController;
 
-  final List<ChatPageItem> tabs;
+  RxList<ChatPageItem> tabs = RxList([]);
 
   RxBool isDrop = false.obs;
 
@@ -107,11 +107,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   ChatPageController({
     required List<MessageExt> messages,
     ConversationInfo? conversation,
-    this.tabs = const [],
     this.isInit = true,
   }) {
     data = RxList(messages.reversed.toList());
-    if (data.length < loadNum) {
+    if (data.length < loadNum && isInit) {
       noMore.value = true;
       Utils.exceptionCapture(() async {
         MessageExt encryptedNotification = await Message(
@@ -182,18 +181,14 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   @override
-  void onWindowClose() {
-    OpenIMManager.unInitSDKPort();
-  }
-
-  @override
   void onInit() {
     OpenIMManager.addListener(this);
     windowManager.addListener(this);
-    textEditingController.addListener(_checkHistoryAction);
 
+    textEditingController.removeListener(_checkHistoryAction);
     ImCore.onPlayerStateChanged(onPlayerStateChanged);
     super.onInit();
+
     tabController = TabController(length: 1 + tabs.length, vsync: this);
     focusNode.addListener(() {
       if (focusNode.hasFocus) {
@@ -229,6 +224,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   @override
   void onReady() {
+    textEditingController.addListener(_checkHistoryAction);
     super.onReady();
     if (isInit) {
       getData();
@@ -348,6 +344,44 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
+  /// 自定义表情发送
+  Future<void> onDiyEmojiSend(Emoji emoji, int index, String locPath) async {
+    MessageExt? extMsg;
+    try {
+      /// 获取网址
+      Uri url = Uri.parse(emoji.sampleDiagramUrl!);
+      String path = '${emoji.emoticonsId}/${emoji.emojiList![index].name}';
+      Message newMsg = await OpenIM.iMManager.messageManager.createCustomMessage(
+        data: jsonEncode({
+          'emoticons_id': emoji.emoticonsId,
+          'emoticons_name': emoji.name,
+          'file_path': path,
+          'url': '${url.origin}/emoticons/$path',
+          'w': emoji.emojiList![index].w,
+          'h': emoji.emojiList![index].h,
+        }),
+        extension: '',
+        description: '',
+      );
+
+      newMsg.contentType = 300;
+      newMsg.pictureElem = PictureElem(sourcePath: locPath);
+      newMsg.file = File(locPath);
+
+      extMsg = await newMsg.toExt();
+      data.insert(0, extMsg);
+      extMsg = await sendMessageNotOss(extMsg);
+      extMsg.m.pictureElem = PictureElem(sourcePath: locPath);
+      updateMessage(extMsg);
+    } catch (e) {
+      if (extMsg != null) {
+        /// 发送失败 修改状态
+        extMsg.m.status = MessageStatus.failed;
+        updateMessage(extMsg);
+      }
+    }
+  }
+
   Future<void> _copyClipboard2Text() async {
     Uint8List? imageBytes = await Pasteboard.image;
     if (imageBytes != null) {
@@ -396,17 +430,23 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   void _checkHistoryAction() {
     hasInput.value = textEditingController.text.isNotEmpty;
-    if (textEditingController.text.isNotEmpty || textEditingController.text.trim().isNotEmpty) {
-      if (textEditingController.text.length == historyText.length + 1 && isGroupChat) {
-        /// 获取光标位置
-        int index = textEditingController.selection.baseOffset;
+    if (textEditingController.text.length == historyText.length + 1 && isGroupChat) {
+      /// 获取光标位置
+      int index = textEditingController.selection.baseOffset;
 
-        /// 光标前一个字符 == @
-        if (textEditingController.text[index - 1] == '@') {
-          onAtTriggerCallback();
-        }
+      /// 光标前一个字符 == @
+      if (textEditingController.text[index - 1] == '@') {
+        onAtTriggerCallback();
       }
+    }
 
+    /// 判断是不是只少了一个@
+
+    if ('${textEditingController.text}@' == historyText && isGroupChat) {
+      onCancelAt();
+    }
+
+    if (textEditingController.text.isNotEmpty || textEditingController.text.trim().isNotEmpty) {
       /// 对比历史记录 当输入内容比历史记录少@10004467 10004467为userID时触发删除@事件
       if (historyText.length > textEditingController.text.length && isGroupChat) {
         for (var key in atUserMap) {
@@ -422,6 +462,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
     historyText = textEditingController.text;
   }
+
+  /// 取消@
+  void onCancelAt() {}
 
   /// 标记已读消息
   Future<void> markMessageAsRead(List<MessageExt> messages) async {
@@ -520,7 +563,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void onClose() {
     OpenIMManager.removeListener(this);
     windowManager.removeListener(this);
-    textEditingController.removeListener(_checkHistoryAction);
     for (var i in data) {
       if (i.ext.isPrivateChat) {
         OpenIM.iMManager.messageManager.deleteMessageFromLocalAndSvr(message: i.m);
@@ -564,7 +606,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       downFile(extMsg);
     }
     if (conversationInfo.value != null && extMsg.ext.isBothDelete) {
-      OpenIM.iMManager.conversationManager.getOneConversation(sourceID: Utils.getValue(msg.groupID, msg.sendID == OpenIM.iMManager.uid ? msg.recvID : msg.sendID)!, sessionType: msg.groupID == null ? ConversationType.single : ConversationType.group).then((c) {
+      OpenIM.iMManager.conversationManager
+          .getOneConversation(sourceID: Utils.getValue(msg.groupID, msg.sendID == OpenIM.iMManager.uid ? msg.recvID : msg.sendID)!, sessionType: msg.groupID == null ? ConversationType.single : ConversationType.group)
+          .then((c) {
         if (c.conversationID == conversationInfo.value!.conversationID) {
           doubleCleanMessage(extMsg);
         }
@@ -779,7 +823,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         Message msg;
 
         /// 判断是不是图片
-        if (['png', 'jpg', 'jpeg', 'gif', 'bmp'].contains(suffix)) {
+        if (['png', 'jpg', 'jpeg', 'gif'].contains(suffix)) {
           msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: file.path);
         }
 
@@ -791,7 +835,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
         }
-        if (Utils.getValue(msg.fileElem?.fileSize ?? msg.videoElem?.videoSize ?? msg.pictureElem?.sourcePicture?.size ?? msg.pictureElem?.sourcePicture?.size, 0) == 0) {
+        if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
           MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
           return;
         }
@@ -945,6 +989,20 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
+  int getIntValue(
+    int? value, [
+    int? defValue1,
+    int? defValue2,
+    int? defValue3,
+    int? defValue4,
+    int? defValue5,
+    int? defValue6,
+  ]) {
+    List<int?> defValues = [value, defValue1, defValue2, defValue3, defValue4, defValue5, defValue6];
+    int? defValue = defValues.firstWhere((v) => v != null && v != 0, orElse: () => null);
+    return defValue ?? 0;
+  }
+
   /// 发送文件
   Future<void> onSendFiles() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles();
@@ -958,7 +1016,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           Message msg;
 
           /// 判断是不是图片
-          if (['png', 'jpg', 'jpeg', 'gif', 'bmp'].contains(suffix)) {
+          if (['png', 'jpg', 'jpeg', 'gif'].contains(suffix)) {
             msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: file.path!);
           }
 
@@ -970,7 +1028,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
           }
-          if (Utils.getValue(msg.fileElem?.fileSize ?? msg.videoElem?.videoSize ?? msg.pictureElem?.sourcePicture?.size ?? msg.pictureElem?.sourcePicture?.size, 0) == 0) {
+          if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
             MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
             return;
           }
@@ -1002,26 +1060,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
     /// 获取所有图片
     List<MessageExt> messages = data.where((v) => v.m.contentType == MessageType.picture).toList();
-    if (Utils.isDesktop) {
-      Utils.exceptionCapture(() async {
-        WindowController window = await DesktopMultiWindow.createWindow(jsonEncode({
-          'route': MultiWindowRoutes.PICTURE_PREVIEW,
-          'params': messages.map((e) => e.toJson()).toList(),
-          'current': extMsg.toJson(),
-          'random': const Uuid().v4(),
-        }));
-        window
-          ..setFrame(const Offset(0, 0) & const Size(580, 760))
-          ..center()
-          ..setTitle('图片预览')
-          ..show();
-      });
-    } else {
-      Get.to(
-        () => ImPreview(messages: messages, currentMessage: extMsg),
-        transition: Transition.fadeIn,
-      );
-    }
+    Get.to(
+      () => ImPreview(messages: messages, currentMessage: extMsg),
+      transition: Transition.fadeIn,
+    );
   }
 
   /// 设置草稿
@@ -1038,24 +1080,48 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 合并消息点击事件
   void onMergerTap(MessageExt extMsg) {
     Utils.exceptionCapture(() async {
-      if (Utils.isMobile) {
-        List<MessageExt> messages = await Future.wait((extMsg.m.mergeElem?.multiMessage ?? []).map((e) => e.toExt()).toList());
-        ChatPageController chatPageController = ChatPageController(messages: messages.reversed.toList());
-        Get.to(() => ChatPage(controller: chatPageController));
-      } else {
-        WindowController window = await DesktopMultiWindow.createWindow(jsonEncode({
-          'route': MultiWindowRoutes.CHAT_RECORD,
-          'userInfo': OpenIM.iMManager.uInfo?.toJson(),
-          'params': extMsg.toJson(),
-          'conversationInfo': conversationInfo.value?.toJson(),
-        }));
-        window
-          ..setFrame(const Offset(0, 0) & const Size(840, 900))
-          ..setTitle(extMsg.m.mergeElem?.title ?? '')
-          ..center()
-          ..show();
-      }
+      List<MessageExt> messages = await Future.wait((extMsg.m.mergeElem?.multiMessage ?? []).map((e) => e.toExt()).toList());
+      ChatPageController chatPageController = ChatPageController(messages: messages.reversed.toList());
+      Get.to(() => ChatPage(controller: chatPageController));
     });
+  }
+
+  /// 发送消息不上传到OSS
+  Future<MessageExt> sendMessageNotOss(MessageExt msg, {String? userId, String? groupId}) async {
+    if (conversationInfo.value != null && Utils.isNotEmpty(conversationInfo.value?.draftText)) {
+      setConversationDraft('');
+    }
+    // ignore: non_constant_identifier_names
+    String? u_id;
+    // ignore: non_constant_identifier_names
+    String? g_id;
+    if (Utils.isNotEmpty(userId) || Utils.isNotEmpty(groupId)) {
+      u_id = userId;
+      g_id = groupId;
+    } else {
+      u_id = uId;
+      g_id = gId;
+    }
+    try {
+      Message newMsg = await OpenIM.iMManager.messageManager.sendMessageNotOss(
+        message: msg.m,
+        userID: u_id,
+        groupID: g_id,
+        offlinePushInfo: OfflinePushInfo(title: '新的未读消息'),
+      );
+      MessageExt extMsg = await newMsg.toExt();
+      extMsg.m.status = MessageStatus.succeeded;
+      updateMessage(extMsg);
+      downFile(extMsg);
+      return extMsg;
+    } catch (e) {
+      msg.m.status = MessageStatus.failed;
+      updateMessage(msg);
+      if (e is OpenIMError) {
+        onSendMessageFailed(e.code);
+      }
+      return msg;
+    }
   }
 
   /// 发送消息统一入口
@@ -1326,27 +1392,23 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void onForwardMessage(MessageExt extMsg) {}
 
   Future<void> onLoad() async {
+    if (noMore.value) return;
     if (conversationInfo.value == null) return;
-    if (noMore.value) {
-      return;
-    }
     noMore.value = true;
-    AdvancedMessage advancedMessage = await OpenIM.iMManager.messageManager.getAdvancedHistoryMessageList(
+    List<Message> list = await OpenIM.iMManager.messageManager.getHistoryMessageList(
       conversationID: conversationInfo.value?.conversationID,
       count: loadNum,
       startMsg: data.last.m,
     );
-
-    List<MessageExt> newExts = await Future.wait(advancedMessage.messageList.reversed.map((e) => e.toExt()));
+    List<MessageExt> newExts = await Future.wait(list.reversed.map((e) => e.toExt()));
     data.addAll(newExts);
-    if (advancedMessage.messageList.length < loadNum) {
+
+    if (list.length < loadNum) {
       MessageExt encryptedNotification = await Message(
         contentType: MessageType.encryptedNotification,
-        createTime: advancedMessage.messageList.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
+        createTime: list.isEmpty ? DateTime.now().millisecondsSinceEpoch : data.last.m.createTime,
       ).toExt();
       data.add(encryptedNotification);
-    }
-    if (advancedMessage.messageList.length < loadNum) {
       noMore.value = true;
     } else {
       noMore.value = false;
@@ -1465,11 +1527,12 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 退出群聊
-  void quitGroup() {
+  void quitGroup({Function? onSuccess}) {
     if (conversationInfo.value == null) return;
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.groupManager.quitGroup(gid: gId!);
       await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversationInfo.value!.conversationID);
+      onSuccess?.call();
     });
   }
 

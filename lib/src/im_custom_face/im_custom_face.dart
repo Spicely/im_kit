@@ -6,15 +6,19 @@ class ImCustomFace extends ImBase {
     required super.isMe,
     required super.message,
     required super.showSelect,
+    super.contextMenuBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CachedImage(
-      file: ext.file,
-      width: message.ext.width,
-      height: message.ext.height,
-      fit: BoxFit.cover,
+    return getSelectableView(
+      context,
+      CachedImage(
+        file: ext.file,
+        width: message.ext.width,
+        height: message.ext.height,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }

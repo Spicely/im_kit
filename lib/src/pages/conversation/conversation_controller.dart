@@ -208,7 +208,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   @override
   void onGroupApplicationAccepted(GroupApplicationInfo info) {
     int index = groupList.indexWhere((v) => v.groupID == info.groupID);
-    if (index != -1) {
+    if (index == -1) {
       Utils.exceptionCapture(() async {
         List<GroupInfo> groups = await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!]);
         if (groups.isNotEmpty) {
@@ -331,6 +331,11 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     if (index != -1) {
       groupList[index] = info;
     }
+  }
+
+  @override
+  void onJoinedGroupDeleted(GroupInfo info) {
+    groupList.removeWhere((v) => v.groupID == info.groupID);
   }
 
   void onTapDown(TapDownDetails dragDownDetails, ConversationInfo info) {
