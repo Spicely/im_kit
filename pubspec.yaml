@@ -46,7 +46,6 @@ dependencies:
   pasteboard: 
   fluent_ui: 
   chinese_font_library:
-  desktop_multi_window:
   window_manager:
 
 dev_dependencies:

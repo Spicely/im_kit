@@ -65,6 +65,42 @@ class _ImPreviewState extends State<ImPreview> {
             itemCount: messages.length,
             onPageChanged: onPageChanged,
           ),
+          Positioned(
+            // 假设子widget宽度为50
+            left: 25,
+            top: (MediaQuery.of(context).size.height - 50) / 2,
+            // width: 32,
+            // height: 32,
+            child: GestureDetector(
+              child: Image.asset('assets/icons/pre_image.png', width: 32, height: 32, package: 'im_kit'),
+              onTap: () {
+                // 按钮点击时的处理逻辑
+                // print('pre_image');
+                // pageController.nextPage(duration: duration, curve: curve)
+                print('page:${pageController.page}');
+                if (currentIndex != 0.0) {
+                  print('page:${pageController.page}');
+                  pageController.previousPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
+                }
+              },
+            ),
+          ),
+          Positioned(
+            right: 25,
+            top: (MediaQuery.of(context).size.height - 50) / 2,
+            child: GestureDetector(
+              child: Image.asset('assets/icons/next_image.png', width: 32, height: 32, package: 'im_kit'),
+              onTap: () {
+                // 按钮点击时的处理逻辑
+                pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
+                // print('page:${pageController.page} total:${currentIndex}');
+                // if (currentIndex == messages.length - 1) {
+                //   pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
+                //   print('next_image');
+                // }
+              },
+            ),
+          ),
           if (!Utils.isDesktop) _buildBackBtn(),
           Positioned(
             bottom: 80,

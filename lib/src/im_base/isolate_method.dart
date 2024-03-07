@@ -173,8 +173,8 @@ class IsolateMethod {
     /// 检测表情包是否存在
     final data = msg.data;
 
-    final url = data['url'];
-    final path = data['path'];
+    String url = data['url'];
+    String path = data['path'];
     String savePath = '${ImCore.dirPath}/$path';
     String fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
 

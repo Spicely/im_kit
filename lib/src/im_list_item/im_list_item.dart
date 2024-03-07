@@ -183,14 +183,20 @@ class ImListItem extends StatelessWidget {
                       shape: const CircleBorder(),
                       side: BorderSide(
                         width: 1.2,
-                        color: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope ? const Color.fromRGBO(175, 175, 175, 0.2) : const Color.fromRGBO(175, 175, 175, 1),
+                        color: message.m.contentType == MessageType.merger
+                            ? Colors.grey.withOpacity(0.3)
+                            : message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
+                                ? const Color.fromRGBO(175, 175, 175, 0.2)
+                                : const Color.fromRGBO(175, 175, 175, 1),
                       ),
                       fillColor: MaterialStateProperty.resolveWith((states) => states.contains(MaterialState.selected) ? Theme.of(context).primaryColor : Colors.transparent),
-                      onChanged: message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
+                      onChanged: message.m.contentType == MessageType.merger
                           ? null
-                          : (value) {
-                              onMessageSelect?.call(message, !selected);
-                            },
+                          : message.m.status != MessageStatus.succeeded || message.ext.isVoice || message.ext.isRedEnvelope
+                              ? null
+                              : (value) {
+                                  onMessageSelect?.call(message, !selected);
+                                },
                     ),
                     const SizedBox(width: 20),
                   ],
@@ -542,6 +548,7 @@ class ImListItem extends StatelessWidget {
           message: message,
           showSelect: showSelect,
           isMe: isMe,
+          contextMenuBuilder: contextMenuBuilder,
         );
       default:
         return const Text('暂不支持的消息');
