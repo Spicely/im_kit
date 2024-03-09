@@ -115,6 +115,7 @@ class ChatPage extends StatelessWidget {
                           onAvatarRightTap: controller.onAvatarRightTap,
                           highlight: controller.currentIndex.value == index,
                           contextMenuBuilder: controller.contextMenuBuilder,
+                          contextTextMenuBuilder: controller.contextTextMenuBuilder,
                           sendSuccessWidget: controller.isInit
                               ? Text(
                                   controller.data[index].m.isRead == true ? '已读' : '未读',
@@ -290,10 +291,9 @@ class ChatPage extends StatelessWidget {
                                     ? language.personalMutedNotification
                                     : chatTheme.textFieldTheme.hintText,
                           ),
-                          specialTextSpanBuilder: ExtendSpecialTextSpanBuilder(
+                          specialTextSpanBuilder: ImExtendTextBuilder(
                             allAtMap: controller.atUserMap,
                             quoteMessage: controller.quoteMessage.value?.m,
-                            groupMembersInfo: controller.groupMembers,
                           ),
                         ),
                       ),

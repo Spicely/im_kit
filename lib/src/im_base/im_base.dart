@@ -55,6 +55,9 @@ class ImBase extends StatelessWidget {
   // 双击点击消息体
   final void Function(MessageExt message)? onDoubleTap;
 
+  /// 位置信息点击
+  final void Function(MessageExt message)? onLocationTap;
+
   final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
 
   Widget getSelectableView(BuildContext context, Widget child) {
@@ -76,28 +79,37 @@ class ImBase extends StatelessWidget {
       constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
       child: SelectableText.rich(
         onTap: () {
-          onTap?.call(message);
+          switch (message.m.contentType) {
+            case MessageType.location:
+              onLocationTap?.call(message);
+              break;
+            default:
+              onTap?.call(message);
+          }
         },
         TextSpan(
           children: [
             WidgetSpan(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: showBackground
-                      ? ImCore.noBgMsgType.contains(msg.contentType)
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: showBackground
+                        ? ImCore.noBgMsgType.contains(msg.contentType)
+                            ? null
+                            : isMe
+                                ? chatTheme.messageTheme.meBackgroundColor
+                                : chatTheme.messageTheme.backgroundColor
+                        : Colors.grey.withOpacity(0.1),
+                    borderRadius: chatTheme.messageTheme.borderRadius,
+                  ),
+                  padding: showBackground
+                      ? ImCore.noPadMsgType.contains(msg.contentType)
                           ? null
-                          : isMe
-                              ? chatTheme.messageTheme.meBackgroundColor
-                              : chatTheme.messageTheme.backgroundColor
-                      : Colors.grey.withOpacity(0.1),
-                  borderRadius: chatTheme.messageTheme.borderRadius,
+                          : chatTheme.messageTheme.padding
+                      : null,
+                  child: child,
                 ),
-                padding: showBackground
-                    ? ImCore.noPadMsgType.contains(msg.contentType)
-                        ? null
-                        : chatTheme.messageTheme.padding
-                    : null,
-                child: child,
               ),
             ),
           ],
@@ -132,6 +144,7 @@ class ImBase extends StatelessWidget {
     this.contextMenuBuilder,
     this.onDoubleTap,
     this.showBackground = true,
+    this.onLocationTap,
   });
 
   @override

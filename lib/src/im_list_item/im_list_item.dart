@@ -116,6 +116,8 @@ class ImListItem extends StatelessWidget {
 
   final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
 
+  final Widget Function(BuildContext, MessageExt, SelectableRegionState)? contextTextMenuBuilder;
+
   /// 是否显示通知类消息
   final bool showNotification;
 
@@ -162,6 +164,7 @@ class ImListItem extends StatelessWidget {
     this.contextMenuBuilder,
     this.showNotification = true,
     this.onReEditTap,
+    this.contextTextMenuBuilder,
   });
 
   @override
@@ -407,6 +410,7 @@ class ImListItem extends StatelessWidget {
                                       onVoiceTap: onVoiceTap,
                                       contextMenuBuilder: contextMenuBuilder,
                                       onDoubleTap: onDoubleTapFile,
+                                      onLocationTap: onLocationTap,
                                     ),
                                   ),
                               ],
@@ -475,7 +479,7 @@ class ImListItem extends StatelessWidget {
           onTapUrl: onTapUrl,
           onTapPhone: onTapPhone,
           onAtTap: onAtTap,
-          contextMenuBuilder: contextMenuBuilder,
+          contextTextMenuBuilder: contextTextMenuBuilder,
         );
       case MessageType.picture:
         return ImImage(
@@ -550,7 +554,7 @@ class ImListItem extends StatelessWidget {
           message: message,
           showSelect: showSelect,
           isMe: isMe,
-          onTap: onLocationTap,
+          onLocationTap: onLocationTap,
           contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.merger:

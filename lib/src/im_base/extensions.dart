@@ -2,7 +2,7 @@ part of im_kit;
 
 extension ExtensionAdvancedMessage on AdvancedMessage {
   Future<List<MessageExt>> toExt() async {
-    return Future.wait((messageList ?? []).map((e) => e.toExt()));
+    return Future.wait(messageList.map((e) => e.toExt()));
   }
 }
 

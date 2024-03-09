@@ -139,6 +139,16 @@ TextSpan _getRedEnvelope(MessageExt extMsg, Map<String, dynamic> detail, {Color?
 
 TextSpan _getAtText(Message msg) {
   String v = msg.atElem?.text ?? msg.content ?? '';
+
+  /// 使用正则匹配 例子 @1231#cc @qeq#大区 输出 @cc @大区
+  v = v.replaceAllMapped(RegExp(r'@(\S+)#(\S+)'), (Match match) {
+    return '@${match.group(2)}';
+  });
+
+  /// 匹配[file:/xxx] 输出图片
+  v = v.replaceAllMapped(RegExp(r"\[file:[^\]]+\]"), (Match match) {
+    return '[图片]';
+  });
   List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
 
   List<ImAtTextType> list = [];
@@ -162,7 +172,7 @@ TextSpan _getAtText(Message msg) {
         String emoji = ImCore.emojiFaces[value]!;
         list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
       } else if (RegExp(atReg).hasMatch(value)) {
-        String id = value.replaceAll('@', '').trim();
+        String id = value.split('#').first.replaceFirst('@', '').trim();
         AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
         if (atUserInfo == null) {
           list.add(ImAtTextType(type: ImAtType.text, text: value));

@@ -13,6 +13,7 @@ class ImQuoteItem extends ImBase {
     super.contextMenuBuilder,
     super.onDoubleTap,
     this.onVoiceTap,
+    super.onLocationTap,
   });
 
   MessageExt get quoteMsg => message.ext.quoteMessage!
@@ -44,11 +45,16 @@ class ImQuoteItem extends ImBase {
                 child: getQuoteContent(context),
               ),
               if (quoteMsg.m.contentType == MessageType.location)
-                Row(
-                  children: [
-                    const SizedBox(width: 4),
-                    CachedImage(imageUrl: message.ext.data?['url'] ?? '', height: 30, width: 30, circular: 2, fit: BoxFit.cover),
-                  ],
+                GestureDetector(
+                  onTap: () {
+                    onLocationTap?.call(quoteMsg);
+                  },
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 4),
+                      CachedImage(imageUrl: quoteMsg.ext.data?['url'] ?? '', height: 30, width: 30, circular: 2, fit: BoxFit.cover),
+                    ],
+                  ),
                 ),
               if (quoteMsg.m.contentType == MessageType.card)
                 Row(

@@ -137,17 +137,31 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     blackList.value = await OpenIM.iMManager.friendshipManager.getBlacklist();
     List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getRecvFriendApplicationList();
     List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
+
+    friendApplicationList = await FriendListRemoveDuplicateData(friendApplicationList);
+    groupApplication = await groupListRemoveDuplicateData(groupApplication);
+
     applicationList.addAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
     applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
+    getApplicationList();
+  }
 
-    /// 依据reqTime排序
-    applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
-    applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
+  void getApplicationList() {
+    Utils.exceptionCapture(() async {
+      List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getRecvFriendApplicationList();
+      List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
+      applicationList.assignAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
+      applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
 
-    friendList.value = await OpenIM.iMManager.friendshipManager.getFriendList();
-    groupList.value = await OpenIM.iMManager.groupManager.getJoinedGroupList();
+      /// 依据reqTime排序
+      applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
+      applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
 
-    OpenIM.iMManager.conversationManager.simpleSort(data);
+      friendList.value = await OpenIM.iMManager.friendshipManager.getFriendList();
+      groupList.value = await OpenIM.iMManager.groupManager.getJoinedGroupList();
+
+      OpenIM.iMManager.conversationManager.simpleSort(data);
+    });
   }
 
   /// 跳转到聊天页面
@@ -189,33 +203,22 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   @override
   void onFriendApplicationAdded(FriendApplicationInfo u) {
-    applicationList.insert(0, u.toApplicationInfo());
+    getApplicationList();
   }
 
   @override
   void onJoinedGroupAdded(GroupInfo info) {
-    int index = groupList.indexWhere((v) => v.groupID == info.groupID);
-    if (index != -1) {
-      groupList.add(info);
-    }
+    getApplicationList();
   }
 
   @override
   void onGroupApplicationAdded(GroupApplicationInfo info) {
-    applicationList.insert(0, info.toApplicationInfo());
+    getApplicationList();
   }
 
   @override
   void onGroupApplicationAccepted(GroupApplicationInfo info) {
-    int index = groupList.indexWhere((v) => v.groupID == info.groupID);
-    if (index == -1) {
-      Utils.exceptionCapture(() async {
-        List<GroupInfo> groups = await OpenIM.iMManager.groupManager.getGroupsInfo(gidList: [info.groupID!]);
-        if (groups.isNotEmpty) {
-          groupList.add(groups.first);
-        }
-      });
-    }
+    getApplicationList();
   }
 
   @override
@@ -387,5 +390,33 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   /// 免打扰
   Future<void> setConversationRecvMessageOpt(ConversationInfo conversation, int status) async {
     await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
+  }
+
+  Future<List<FriendApplicationInfo>> FriendListRemoveDuplicateData(List<FriendApplicationInfo> list) async {
+    var len = list.length;
+    for (var i = 0; i < len; i++) {
+      for (var j = i + 1; j < len; j++) {
+        if (list[i].fromUserID == list[j].fromUserID && list[i].handleResult == list[j].handleResult) {
+          list.removeAt(i);
+          len--;
+          i--;
+        }
+      }
+    }
+    return list;
+  }
+
+  Future<List<GroupApplicationInfo>> groupListRemoveDuplicateData(List<GroupApplicationInfo> list) async {
+    var len = list.length;
+    for (var i = 0; i < len; i++) {
+      for (var j = i + 1; j < len; j++) {
+        if (list[i].userID == list[j].userID && list[i].handleResult == list[j].handleResult) {
+          list.removeAt(i);
+          len--;
+          i--;
+        }
+      }
+    }
+    return list;
   }
 }

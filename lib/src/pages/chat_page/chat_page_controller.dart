@@ -73,11 +73,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   bool get isCanSpeak => !isMuteUser.value || !isMute.value || isCanAdmin;
 
   /// 不允许通过群获取成员资料
-  bool get lookMemberInfo => isSingleChat
-      ? false
-      : isCanAdmin
-          ? false
-          : groupInfo.value?.lookMemberInfo == 1;
+  bool get lookMemberInfo => isSingleChat ? false : groupInfo.value?.lookMemberInfo == 1;
 
   /// 群id
   String? get gId => Utils.getValue<String?>(conversationInfo.value?.groupID, null);
@@ -159,7 +155,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   final List<int> _types = [1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1514, 1515, 1201, 1202, 1203, 1204, 1205, 27, 77, 1512, 1513, 2023, 2024, 2025, 1701];
 
   /// at用户映射表
-  RxList<GroupMembersInfo> atUserMap = RxList<GroupMembersInfo>([]);
+  RxList<AtUserInfo> atUserMap = RxList<AtUserInfo>([]);
 
   final ITextEditingController search = ITextEditingController();
 
@@ -237,6 +233,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
     if (Utils.isNotEmpty(conversationInfo.value?.draftText)) {
       textEditingController.text = conversationInfo.value?.draftText ?? '';
+      if (textEditingController.text.contains('@-1#所有人')) {
+        atUserMap.add(AtUserInfo(atUserID: '-1', groupNickname: '所有人'));
+      }
     }
   }
 
@@ -366,9 +365,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
       newMsg.contentType = 300;
       newMsg.pictureElem = PictureElem(sourcePath: locPath);
-      newMsg.file = File(locPath);
 
       extMsg = await newMsg.toExt();
+      extMsg.ext.file = File(locPath);
       data.insert(0, extMsg);
       extMsg = await sendMessageNotOss(extMsg);
       extMsg.m.pictureElem = PictureElem(sourcePath: locPath);
@@ -392,7 +391,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   void onAtDeleteCallback(String id) {
-    atUserMap.removeWhere((v) => v.userID == id);
+    atUserMap.removeWhere((v) => v.atUserID == id);
   }
 
   Future<void> getData() async {
@@ -402,6 +401,26 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       groupMembers.value = await OpenIM.iMManager.groupManager.getGroupMemberList(groupId: groupID!);
       if (groupInfo.value?.status == 3) {
         isMute.value = true;
+      }
+      if (conversationInfo.value?.draftText != null) {
+        String draftText = conversationInfo.value?.draftText ?? '';
+
+        /// 使用正则匹配 例子 @1231#cc @qeq#大区 输出 [1231,qeq]
+        var regexAt = groupMembers.map((e) => '@${e.userID} ').toList().join('|');
+        draftText.splitMapJoin(
+          RegExp(regexAt),
+          onMatch: (Match m) {
+            String value = m.group(0)!;
+            String id = value.split('#').first.replaceFirst('@', '').trim();
+            for (var i in groupMembers) {
+              if (i.userID == id) {
+                addAtUserMap(AtUserInfo(atUserID: id, groupNickname: i.nickname));
+                break;
+              }
+            }
+            return '';
+          },
+        );
       }
       isMuteUser.value = userIsMuted(gInfo?.muteEndTime ?? 0);
 
@@ -450,11 +469,11 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       /// 对比历史记录 当输入内容比历史记录少@10004467 10004467为userID时触发删除@事件
       if (historyText.length > textEditingController.text.length && isGroupChat) {
         for (var key in atUserMap) {
-          GroupMembersInfo? v = key;
+          AtUserInfo? v = key;
 
-          if (!textEditingController.text.contains('@${v.userID} ')) {
+          if (!textEditingController.text.contains('@${v.atUserID} ')) {
             /// 跳出循环
-            onAtDeleteCallback(key.userID!);
+            onAtDeleteCallback(key.atUserID!);
             break;
           }
         }
@@ -501,8 +520,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// @触发事件
   void onAtTriggerCallback() async {}
 
-  void addAtUserMap(GroupMembersInfo info) {
-    int index = atUserMap.indexWhere((v) => v.userID == info.userID);
+  void addAtUserMap(AtUserInfo info) {
+    int index = atUserMap.indexWhere((v) => v.atUserID == info.atUserID);
     if (index == -1) {
       atUserMap.add(info);
     }
@@ -564,7 +583,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     OpenIMManager.removeListener(this);
     windowManager.removeListener(this);
     for (var i in data) {
-      if (i.ext.isPrivateChat) {
+      if (i.ext.isPrivateChat && i.m.isRead!) {
         OpenIM.iMManager.messageManager.deleteMessageFromLocalAndSvr(message: i.m);
       }
     }
@@ -606,9 +625,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       downFile(extMsg);
     }
     if (conversationInfo.value != null && extMsg.ext.isBothDelete) {
-      OpenIM.iMManager.conversationManager
-          .getOneConversation(sourceID: Utils.getValue(msg.groupID, msg.sendID == OpenIM.iMManager.uid ? msg.recvID : msg.sendID)!, sessionType: msg.groupID == null ? ConversationType.single : ConversationType.group)
-          .then((c) {
+      OpenIM.iMManager.conversationManager.getOneConversation(sourceID: Utils.getValue(msg.groupID, msg.sendID == OpenIM.iMManager.uid ? msg.recvID : msg.sendID)!, sessionType: msg.groupID == null ? ConversationType.single : ConversationType.group).then((c) {
         if (c.conversationID == conversationInfo.value!.conversationID) {
           doubleCleanMessage(extMsg);
         }
@@ -715,6 +732,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   @override
   void onGroupMemberDeleted(GroupMembersInfo info) {
     groupMembers.removeWhere((v) => v.userID == info.userID);
+    showGroupMembers.removeWhere((element) => element.userID == info.userID);
   }
 
   @override
@@ -1145,6 +1163,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       u_id = uId;
       g_id = gId;
     }
+
     try {
       Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
         message: msg.m,
@@ -1274,10 +1293,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       );
 
       if (value.isNotEmpty) {
-        /// 创建@消息
-        List<AtUserInfo> list = atUserMap.map((v) => AtUserInfo(atUserID: v.userID, groupNickname: v.nickname)).toList();
         if (atUserMap.isNotEmpty) {
-          message = await createTextAtMessage(list, value, quoteMessage: quoteMsg?.m);
+          message = await createTextAtMessage(atUserMap, value, quoteMessage: quoteMsg?.m);
         } else if (quoteMsg != null) {
           message = await createQuoteMessage(value, quoteMsg.m);
         } else {
@@ -1656,7 +1673,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     try {
       message.m.status = MessageStatus.sending;
       await updateMessage(message);
-      message = await sendMessage(message);
+      message = await sendMessage(message, text: message.m.atElem?.text ?? message.m.content);
 
       updateMessage(message);
     } catch (e) {
@@ -1712,6 +1729,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   Widget contextMenuBuilder(BuildContext context, MessageExt extMsg, EditableTextState state) {
+    return Container();
+  }
+
+  Widget contextTextMenuBuilder(BuildContext context, MessageExt extMsg, SelectableRegionState state) {
     return Container();
   }
 

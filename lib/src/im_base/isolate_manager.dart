@@ -326,75 +326,77 @@ class ImKitIsolateManager {
         case MessageType.quote:
           {
             String v = msg.atElem?.text ?? msg.atElem?.text ?? msg.quoteElem?.text ?? msg.content ?? '';
-
-            List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
-
-            List<ImAtTextType> list = [];
-
-            /// 匹配艾特用户
-            String atReg = atUsersInfo.map((v) => '@${v.atUserID} ').join('|');
-            var regexEmoji = ImCore.emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
-
-            /// 匹配电话号码
-            String phoneReg = r"\b\d{5,}\b";
-
-            /// 匹配网址
-            String urlRge = r'(((http(s)?:\/\/(www\.)?)|(www\.))([-a-zA-Z0-9@:;_\+.%#?&\/=]*))|([-a-zA-Z@:;_\+.%#?&\/=]{2,}\.((com)|(cn)))/g';
-
-            /// 匹配邮箱
-            String email = r"\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b";
-
-            String regExp;
-            if (atUsersInfo.isEmpty) {
-              regExp = [regexEmoji, urlRge, phoneReg, email].join('|');
-            } else {
-              regExp = [regexEmoji, urlRge, atReg, phoneReg, email].join('|');
-            }
-            v.splitMapJoin(
-              RegExp('($regExp)'),
-              onMatch: (Match m) {
-                String value = m.group(0)!;
-                if (RegExp(regexEmoji).hasMatch(value)) {
-                  String emoji = ImCore.emojiFaces[value]!;
-                  list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
-                } else if (RegExp(email).hasMatch(value)) {
-                  list.add(ImAtTextType(type: ImAtType.email, text: value));
-                } else if (RegExp(atReg).hasMatch(value) && atUsersInfo.isNotEmpty) {
-                  String id = value.replaceAll('@', '').trim();
-
-                  AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
-                  if (atUserInfo == null) {
-                    if (RegExp(phoneReg).hasMatch(value)) {
-                      list.add(ImAtTextType(type: ImAtType.phone, text: value));
-                    } else {
-                      list.add(ImAtTextType(type: ImAtType.text, text: value));
-                    }
-                  } else {
-                    if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
-                      list.add(ImAtTextType(type: ImAtType.at, text: '@你 ', userInfo: atUserInfo));
-                    } else {
-                      list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
-                    }
-                  }
-                } else if (RegExp(urlRge).hasMatch(value)) {
-                  list.add(ImAtTextType(type: ImAtType.url, text: value));
-                } else if (RegExp(phoneReg).hasMatch(value)) {
-                  list.add(ImAtTextType(type: ImAtType.phone, text: value));
-                }
-                return '';
-              },
-              onNonMatch: (String n) {
-                list.add(ImAtTextType(type: ImAtType.text, text: n));
-                return '';
-              },
-            );
+            ext.data = v;
             if (msg.contentType == MessageType.quote || (msg.contentType == MessageType.at_text && msg.atElem?.quoteMessage != null)) {
               Message? quoteMsg = msg.quoteElem?.quoteMessage ?? msg.atElem?.quoteMessage;
               if (quoteMsg != null) {
                 ext.quoteMessage = await toMessageExt(quoteMsg);
               }
             }
-            ext.data = list;
+
+            // List<AtUserInfo> atUsersInfo = msg.atElem?.atUsersInfo ?? [];
+
+            // List<ImAtTextType> list = [];
+
+            // /// 匹配艾特用户
+            // String atReg = atUsersInfo.map((v) => '@${v.atUserID}#${v.groupNickname} ').join('|');
+            // var regexEmoji = ImCore.emojiFaces.keys.toList().map((e) => RegExp.escape(e)).join('|');
+
+            // /// 匹配电话号码
+            // String phoneReg = r"\b\d{5,}\b";
+
+            // /// 匹配网址
+            // String urlRge = r'(((http(s)?:\/\/(www\.)?)|(www\.))([-a-zA-Z0-9@:;_\+.%#?&\/=]*))|([-a-zA-Z@:;_\+.%#?&\/=]{2,}\.((com)|(cn)))/g';
+
+            // /// 匹配邮箱
+            // String email = r"\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b";
+
+            // String regExp;
+            // if (atUsersInfo.isEmpty) {
+            //   regExp = [regexEmoji, urlRge, phoneReg, email].join('|');
+            // } else {
+            //   regExp = [regexEmoji, urlRge, atReg, phoneReg, email].join('|');
+            // }
+            // v.splitMapJoin(
+            //   RegExp('($regExp)'),
+            //   onMatch: (Match m) {
+            //     String value = m.group(0)!;
+            //     if (RegExp(regexEmoji).hasMatch(value)) {
+            //       String emoji = ImCore.emojiFaces[value]!;
+            //       list.add(ImAtTextType(type: ImAtType.emoji, text: emoji));
+            //     } else if (RegExp(email).hasMatch(value)) {
+            //       list.add(ImAtTextType(type: ImAtType.email, text: value));
+            //     } else if (RegExp(atReg).hasMatch(value) && atUsersInfo.isNotEmpty) {
+            //       String id = value.split('#').first.replaceFirst('@', '').trim();
+
+            //       AtUserInfo? atUserInfo = atUsersInfo.firstWhereOrNull((v) => v.atUserID == id);
+            //       if (atUserInfo == null) {
+            //         if (RegExp(phoneReg).hasMatch(value)) {
+            //           list.add(ImAtTextType(type: ImAtType.phone, text: value));
+            //         } else {
+            //           list.add(ImAtTextType(type: ImAtType.text, text: value));
+            //         }
+            //       } else {
+            //         if (atUserInfo.atUserID == OpenIM.iMManager.uid) {
+            //           list.add(ImAtTextType(type: ImAtType.at, text: '@你 ', userInfo: atUserInfo));
+            //         } else {
+            //           list.add(ImAtTextType(type: ImAtType.at, text: '@${atUserInfo.groupNickname} ', userInfo: atUserInfo));
+            //         }
+            //       }
+            //     } else if (RegExp(urlRge).hasMatch(value)) {
+            //       list.add(ImAtTextType(type: ImAtType.url, text: value));
+            //     } else if (RegExp(phoneReg).hasMatch(value)) {
+            //       list.add(ImAtTextType(type: ImAtType.phone, text: value));
+            //     }
+            //     return '';
+            //   },
+            //   onNonMatch: (String n) {
+            //     list.add(ImAtTextType(type: ImAtType.text, text: n));
+            //     return '';
+            //   },
+            // );
+
+            // ext.data = list;
           }
           break;
         case MessageType.location:
