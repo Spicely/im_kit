@@ -39,7 +39,7 @@ class ImImage extends ImBase {
                 color: Colors.black.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
+              child: Text(message.m.createTime?.formatDate() ?? '', style: const TextStyle(fontSize: 10, color: Colors.white)),
             ),
           ),
         ),

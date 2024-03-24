@@ -13,12 +13,11 @@ class ImButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      // cursor: MouseCursor.uncontrolled,
+    return InkWell(
       onTap: onPressed,
       child: Text(
         label,
-        // style: TextStyle(color: onPressed == null ? ImCore.theme.subtitleColor : Theme.of(context).primaryColor, fontSize: 12),
+        style: TextStyle(color: Theme.of(context).colorScheme.primary),
       ),
     );
   }

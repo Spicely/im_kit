@@ -40,6 +40,8 @@ class ImAtText extends ImBase {
   /// at点击事件
   final void Function(TapUpDetails details, String userID)? onAtTap;
 
+  final Widget Function(BuildContext, MessageExt, SelectableRegionState)? contextTextMenuBuilder;
+
   const ImAtText({
     super.key,
     required super.isMe,
@@ -51,7 +53,7 @@ class ImAtText extends ImBase {
     super.onTapEmail,
     super.onTapPhone,
     this.onAtTap,
-    super.contextMenuBuilder,
+    this.contextTextMenuBuilder,
   });
 
   double get width {
@@ -65,46 +67,6 @@ class ImAtText extends ImBase {
   @override
   Widget build(BuildContext context) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    var textSpan = TextSpan(
-        children: (message.ext.data as List<ImAtTextType>?)?.map((e) {
-      if (e.type == ImAtType.emoji) {
-        return WidgetSpan(
-          child: Image.asset(
-            'assets/emoji/${e.text}.webp',
-            width: 25,
-            height: 25,
-            package: 'im_kit',
-            semanticLabel: e.text,
-          ),
-        );
-      } else {
-        return TextSpan(
-          text: ImCore.fixAutoLines(e.text),
-          style: TextStyle(color: atTypeColor(e, chatTheme)),
-          recognizer: TapGestureRecognizer()
-            ..onTapUp = (TapUpDetails details) {
-              switch (e.type) {
-                case ImAtType.url:
-                  onTapUrl?.call(e.text);
-                  break;
-                case ImAtType.email:
-                  onTapEmail?.call(e.text);
-                  break;
-                case ImAtType.phone:
-                  onTapPhone?.call(e.text);
-                  break;
-                case ImAtType.at:
-                  if (e.userInfo?.atUserID == '-1') {
-                    onAtTap?.call(details, '-1');
-                    return;
-                  }
-                  onAtTap?.call(details, e.userInfo!.atUserID!);
-                default:
-              }
-            },
-        );
-      }
-    }).toList());
 
     return Container(
       constraints: BoxConstraints(maxWidth: width),
@@ -119,18 +81,28 @@ class ImAtText extends ImBase {
       padding: ImCore.noPadMsgType.contains(msg.contentType) ? null : chatTheme.messageTheme.padding,
       child: Directionality(
         textDirection: TextDirection.ltr,
-        child: SelectableText.rich(
-          textSpan,
-          style: chatTheme.textStyle,
-          contextMenuBuilder: (BuildContext context, EditableTextState state) {
-            if (contextMenuBuilder == null) {
-              return AdaptiveTextSelectionToolbar.editableText(
-                editableTextState: state,
+        child: SelectionArea(
+          contextMenuBuilder: (BuildContext context, SelectableRegionState state) {
+            if (contextTextMenuBuilder == null) {
+              return AdaptiveTextSelectionToolbar.selectableRegion(
+                selectableRegionState: state,
               );
             } else {
-              return contextMenuBuilder!(context, message, state);
+              return contextTextMenuBuilder!(context, message, state);
             }
           },
+          child: ExtendedText(
+            message.ext.data,
+            style: chatTheme.textStyle,
+            specialTextSpanBuilder: ImExtendTextBuilder(
+              allAtMap: msg.atTextElem?.atUsersInfo ?? [],
+              onAtTextTap: onAtTap,
+              onTapUrl: onTapUrl,
+              onTapEmail: onTapEmail,
+              onTapPhone: onTapPhone,
+              isText: true,
+            ),
+          ),
         ),
       ),
     );

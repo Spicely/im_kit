@@ -8,6 +8,7 @@ class ImLocation extends ImBase {
     required super.showSelect,
     super.onTap,
     super.contextMenuBuilder,
+    super.onLocationTap,
   });
 
   @override

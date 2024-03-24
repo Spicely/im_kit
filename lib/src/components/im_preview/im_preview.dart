@@ -31,6 +31,7 @@ class _ImPreviewState extends State<ImPreview> {
   late List<MessageExt> messages;
   late ExtendedPageController pageController;
   int currentIndex = 0;
+  // var currentIndex = 0.obs;
 
   @override
   initState() {
@@ -44,93 +45,130 @@ class _ImPreviewState extends State<ImPreview> {
   @override
   Widget build(BuildContext context) {
     ImLanguage language = ImKitTheme.of(context).language;
-    return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      body: Stack(
-        children: [
-          ExtendedImageGesturePageView.builder(
-            controller: pageController,
-            physics: const BouncingScrollPhysics(),
-            itemBuilder: (BuildContext context, int index) {
-              MessageExt message = messages[index];
-              return ExtendedImage.file(
-                message.ext.file!,
-                fit: BoxFit.contain,
-                mode: ExtendedImageMode.gesture,
-                initEditorConfigHandler: (state) {
-                  return EditorConfig(maxScale: 6.0);
-                },
-              );
-            },
-            itemCount: messages.length,
-            onPageChanged: onPageChanged,
+    return Stack(
+      children: [
+        // Container(
+        //   width: double.infinity,
+        //   height: double.infinity,
+        // ),
+        Center(
+          child: SizedBox(
+            width: Get.width * 0.6,
+            child: ExtendedImageGesturePageView.builder(
+              controller: pageController,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (BuildContext context, int index) {
+                MessageExt message = messages[index];
+                return ExtendedImage.file(
+                  message.ext.file!,
+                  fit: BoxFit.contain,
+                  mode: ExtendedImageMode.gesture,
+                  initEditorConfigHandler: (state) {
+                    return EditorConfig(maxScale: 6.0);
+                  },
+                );
+              },
+              itemCount: messages.length,
+              onPageChanged: onPageChanged,
+            ),
           ),
-          Positioned(
-            // 假设子widget宽度为50
-            left: 25,
-            top: (MediaQuery.of(context).size.height - 50) / 2,
-            // width: 32,
-            // height: 32,
+        ),
+        Positioned(
+          // 假设子widget宽度为50
+          left: 25,
+          top: (MediaQuery.of(context).size.height - 50) / 2,
+          // width: 32,
+          // height: 32,
+          child: Visibility(
+            visible: currentIndex == 0 ? false : true,
+            maintainState: true,
             child: GestureDetector(
-              child: Image.asset('assets/icons/pre_image.png', width: 32, height: 32, package: 'im_kit'),
+              // child: Image.asset('assets/icons/pre_image.png', width: 32, height: 32, package: 'im_kit'),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  color: Colors.black, // 设置所有角的半径为20
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_rounded,
+                  color: Colors.white,
+                ),
+              ),
               onTap: () {
                 // 按钮点击时的处理逻辑
                 // print('pre_image');
                 // pageController.nextPage(duration: duration, curve: curve)
                 print('page:${pageController.page}');
-                if (currentIndex != 0.0) {
+                if (currentIndex > 0) {
                   print('page:${pageController.page}');
                   pageController.previousPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
                 }
               },
             ),
           ),
-          Positioned(
-            right: 25,
-            top: (MediaQuery.of(context).size.height - 50) / 2,
+        ),
+        Positioned(
+          right: 25,
+          top: (MediaQuery.of(context).size.height - 50) / 2,
+          child: Visibility(
+            visible: currentIndex == messages.length - 1 ? false : true,
+            maintainState: true,
             child: GestureDetector(
-              child: Image.asset('assets/icons/next_image.png', width: 32, height: 32, package: 'im_kit'),
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  color: Colors.black, // 设置所有角的半径为20
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                ),
+              ),
               onTap: () {
                 // 按钮点击时的处理逻辑
-                pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
+                // pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
                 // print('page:${pageController.page} total:${currentIndex}');
-                // if (currentIndex == messages.length - 1) {
-                //   pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
-                //   print('next_image');
-                // }
+                if (currentIndex < messages.length - 1) {
+                  pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
+                  print('next_image');
+                }
               },
             ),
           ),
-          if (!Utils.isDesktop) _buildBackBtn(),
-          Positioned(
-            bottom: 80,
-            left: 0,
-            right: 0,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Wrap(
-                spacing: 10,
-                alignment: WrapAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: saveImage,
-                    child: Container(
-                      width: 100,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(language.save, style: const TextStyle(fontSize: 14, color: Colors.white)),
+        ),
+        if (!Utils.isDesktop) _buildBackBtn(),
+        Positioned(
+          bottom: 80,
+          left: 0,
+          right: 0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Wrap(
+              spacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: saveImage,
+                  child: Container(
+                    width: 100,
+                    height: 30,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    child: Text(language.save, style: const TextStyle(fontSize: 14, color: Colors.white)),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -154,7 +192,9 @@ class _ImPreviewState extends State<ImPreview> {
       );
 
   void onPageChanged(int index) {
-    currentIndex = index;
+    setState(() {
+      currentIndex = index;
+    });
   }
 
   Widget loadingBuilder(BuildContext context, ImageChunkEvent? event) {

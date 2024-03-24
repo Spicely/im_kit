@@ -114,8 +114,9 @@ class Conversation extends StatelessWidget {
                                           child: Text.rich(
                                             Utils.isNotEmpty(c.data[index].draftText)
                                                 ? TextSpan(children: [
-                                                    TextSpan(text: ImCore.fixAutoLines('[${language.draft}]'), style: const TextStyle(color: Colors.red).useSystemChineseFont()),
-                                                    TextSpan(text: ImCore.fixAutoLines(c.data[index].draftText ?? ''), style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
+                                                    TextSpan(text: ImCore.fixAutoLines('[${language.draft}] '), style: const TextStyle(color: Colors.red).useSystemChineseFont()),
+                                                    // TextSpan(text: ImCore.fixAutoLines(c.data[index].draftText ?? '' ), style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
+                                                    _getAtText(Message(textElem: TextElem(content: c.data[index].draftText ?? ''))),
                                                   ])
                                                 : c.data[index].latestMsg?.type ?? const TextSpan(),
                                             style: const TextStyle(fontSize: 12, color: Color.fromRGBO(179, 179, 179, 1)),
