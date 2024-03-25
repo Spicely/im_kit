@@ -9,6 +9,6 @@ class ImConversationTheme {
 
   const ImConversationTheme({
     this.titleStyle = const TextStyle(fontSize: 14),
-    this.subtitleStyle = const TextStyle(fontSize: 12, color: Color.fromRGBO(179, 179, 179, 1)),
+    this.subtitleStyle = const TextStyle(fontSize: 12),
   });
 }

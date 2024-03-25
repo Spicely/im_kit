@@ -115,7 +115,6 @@ class Conversation extends StatelessWidget {
                                             Utils.isNotEmpty(c.data[index].draftText)
                                                 ? TextSpan(children: [
                                                     TextSpan(text: ImCore.fixAutoLines('[${language.draft}] '), style: const TextStyle(color: Colors.red).useSystemChineseFont()),
-                                                    // TextSpan(text: ImCore.fixAutoLines(c.data[index].draftText ?? '' ), style: const TextStyle(color: Colors.grey).useSystemChineseFont()),
                                                     _getAtText(Message(textElem: TextElem(content: c.data[index].draftText ?? ''))),
                                                   ])
                                                 : c.data[index].latestMsg?.type ?? const TextSpan(),
