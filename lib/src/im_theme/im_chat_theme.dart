@@ -46,19 +46,13 @@ class ImChatTheme {
 }
 
 class ImChatAppBarTheme {
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   final bool centerTitle;
-
-  final TextStyle style;
-
-  final IconThemeData iconTheme;
 
   const ImChatAppBarTheme({
     this.backgroundColor = Colors.white,
     this.centerTitle = false,
-    this.style = const TextStyle(fontSize: 16, color: Colors.black),
-    this.iconTheme = const IconThemeData(color: Colors.black),
   });
 }
 

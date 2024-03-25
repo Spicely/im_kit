@@ -38,20 +38,16 @@ class ChatPage extends StatelessWidget {
               : AppBar(
                   backgroundColor: chatTheme.appBarTheme.backgroundColor,
                   toolbarOpacity: 0.8,
-                  iconTheme: chatTheme.appBarTheme.iconTheme,
                   leading: Obx(
                     () => Visibility(
                       visible: controller.showSelect.value,
-                      replacement: TextButton(
-                        onPressed: Get.back,
-                        child: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                      ),
+                      replacement: BackButton(onPressed: Get.back),
                       child: TextButton(
                         onPressed: () {
                           controller.selectList.clear();
                           controller.showSelect.value = false;
                         },
-                        child: Text(language.cancel, style: const TextStyle(color: Colors.black)),
+                        child: Text(language.cancel),
                       ),
                     ),
                   ),
@@ -60,7 +56,6 @@ class ChatPage extends StatelessWidget {
                       Obx(
                         () => Text(
                           controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
-                          style: chatTheme.appBarTheme.style,
                         ),
                       ),
                       // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
