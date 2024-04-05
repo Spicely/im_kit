@@ -24,7 +24,9 @@ class ChatAttachment {
 
   final File file;
 
-  ChatAttachment({required this.isHidden, required this.file});
+  final Uint8List? memory;
+
+  ChatAttachment({required this.isHidden, required this.file, this.memory});
 }
 
 class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
@@ -409,8 +411,13 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     Utils.exceptionCapture(() async {
       Uint8List? imageBytes = await Pasteboard.image;
       if (imageBytes != null) {
-        String path = await ImKitIsolateManager.saveBytesToTemp(imageBytes);
-        attachments.add(ChatAttachment(isHidden: false, file: File(path)));
+        ChatAttachment? chatAttachment = attachments.firstWhereOrNull((v) => v.memory == imageBytes);
+        if (chatAttachment == null) {
+          String path = await ImKitIsolateManager.saveBytesToTemp(imageBytes);
+          attachments.add(ChatAttachment(isHidden: false, file: File(path), memory: imageBytes));
+        } else {
+          attachments.add(chatAttachment);
+        }
       }
     });
   }
