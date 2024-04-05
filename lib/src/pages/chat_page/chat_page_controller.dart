@@ -18,6 +18,15 @@ class ChatPageItem {
   });
 }
 
+class ChatAttachment {
+  /// 是否隐藏
+  final bool isHidden;
+
+  final File file;
+
+  ChatAttachment({required this.isHidden, required this.file});
+}
+
 class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
   late Rx<ConversationInfo?> conversationInfo;
 
@@ -62,6 +71,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   /// 是否是群主
   bool get isOwner => gInfo?.roleLevel == GroupRoleLevel.owner;
+
+  /// 附件信息
+  RxList<ChatAttachment> attachments = RxList<ChatAttachment>([]);
 
   /// 多选
   RxBool showSelect = false.obs;
@@ -334,12 +346,12 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
         /// 监听粘贴按键组合
         if (event.logicalKey == LogicalKeyboardKey.keyV && event.isMetaPressed) {
-          _copyClipboard2Text();
+          _copyClipboardToMemory();
         }
       } else {
         /// 监听粘贴按键组合
         if (event.logicalKey == LogicalKeyboardKey.keyV && event.isControlPressed) {
-          _copyClipboard2Text();
+          _copyClipboardToMemory();
         }
       }
     }
@@ -390,6 +402,17 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       textEditingController.text = '${textEditingController.text}${'[file:$path]'}';
       textEditingController.selection = TextSelection.fromPosition(TextPosition(offset: textEditingController.text.length));
     }
+  }
+
+  // 存储附件信息
+  void _copyClipboardToMemory() {
+    Utils.exceptionCapture(() async {
+      Uint8List? imageBytes = await Pasteboard.image;
+      if (imageBytes != null) {
+        String path = await ImKitIsolateManager.saveBytesToTemp(imageBytes);
+        attachments.add(ChatAttachment(isHidden: false, file: File(path)));
+      }
+    });
   }
 
   void onAtDeleteCallback(String id) {
