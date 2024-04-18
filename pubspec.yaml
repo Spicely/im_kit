@@ -45,7 +45,6 @@ dependencies:
   screen_capturer:
   url_launcher:
   pasteboard: 
-  fluent_ui: 
   chinese_font_library:
   window_manager:
 
