@@ -168,11 +168,8 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     );
 
     List<MessageExt> messages = await advancedMessage.toExt();
-    Get.to(
-      () => ChatPage(
-        controller: ChatPageController(messages: messages, conversation: info),
-      ),
-    );
+    currentChatPageController.value = ChatPageController(messages: messages, conversation: info);
+    Get.to(() => ChatPage(controller: currentChatPageController.value));
   }
 
   Future<void> loadConversation() async {
