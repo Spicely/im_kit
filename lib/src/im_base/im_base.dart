@@ -1,3 +1,5 @@
+// ignore_for_file: constant_identifier_names
+
 part of im_kit;
 /*
  * Summary: 基础类

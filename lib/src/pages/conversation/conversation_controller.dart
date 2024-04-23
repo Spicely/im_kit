@@ -384,7 +384,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     await OpenIM.iMManager.conversationManager.setConversationRecvMessageOpt(conversationIDList: [conversation.conversationID], status: status);
   }
 
-  Future<List<FriendApplicationInfo>> FriendListRemoveDuplicateData(List<FriendApplicationInfo> list) async {
+  Future<List<FriendApplicationInfo>> friendListRemoveDuplicateData(List<FriendApplicationInfo> list) async {
     var len = list.length;
     for (var i = 0; i < len; i++) {
       for (var j = i + 1; j < len; j++) {

@@ -100,9 +100,9 @@ class _ImPreviewState extends State<ImPreview> {
                 // 按钮点击时的处理逻辑
                 // print('pre_image');
                 // pageController.nextPage(duration: duration, curve: curve)
-                print('page:${pageController.page}');
+                debugPrint('page:${pageController.page}');
                 if (currentIndex > 0) {
-                  print('page:${pageController.page}');
+                  debugPrint('page:${pageController.page}');
                   pageController.previousPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
                 }
               },
@@ -134,7 +134,7 @@ class _ImPreviewState extends State<ImPreview> {
                 // print('page:${pageController.page} total:${currentIndex}');
                 if (currentIndex < messages.length - 1) {
                   pageController.nextPage(duration: const Duration(milliseconds: 1), curve: Curves.easeIn);
-                  print('next_image');
+                  debugPrint('next_image');
                 }
               },
             ),

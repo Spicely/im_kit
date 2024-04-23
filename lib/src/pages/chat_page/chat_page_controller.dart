@@ -250,7 +250,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     if (Utils.isNotEmpty(conversationInfo.value?.draftText)) {
       textEditingController.text = conversationInfo.value?.draftText ?? '';
       if (textEditingController.text.contains('@-1#所有人')) {
-        atUserMap.add(AtUserInfo(atUserID: '-1', groupNickname: '所有人'));
+        atUserMap.add(const AtUserInfo(atUserID: '-1', groupNickname: '所有人'));
       }
     }
   }
