@@ -124,14 +124,13 @@ class ChatPage extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!Utils.isDesktop)
-                Obx(
-                  () => Visibility(
-                    visible: controller.showSelect.value,
-                    replacement: _buildBottomInput(context),
-                    child: _buildMoreBottomView(),
-                  ),
+              Obx(
+                () => Visibility(
+                  visible: controller.showSelect.value,
+                  replacement: ChatInputView(controller: controller),
+                  child: _buildMoreBottomView(),
                 ),
+              ),
             ],
           ),
           resizeToAvoidBottomInset: true,

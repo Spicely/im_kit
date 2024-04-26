@@ -80,6 +80,7 @@ part 'src/im_base/extend_special_text_span_builder.dart';
 part 'src/im_base/extensions_int_to_time.dart';
 
 part 'src/pages/chat_page/chat_page.dart';
+part 'src/pages/chat_page/chat_input_view.dart';
 part 'src/pages/chat_page/chat_page_controller.dart';
 part 'src/pages/conversation/conversation.dart';
 part 'src/pages/conversation/conversation_controller.dart';

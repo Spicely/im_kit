@@ -30,6 +30,12 @@ class ChatAttachment {
 }
 
 class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
+  final MenuController menuController = MenuController();
+
+  final MenuController emojiMenuController = MenuController();
+
+  final FocusNode editFocusNode = FocusNode();
+
   late Rx<ConversationInfo?> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -1754,7 +1760,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   Widget contextTextMenuBuilder(BuildContext context, MessageExt extMsg, SelectableRegionState state) {
-    return Container();
+    return AdaptiveTextSelectionToolbar.selectableRegion(selectableRegionState: state);
   }
 
   /// 设置多选
