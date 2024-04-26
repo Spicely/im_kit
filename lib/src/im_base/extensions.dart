@@ -41,6 +41,7 @@ extension ExtensionMessage on Message {
         MessageType.text || MessageType.advancedText || MessageType.atText => _getAtText(this),
         // MessageType.revoke => TextSpan(text: ImCore.fixAutoLines('$senderNickname撤回了一条消息')),
         MessageType.friendAddedNotification => TextSpan(text: ImCore.fixAutoLines('添加好友成功')),
+        MessageType.friendAddedNotification || MessageType.friendApplicationApprovedNotification => TextSpan(text: ImCore.fixAutoLines('你们已成为好友，可以开始聊天了')),
         MessageType.oaNotification => TextSpan(text: ImCore.fixAutoLines(jsonDecode(notificationElem?.detail ?? '{}')['notificationName'])),
         300 => TextSpan(text: ImCore.fixAutoLines(isSingleChat ? '[表情]' : '$senderNickname: [表情]')),
         MessageType.burnAfterReadingNotification => TextSpan(text: ImCore.fixAutoLines(jsonDecode(notificationElem?.detail ?? '{}')['isPrivate'] == true ? '阅后即焚已开启' : '阅后即焚已关闭')),
