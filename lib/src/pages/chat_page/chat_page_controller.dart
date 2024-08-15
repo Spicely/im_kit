@@ -1,9 +1,17 @@
-part of im_kit;
+part of '../../../im_kit.dart';
 
 enum ImChatPageFieldType {
   voice,
   emoji,
   actions,
+  none,
+}
+
+enum SheetType {
+  /// 文件
+  file,
+
+  /// 无
   none,
 }
 
@@ -36,6 +44,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   final FocusNode editFocusNode = FocusNode();
 
+  late BaseChatFun chatFun;
+
   late Rx<ConversationInfo?> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -45,6 +55,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   RxList<ChatPageItem> tabs = RxList([]);
 
   RxBool isDrop = false.obs;
+
+  /// sheet类型
+  Rx<SheetType> sheetType = SheetType.none.obs;
 
   /// 群成员信息
   RxList<GroupMembersInfo> groupMembers = RxList([]);
@@ -124,6 +137,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     required List<MessageExt> messages,
     ConversationInfo? conversation,
     this.isInit = true,
+    BaseChatFun? baseChatFun,
   }) {
     data = RxList(messages.reversed.toList());
     if (data.length < loadNum && isInit) {
@@ -136,6 +150,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       //   data.add(encryptedNotification);
       // });
     }
+    chatFun = baseChatFun ?? BaseChatFun();
     conversationInfo = Rx(conversation);
   }
   ScrollController scrollController = ScrollController();
@@ -875,7 +890,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         /// 判断视频
         else if (['mp4', 'avi', '3gp', 'mkv'].contains(suffix)) {
           dest = join(ImCore.tempPath, '${const Uuid().v4()}.$suffix');
-          await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: file.path, destFile: dest, width: 300, height: 600, keepAspectRatio: true, format: 'jpeg', quality: 90);
+          await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: file.path, destFile: dest, width: 300, height: 600, format: 'jpeg', quality: 90);
           msg = await OpenIM.iMManager.messageManager.createVideoMessageFromFullPath(videoPath: file.path, videoType: suffix, duration: 0, snapshotPath: dest);
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
@@ -1068,7 +1083,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           /// 判断视频
           else if (['mp4', 'avi', '3gp', 'mkv'].contains(suffix)) {
             dest = join(ImCore.tempPath, '${const Uuid().v4()}.$suffix');
-            await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: file.path!, destFile: dest, width: 300, height: 600, keepAspectRatio: true, format: 'jpeg', quality: 90);
+            await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: file.path!, destFile: dest, width: 300, height: 600, format: 'jpeg', quality: 90);
             msg = await OpenIM.iMManager.messageManager.createVideoMessageFromFullPath(videoPath: file.path!, videoType: suffix!, duration: 0, snapshotPath: dest);
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
@@ -1823,5 +1838,19 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       groupInfo.refresh();
       MukaConfig.config.exceptionCapture.error(e);
     });
+  }
+
+  /// 显示文件sheet
+  void showFileSheet() {
+    sheetType.value = SheetType.file;
+  }
+
+  /// 退出页面前判断
+  void onPopInvokedWithResult(bool status, dynamic v) {
+    if (sheetType.value == SheetType.none) {
+      Get.back();
+      return;
+    }
+    sheetType.value = SheetType.none;
   }
 }

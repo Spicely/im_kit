@@ -22,7 +22,6 @@ dependencies:
   get:
   audioplayers:
   record:
-  image_gallery_saver:
   card_swiper: 
   image: 
   html:

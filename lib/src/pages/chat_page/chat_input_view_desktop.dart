@@ -1,9 +1,9 @@
-part of im_kit;
+part of '../../../im_kit.dart';
 
-class ChatInputView extends StatelessWidget {
+class ChatInputViewDesktop extends StatelessWidget {
   final ChatPageController controller;
 
-  const ChatInputView({
+  const ChatInputViewDesktop({
     super.key,
     required this.controller,
   });
@@ -11,18 +11,14 @@ class ChatInputView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.symmetric(horizontal: 5),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        color: context.theme.colorScheme.primary.withOpacity(0.1),
-        boxShadow: [
-          BoxShadow(
-            color: context.theme.colorScheme.primary.withOpacity(0.2),
-            blurRadius: 10,
-            spreadRadius: 3,
+        color: context.theme.scaffoldBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: context.theme.colorScheme.primary.withOpacity(0.1),
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,6 +236,15 @@ class ChatInputView extends StatelessWidget {
                           }
                         },
                       ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 45,
+                  child: Center(
+                    child: IconButton(
+                      icon: const Icon(Icons.folder),
+                      onPressed: controller.chatFun.getImage,
                     ),
                   ),
                 ),

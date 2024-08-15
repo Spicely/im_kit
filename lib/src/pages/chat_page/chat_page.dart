@@ -1,4 +1,4 @@
-part of im_kit;
+part of '../../../im_kit.dart';
 
 List<String> _keys = ImCore.emojiFaces.keys.toList();
 
@@ -31,109 +31,167 @@ class ChatPage extends StatelessWidget {
         key: ValueKey(controller.isInit ? controller.conversationInfo.value?.conversationID : const Uuid().v4()),
         init: controller,
         tag: controller.isInit ? controller.conversationInfo.value?.conversationID : const Uuid().v4(),
-        builder: (controller) => Scaffold(
-          backgroundColor: chatTheme.backgroundColor,
-          appBar: Utils.isDesktop
-              ? null
-              : AppBar(
-                  backgroundColor: chatTheme.appBarTheme.backgroundColor,
-                  toolbarOpacity: 0.8,
-                  leading: Obx(
-                    () => Visibility(
-                      visible: controller.showSelect.value,
-                      replacement: BackButton(onPressed: Get.back),
-                      child: TextButton(
-                        onPressed: () {
-                          controller.selectList.clear();
-                          controller.showSelect.value = false;
-                        },
-                        child: Text(language.cancel),
-                      ),
-                    ),
-                  ),
-                  title: Column(
-                    children: [
-                      Obx(
-                        () => Text(
-                          controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
+        builder: (controller) => PopScope(
+          canPop: false,
+          onPopInvokedWithResult: controller.onPopInvokedWithResult,
+          child: Scaffold(
+            backgroundColor: chatTheme.backgroundColor,
+            appBar: Utils.isDesktop
+                ? null
+                : AppBar(
+                    backgroundColor: chatTheme.appBarTheme.backgroundColor,
+                    toolbarOpacity: 0.8,
+                    leading: Obx(
+                      () => Visibility(
+                        visible: controller.showSelect.value,
+                        replacement: BackButton(onPressed: Get.back),
+                        child: TextButton(
+                          onPressed: () {
+                            controller.selectList.clear();
+                            controller.showSelect.value = false;
+                          },
+                          child: Text(language.cancel),
                         ),
                       ),
-                      // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
-                    ],
-                  ),
-                  centerTitle: chatTheme.appBarTheme.centerTitle,
-                  actions: appBarActions,
-                ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Obx(
-                    () => ListView.builder(
-                      itemCount: controller.data.length,
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      reverse: controller.isInit,
-                      shrinkWrap: true,
-                      controller: controller.scrollController,
-                      itemBuilder: (context, index) => Obx(
-                        () => ImListItem(
-                          message: controller.data[index],
-                          selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
-                          sendLoadingWidget: const SpinKitFadingCircle(size: 20, color: Colors.grey),
-                          sendErrorWidget: GestureDetector(
-                            onTap: () {
-                              controller.onResend(controller.data[index]);
-                            },
-                            child: const Icon(Icons.error, color: Colors.red, size: 18),
+                    ),
+                    title: Column(
+                      children: [
+                        Obx(
+                          () => Text(
+                            controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
                           ),
-                          showSelect: controller.showSelect.value,
-                          onTapDownFile: controller.onTapDownFile,
-                          onTapPlayVideo: controller.onTapPlayVideo,
-                          onPictureTap: controller.onPictureTap,
-                          onNotificationUserTap: controller.onNotificationUserTap,
-                          onTapUrl: controller.onUrlTap,
-                          onAtTap: controller.onAtTap,
-                          onTapEmail: controller.onTapEmail,
-                          onTapPhone: controller.onTapPhone,
-                          onCardTap: controller.onCardTap,
-                          onLocationTap: controller.onLocationTap,
-                          onFileTap: controller.onFileTap,
-                          onMergerTap: controller.onMergerTap,
-                          onCopyTip: controller.onCopyTip,
-                          onReEditTap: controller.onReEditTap,
-                          onMessageSelect: controller.onMessageSelect,
-                          onQuoteMessageTap: controller.onQuoteMessageTap,
-                          onVoiceTap: controller.onVoiceTap,
-                          onAvatarTap: controller.onAvatarTap,
-                          onAvatarLongPress: controller.onAvatarLongPress,
-                          onDoubleTapFile: controller.onDoubleTapFile,
-                          onAvatarRightTap: controller.onAvatarRightTap,
-                          highlight: controller.currentIndex.value == index,
-                          contextMenuBuilder: controller.contextMenuBuilder,
-                          contextTextMenuBuilder: controller.contextTextMenuBuilder,
-                          sendSuccessWidget: controller.isInit
-                              ? Text(
-                                  controller.data[index].m.isRead == true ? '已读' : '未读',
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                )
-                              : null,
+                        ),
+                        // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
+                      ],
+                    ),
+                    centerTitle: chatTheme.appBarTheme.centerTitle,
+                    actions: appBarActions,
+                  ),
+            body: Stack(
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Obx(
+                          () => ListView.builder(
+                            itemCount: controller.data.length,
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            reverse: controller.isInit,
+                            shrinkWrap: true,
+                            controller: controller.scrollController,
+                            itemBuilder: (context, index) => Obx(
+                              () => ImListItem(
+                                message: controller.data[index],
+                                selected: controller.selectList.indexWhere((v) => v.m.clientMsgID == controller.data[index].m.clientMsgID) != -1,
+                                sendLoadingWidget: const SpinKitFadingCircle(size: 20, color: Colors.grey),
+                                sendErrorWidget: GestureDetector(
+                                  onTap: () {
+                                    controller.onResend(controller.data[index]);
+                                  },
+                                  child: const Icon(Icons.error, color: Colors.red, size: 18),
+                                ),
+                                showSelect: controller.showSelect.value,
+                                onTapDownFile: controller.onTapDownFile,
+                                onTapPlayVideo: controller.onTapPlayVideo,
+                                onPictureTap: controller.onPictureTap,
+                                onNotificationUserTap: controller.onNotificationUserTap,
+                                onTapUrl: controller.onUrlTap,
+                                onAtTap: controller.onAtTap,
+                                onTapEmail: controller.onTapEmail,
+                                onTapPhone: controller.onTapPhone,
+                                onCardTap: controller.onCardTap,
+                                onLocationTap: controller.onLocationTap,
+                                onFileTap: controller.onFileTap,
+                                onMergerTap: controller.onMergerTap,
+                                onCopyTip: controller.onCopyTip,
+                                onReEditTap: controller.onReEditTap,
+                                onMessageSelect: controller.onMessageSelect,
+                                onQuoteMessageTap: controller.onQuoteMessageTap,
+                                onVoiceTap: controller.onVoiceTap,
+                                onAvatarTap: controller.onAvatarTap,
+                                onAvatarLongPress: controller.onAvatarLongPress,
+                                onDoubleTapFile: controller.onDoubleTapFile,
+                                onAvatarRightTap: controller.onAvatarRightTap,
+                                highlight: controller.currentIndex.value == index,
+                                contextMenuBuilder: controller.contextMenuBuilder,
+                                contextTextMenuBuilder: controller.contextTextMenuBuilder,
+                                sendSuccessWidget: controller.isInit
+                                    ? Text(
+                                        controller.data[index].m.isRead == true ? '已读' : '未读',
+                                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    Obx(
+                      () => Padding(
+                        padding: EdgeInsets.only(bottom: controller.sheetType.value == SheetType.none ? 0 : Get.mediaQuery.size.height * 0.4 - 30),
+                        child: Visibility(
+                          visible: controller.showSelect.value,
+                          replacement: ChatInputViewMobile(controller: controller),
+                          child: _buildMoreBottomView(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Obx(
+                  () => Visibility(
+                    visible: controller.sheetType.value == SheetType.file,
+                    child: DraggableScrollableSheet(
+                      initialChildSize: 0.4,
+                      builder: (BuildContext context, scrollController) {
+                        return Container(
+                          clipBehavior: Clip.hardEdge,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).canvasColor,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(25),
+                              topRight: Radius.circular(25),
+                            ),
+                          ),
+                          child: CustomScrollView(
+                            controller: scrollController,
+                            slivers: [
+                              SliverToBoxAdapter(
+                                child: Center(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).hintColor,
+                                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                    ),
+                                    height: 4,
+                                    width: 40,
+                                    margin: const EdgeInsets.symmetric(vertical: 10),
+                                  ),
+                                ),
+                              ),
+                              const SliverAppBar(
+                                title: Text('My App'),
+                                primary: false,
+                                pinned: true,
+                                centerTitle: false,
+                              ),
+                              SliverList.list(children: const [
+                                ListTile(title: Text('Jane Doe')),
+                                ListTile(title: Text('Jack Reacher')),
+                              ])
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
-              Obx(
-                () => Visibility(
-                  visible: controller.showSelect.value,
-                  replacement: ChatInputView(controller: controller),
-                  child: _buildMoreBottomView(),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          resizeToAvoidBottomInset: true,
         ),
       ),
     );
@@ -354,7 +412,7 @@ class ChatPage extends StatelessWidget {
                       ),
                       tabs: [
                         const Tab(icon: CachedImage(assetUrl: 'assets/icons/chat_emoji.png', package: 'im_kit', width: 22, height: 22)),
-                        ...controller.tabs.map((e) => e.tab).toList(),
+                        ...controller.tabs.map((e) => e.tab),
                       ],
                     ),
                   ),
@@ -387,7 +445,7 @@ class ChatPage extends StatelessWidget {
                           },
                           itemCount: _keys.length,
                         ),
-                        ...controller.tabs.map((e) => e.view.call(controller)).toList(),
+                        ...controller.tabs.map((e) => e.view.call(controller)),
                       ],
                     ),
                   ),

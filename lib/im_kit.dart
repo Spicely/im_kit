@@ -25,7 +25,6 @@ import 'package:flutter_openim_sdk_ffi/flutter_openim_sdk_ffi.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:html/parser.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:lottie/lottie.dart';
 import 'package:media_kit/media_kit.dart';
@@ -53,6 +52,8 @@ part 'src/components/im_bottom_voice/im_bottom_voice.dart';
 part 'src/components/voice_record/voice_record_controller.dart';
 part 'src/im_at_text/im_at_text.dart';
 part 'src/im_base/im_base.dart';
+part 'src/im_base/base_chat_fun.dart';
+part 'src/im_base/chat_fun_mobile.dart';
 
 part 'src/im_base/isolate_manager.dart';
 part 'src/im_base/emoji.dart';
@@ -80,7 +81,8 @@ part 'src/im_base/extend_special_text_span_builder.dart';
 part 'src/im_base/extensions_int_to_time.dart';
 
 part 'src/pages/chat_page/chat_page.dart';
-part 'src/pages/chat_page/chat_input_view.dart';
+part 'src/pages/chat_page/chat_input_view_mobile.dart';
+part 'src/pages/chat_page/chat_input_view_desktop.dart';
 part 'src/pages/chat_page/chat_page_controller.dart';
 part 'src/pages/conversation/conversation.dart';
 part 'src/pages/conversation/conversation_controller.dart';

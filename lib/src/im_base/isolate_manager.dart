@@ -112,12 +112,12 @@ class ImKitIsolateManager {
   static late final SendPort _isolateSendPort;
 
   static Future<bool> saveFileToAlbumByU8List(Uint8List pngBytes, String name, {String androidRelativePath = 'Pictures'}) async {
-    try {
-      await ImageGallerySaver.saveImage(pngBytes, name: name, isReturnImagePathOfIOS: true);
-      return true;
-    } catch (_) {
-      return false;
-    }
+    // try {
+    //   await ImageGallerySaver.saveImage(pngBytes, name: name, isReturnImagePathOfIOS: true);
+    //   return true;
+    // } catch (_) {
+    return false;
+    // }
   }
 
   /// Uint8List保存到临时文件夹
@@ -147,24 +147,24 @@ class ImKitIsolateManager {
 
   /// 保存文件到相册
   static Future<bool> saveFileToAlbum(String path, {String? fileName}) async {
-    try {
-      if (Utils.isMobile) {
-        await ImageGallerySaver.saveFile(path);
-      } else {
-        String? saveDir = await FilePicker.platform.getDirectoryPath(
-          dialogTitle: '保存文件',
-          lockParentWindow: true,
-        );
-        if (saveDir != null) {
-          ImKitIsolateManager.copyFile(path, saveDir, fileName: fileName);
-        } else {
-          return false;
-        }
-      }
-      return true;
-    } catch (_) {
-      return false;
-    }
+    // try {
+    //   if (Utils.isMobile) {
+    //     await ImageGallerySaver.saveFile(path);
+    //   } else {
+    //     String? saveDir = await FilePicker.platform.getDirectoryPath(
+    //       dialogTitle: '保存文件',
+    //       lockParentWindow: true,
+    //     );
+    //     if (saveDir != null) {
+    //       ImKitIsolateManager.copyFile(path, saveDir, fileName: fileName);
+    //     } else {
+    //       return false;
+    //     }
+    //   }
+    //   return true;
+    // } catch (_) {
+    return false;
+    // }
   }
 
   /// 获取本地文件
