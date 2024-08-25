@@ -144,49 +144,7 @@ class ChatPage extends StatelessWidget {
                 Obx(
                   () => Visibility(
                     visible: controller.sheetType.value == SheetType.file,
-                    child: DraggableScrollableSheet(
-                      initialChildSize: 0.4,
-                      builder: (BuildContext context, scrollController) {
-                        return Container(
-                          clipBehavior: Clip.hardEdge,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).canvasColor,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(25),
-                              topRight: Radius.circular(25),
-                            ),
-                          ),
-                          child: CustomScrollView(
-                            controller: scrollController,
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: Center(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).hintColor,
-                                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                    ),
-                                    height: 4,
-                                    width: 40,
-                                    margin: const EdgeInsets.symmetric(vertical: 10),
-                                  ),
-                                ),
-                              ),
-                              const SliverAppBar(
-                                title: Text('My App'),
-                                primary: false,
-                                pinned: true,
-                                centerTitle: false,
-                              ),
-                              SliverList.list(children: const [
-                                ListTile(title: Text('Jane Doe')),
-                                ListTile(title: Text('Jack Reacher')),
-                              ])
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                    child: const DraggableScrollableSheetManager(),
                   ),
                 ),
               ],
