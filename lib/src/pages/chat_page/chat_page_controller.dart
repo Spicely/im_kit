@@ -44,8 +44,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   final FocusNode editFocusNode = FocusNode();
 
-  late BaseChatFun chatFun;
-
   late Rx<ConversationInfo?> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -80,6 +78,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   RxInt currentIndex = (-1).obs;
 
   final TextEditingController textEditingController = TextEditingController();
+
+  final u.FlyoutController flyoutController = u.FlyoutController();
 
   /// 自己在群里的信息
   GroupMembersInfo? get gInfo => (isGroupChat && groupMembers.isNotEmpty) ? groupMembers.firstWhere((v) => v.userID == uInfo.userID) : null;
@@ -120,6 +120,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 选中的消息列表
   RxList<MessageExt> selectList = RxList([]);
 
+  OverlayEntry? overlayEntry;
+
   String get title {
     if (isGroupChat) {
       return '${conversationInfo.value?.showName}(${groupMembers.length})';
@@ -137,7 +139,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     required List<MessageExt> messages,
     ConversationInfo? conversation,
     this.isInit = true,
-    BaseChatFun? baseChatFun,
   }) {
     data = RxList(messages.reversed.toList());
     if (data.length < loadNum && isInit) {
@@ -150,7 +151,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       //   data.add(encryptedNotification);
       // });
     }
-    chatFun = baseChatFun ?? BaseChatFun();
     conversationInfo = Rx(conversation);
   }
   ScrollController scrollController = ScrollController();
@@ -199,6 +199,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   /// 显示群成员
   final RxList<GroupMembersInfo> showGroupMembers = <GroupMembersInfo>[].obs;
+
+  /// 图片选中信息
+  RxList<PhotoManagerPaths> selectPhotos = RxList<PhotoManagerPaths>([]);
 
   @override
   void onWindowFocus() {
@@ -597,18 +600,15 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
-  void saveFile(MessageExt extMsg, {Function? onSuccess, Function(Object e)? onError}) {
+  void saveFile(MessageExt extMsg) {
     Utils.exceptionCapture(() async {
       FocusScopeNode currentFocus = FocusScope.of(Get.context!);
       if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
         FocusManager.instance.primaryFocus?.unfocus();
       }
-      bool status = await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path, fileName: extMsg.m.fileElem?.fileName);
-      if (status) {
-        onSuccess?.call();
-      }
+      bool status = await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path, fileName: basenameWithoutExtension(extMsg.m.videoElem?.videoUrl ?? extMsg.m.fileElem?.fileName ?? extMsg.m.pictureElem?.sourcePicture?.url ?? ''));
     }, error: (e) {
-      onError?.call(e);
+      // onError?.call(e);
     });
   }
 
@@ -633,6 +633,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     OpenIMManager.removeListener(this);
     windowManager.removeListener(this);
     ImKitIsolateManager.removeListener(this);
+    _removeOverlay();
     textEditingController.removeListener(_checkHistoryAction);
     for (var i in data) {
       if (i.ext.isPrivateChat && i.m.isRead!) {
@@ -716,6 +717,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
             ),
         ],
       );
+      extMsg.ext.isDownloading = true;
+      updateMessage(extMsg);
     } else if (MessageType.quote == extMsg.m.contentType) {
       if (conversationInfo.value != null && [MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.quoteElem?.quoteMessage?.contentType)) {
         ImKitIsolateManager.downloadFiles(
@@ -733,8 +736,23 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           ],
         );
       }
+      extMsg.ext.isDownloading = true;
+      updateMessage(extMsg);
     }
   }
+
+  /// 下载进度
+  @override
+  void onDownloadProgress(String id, double progress) {
+    MessageExt? extMsg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
+    if (extMsg == null) return;
+    extMsg.ext.progress = progress;
+    updateMessage(extMsg);
+  }
+
+  /// 下载失败
+  @override
+  void onDownloadFailure(String id, String error) {}
 
   /// 下载成功
   @override
@@ -742,11 +760,12 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     MessageExt? extMsg = data.firstWhereOrNull((v) => v.m.clientMsgID == id);
     if (extMsg == null) return;
     if (paths.length == 2) {
-      extMsg.ext.previewFile = File(paths.first);
-      extMsg.ext.file = File(paths.last);
+      extMsg.ext.previewFile ??= File(paths.first);
+      extMsg.ext.file ??= File(paths.last);
     } else {
-      extMsg.ext.file = File(paths.first);
+      extMsg.ext.file ??= File(paths.first);
     }
+    extMsg.ext.isDownloading = false;
     updateMessage(extMsg);
   }
 
@@ -855,9 +874,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   @override
   void onNewRecvMessageRevoked(RevokedInfo info) {
-    int index = data.indexWhere((v) => v.m.clientMsgID == info.clientMsgID);
-    if (index != -1) {
-      data.removeAt(index);
+    MessageExt? extMsg = data.firstWhereOrNull((v) => v.m.clientMsgID == info.clientMsgID);
+    if (extMsg != null) {
+      extMsg.m.contentType = MessageType.revokeMessageNotification;
+      updateMessage(extMsg);
     }
   }
 
@@ -895,10 +915,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         } else {
           msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
         }
-        if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
-          MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
-          return;
-        }
+        // if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
+        //   MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+        //   return;
+        // }
 
         MessageExt extMsg = await msg.toExt();
         extMsg.ext.file = File(file.path);
@@ -990,7 +1010,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
 
       MessageExt lastMessage = data[index];
-      if (_check2TimeGap(message.m.sendTime ?? message.m.createTime!, lastMessage.m.sendTime ?? lastMessage.m.createTime!)) {
+      if (_check2TimeGap(message.m.sendTime ?? message.m.createTime ?? 0, lastMessage.m.sendTime ?? lastMessage.m.createTime!)) {
         message.ext.showTime = true;
       } else {
         message.ext.showTime = false;
@@ -1088,10 +1108,10 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
           } else {
             msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path!, fileName: file.name);
           }
-          if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
-            MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
-            return;
-          }
+          // if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
+          //   MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+          //   return;
+          // }
           MessageExt extMsg = await msg.toExt();
           extMsg.ext.file = File(file.path!);
           if (dest != null) {
@@ -1107,10 +1127,13 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void onAvatarRightTap(Offset position, String userID) {}
 
   /// 下载文件
-  void onTapDownFile(MessageExt extMsg) {}
+  void onTapDownFile(MessageExt extMsg) {
+    downFile(extMsg);
+  }
 
   /// 点击播放视频
   void onTapPlayVideo(MessageExt extMsg) {
+    if (extMsg.ext.file == null) return;
     Get.to(() => ImPlayer(message: extMsg));
   }
 
@@ -1121,7 +1144,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     /// 获取所有图片
     List<MessageExt> messages = data.where((v) => v.m.contentType == MessageType.picture).toList();
     Get.to(
-      () => ImPreview(messages: messages, currentMessage: extMsg),
+      () => ImPreview(messages: messages.reversed.toList(), currentMessage: extMsg),
       transition: Transition.fadeIn,
     );
   }
@@ -1312,61 +1335,76 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 发送消息
   Future<void> onSendMessage() async {
     String value = textEditingController.text;
-    if (value.trim().isEmpty) return;
-    MessageExt? message;
-    try {
-      /// 清空输入框
-      MessageExt? quoteMsg = quoteMessage.value;
+    if (value.trim().isNotEmpty) {
+      MessageExt? message;
+      try {
+        /// 清空输入框
+        MessageExt? quoteMsg = quoteMessage.value;
 
-      textEditingController.clear();
+        textEditingController.clear();
 
-      List<String> files = [];
+        List<String> files = [];
 
-      value = value.splitMapJoin(
-        RegExp(r"\[file:[^\]]+\]"),
-        onMatch: (Match m) {
-          String? path = m.group(0);
-          if (path != null) {
-            path = path.replaceFirst('[file:', '').replaceFirst(']', '');
-            files.add(path);
+        value = value.splitMapJoin(
+          RegExp(r"\[file:[^\]]+\]"),
+          onMatch: (Match m) {
+            String? path = m.group(0);
+            if (path != null) {
+              path = path.replaceFirst('[file:', '').replaceFirst(']', '');
+              files.add(path);
+            }
+            return '';
+          },
+        );
+
+        if (value.isNotEmpty) {
+          if (atUserMap.isNotEmpty) {
+            message = await createTextAtMessage(atUserMap, value, quoteMessage: quoteMsg?.m);
+          } else if (quoteMsg != null) {
+            message = await createQuoteMessage(value, quoteMsg.m);
+          } else {
+            message = await createTextMessage(value);
           }
-          return '';
-        },
-      );
+          quoteMessage.value = null;
+          atUserMap.clear();
+          data.insert(0, message);
 
-      if (value.isNotEmpty) {
-        if (atUserMap.isNotEmpty) {
-          message = await createTextAtMessage(atUserMap, value, quoteMessage: quoteMsg?.m);
-        } else if (quoteMsg != null) {
-          message = await createQuoteMessage(value, quoteMsg.m);
-        } else {
-          message = await createTextMessage(value);
+          if (data.length > 5) {
+            // itemScrollController.jumpTo(index: 0);
+          }
+          message = await sendMessage(message, text: value);
+          updateMessage(message);
         }
-        quoteMessage.value = null;
-        atUserMap.clear();
-        data.insert(0, message);
 
-        if (data.length > 5) {
-          // itemScrollController.jumpTo(index: 0);
+        /// 发送图片消息
+        for (var f in files) {
+          Message msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: f);
+          MessageExt extMsg = await msg.toExt();
+          extMsg.ext.file = File(f);
+          data.insert(0, extMsg);
+          sendMessage(extMsg);
         }
-        message = await sendMessage(message, text: value);
-        updateMessage(message);
+      } catch (e) {
+        if (message != null) {
+          /// 发送失败 修改状态
+          message.m.status = MessageStatus.failed;
+          updateMessage(message);
+        }
       }
-
-      /// 发送图片消息
-      for (var f in files) {
-        Message msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: f);
-        MessageExt extMsg = await msg.toExt();
-        extMsg.ext.file = File(f);
-        data.insert(0, extMsg);
-        sendMessage(extMsg);
-      }
-    } catch (e) {
-      if (message != null) {
-        /// 发送失败 修改状态
-        message.m.status = MessageStatus.failed;
-        updateMessage(message);
-      }
+    }
+    if (selectPhotos.isNotEmpty) {
+      Utils.exceptionCapture(() async {
+        for (var v in selectPhotos) {
+          if (v.imagePath != null) {
+            Message msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: v.imagePath!);
+            MessageExt extMsg = await msg.toExt();
+            extMsg.ext.file = File(v.imagePath!);
+            data.insert(0, extMsg);
+            sendMessage(extMsg);
+          }
+        }
+        selectPhotos.clear();
+      });
     }
   }
 
@@ -1682,19 +1720,12 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 消息撤回
   void revokeMessage(MessageExt message) {
     Utils.exceptionCapture(() async {
-      int index = data.indexWhere((v) => v.m.clientMsgID == message.m.clientMsgID);
       FocusScopeNode currentFocus = FocusScope.of(Get.context!);
       if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
         FocusManager.instance.primaryFocus?.unfocus();
       }
-      if (index != -1 && conversationInfo.value != null) {
-        data.removeAt(index);
+      if (conversationInfo.value != null) {
         await OpenIM.iMManager.messageManager.revokeMessage(conversationID: conversationInfo.value!.conversationID, clientMsgID: message.m.clientMsgID ?? '');
-        MessageExt revMsg = await Message(contentType: MessageType.revokeMessageNotification, sendID: uInfo.userID, createTime: DateTime.now().millisecondsSinceEpoch).toExt();
-        if (message.m.contentType == MessageType.text) {
-          revMsg.ext.quoteMessage = message;
-        }
-        data.insert(0, revMsg);
       }
     });
     computeTime();
@@ -1770,12 +1801,16 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     });
   }
 
-  Widget contextMenuBuilder(BuildContext context, MessageExt extMsg, EditableTextState state) {
-    return Container();
-  }
-
-  Widget contextTextMenuBuilder(BuildContext context, MessageExt extMsg, SelectableRegionState state) {
-    return AdaptiveTextSelectionToolbar.selectableRegion(selectableRegionState: state);
+  Widget? contextMenuBuilder(BuildContext context, MessageExt extMsg, {SelectableRegionState? state, Offset? position}) {
+    if (position != null) {
+      flyoutController.showFlyout(
+        position: position,
+        barrierColor: Colors.transparent,
+        builder: (context) => ChatActions(extMsg: extMsg, controller: this, position: position),
+      );
+      return null;
+    }
+    return ChatActions(extMsg: extMsg, controller: this, selectableRegionState: state);
   }
 
   /// 设置多选
@@ -1852,5 +1887,68 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       return;
     }
     sheetType.value = SheetType.none;
+  }
+
+  void onSelectPhotos(List<PhotoManagerPaths> photos) {
+    selectPhotos.assignAll(photos);
+  }
+
+  void _removeOverlay() {
+    overlayEntry?.remove();
+    overlayEntry = null;
+  }
+
+  /// 转发
+  void onForward() async {
+    if (conversationInfo.value == null) return;
+    if (selectList.isEmpty) {
+      // showToast(title: '请先选择要转发的内容', severity: InfoBarSeverity.warning);
+      return;
+    }
+
+    /// 依据发送时间排序
+    selectList.sort((a, b) => a.m.sendTime!.compareTo(b.m.sendTime!));
+    // List<SelectDialogData>? list = await home.flyoutController.showFlyout<List<SelectDialogData>?>(
+    //   barrierColor: Colors.transparent,
+    //   transitionBuilder: (context, animation, placement, child) => FadeTransition(opacity: animation, child: child),
+    //   builder: (_) => const SelectFriendDialogView(),
+    // );
+    // if (list != null) {
+    //   for (var v in list) {
+    //     Message msg;
+    //     String title;
+    //     List<String> summaryList = [];
+    //     if (selectList.length == 1) {
+    //       msg = await OpenIM.iMManager.messageManager.createForwardMessage(message: selectList.first.m);
+    //     } else {
+    //       for (var v in selectList) {
+    //         summaryList.add('${v.m.senderNickname}:${v.m.type.toPlainText()}');
+    //         if (summaryList.length > 2) break;
+    //       }
+
+    //       if (isGroupChat) {
+    //         title = '群聊聊天记录';
+    //       } else {
+    //         var partner1 = uInfo.getShowName();
+    //         String partner2 = conversationInfo.value!.name.nickName;
+    //         title = '$partner1和$partner2聊天记录';
+    //       }
+    //       msg = await OpenIM.iMManager.messageManager.createMergerMessage(messageList: selectList.map((e) => e.m).toList(), title: title, summaryList: summaryList.toList());
+    //     }
+    //     Message newMsg = await OpenIM.iMManager.messageManager.sendMessage(
+    //       userID: v.userID,
+    //       groupID: v.groupID,
+    //       message: msg,
+    //       offlinePushInfo: OfflinePushInfo(title: '你收到了一条新消息', desc: '', iOSBadgeCount: true, iOSPushSound: '+1'),
+    //     );
+    //     if ((v.userID != null && v.userID!.isNotEmpty && v.userID == userID) || (v.groupID != null && v.groupID!.isNotEmpty && v.groupID == groupID)) {
+    //       MessageExt newExtMsg = await newMsg.toExt();
+    //       data.insert(0, newExtMsg);
+    //     }
+    //   }
+    //   selectList.clear();
+    //   showSelect.value = false;
+    //   showToast(title: '转发成功', severity: InfoBarSeverity.success);
+    // }
   }
 }

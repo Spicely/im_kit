@@ -53,26 +53,25 @@ class _ImPlayerState extends State<ImPlayer> {
             padding: const EdgeInsets.symmetric(vertical: 30),
             child: Video(controller: videoController),
           ),
-          if (Utils.isMobile)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: AppBar(
-                backgroundColor: Colors.transparent,
-                iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
-                systemOverlayStyle: const SystemUiOverlayStyle(
-                  statusBarColor: Colors.transparent,
-                  systemStatusBarContrastEnforced: false,
-                ),
-                leading: IconButton(
-                  icon: const Icon(Icons.close_outlined, color: Colors.white),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              iconTheme: context.theme.appBarTheme.iconTheme?.copyWith(color: Colors.white),
+              systemOverlayStyle: const SystemUiOverlayStyle(
+                statusBarColor: Colors.transparent,
+                systemStatusBarContrastEnforced: false,
+              ),
+              leading: IconButton(
+                icon: const Icon(Icons.close_outlined, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
               ),
             ),
+          ),
           if (!Utils.isDesktop)
             Positioned(
               bottom: 80,

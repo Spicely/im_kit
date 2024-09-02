@@ -60,7 +60,7 @@ class ImBase extends StatelessWidget {
   /// 位置信息点击
   final void Function(MessageExt message)? onLocationTap;
 
-  final Widget Function(BuildContext, MessageExt, EditableTextState)? contextMenuBuilder;
+  final Widget? Function(BuildContext, MessageExt, {SelectableRegionState? state, Offset? position})? contextMenuBuilder;
 
   Widget getSelectableView(BuildContext context, Widget child) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
@@ -77,55 +77,50 @@ class ImBase extends StatelessWidget {
     //   padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
     //   child: child,
     // );
-    return Container(
-      constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
-      child: SelectableText.rich(
-        onTap: () {
-          switch (message.m.contentType) {
-            case MessageType.location:
-              onLocationTap?.call(message);
-              break;
-            default:
-              onTap?.call(message);
-          }
+    return GestureDetector(
+      onSecondaryTapDown: (details) {
+        contextMenuBuilder?.call(context, message, position: details.globalPosition);
+      },
+      child: DropTarget(
+        onDragDone: (detail) {
+          print(detail);
         },
-        TextSpan(
-          children: [
-            WidgetSpan(
-              child: MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: showBackground
-                        ? ImCore.noBgMsgType.contains(msg.contentType)
+        onDragEntered: (detail) {
+          print(detail);
+        },
+        onDragExited: (detail) {
+          print(detail);
+        },
+        child: Container(
+          constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
+          child: ExtendedText.rich(
+            TextSpan(
+              children: [
+                WidgetSpan(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: showBackground
+                          ? ImCore.noBgMsgType.contains(msg.contentType)
+                              ? null
+                              : isMe
+                                  ? chatTheme.messageTheme.meBackgroundColor
+                                  : chatTheme.messageTheme.backgroundColor
+                          : Colors.grey.withOpacity(0.1),
+                      borderRadius: chatTheme.messageTheme.borderRadius,
+                    ),
+                    padding: showBackground
+                        ? ImCore.noPadMsgType.contains(msg.contentType)
                             ? null
-                            : isMe
-                                ? chatTheme.messageTheme.meBackgroundColor
-                                : chatTheme.messageTheme.backgroundColor
-                        : Colors.grey.withOpacity(0.1),
-                    borderRadius: chatTheme.messageTheme.borderRadius,
+                            : chatTheme.messageTheme.padding
+                        : null,
+                    child: child,
                   ),
-                  padding: showBackground
-                      ? ImCore.noPadMsgType.contains(msg.contentType)
-                          ? null
-                          : chatTheme.messageTheme.padding
-                      : null,
-                  child: child,
                 ),
-              ),
+              ],
             ),
-          ],
+            style: chatTheme.textStyle,
+          ),
         ),
-        style: chatTheme.textStyle,
-        contextMenuBuilder: (BuildContext context, EditableTextState state) {
-          if (contextMenuBuilder == null) {
-            return AdaptiveTextSelectionToolbar.editableText(
-              editableTextState: state,
-            );
-          } else {
-            return contextMenuBuilder!(context, message, state);
-          }
-        },
       ),
     );
   }

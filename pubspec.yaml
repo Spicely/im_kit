@@ -46,7 +46,9 @@ dependencies:
   pasteboard: 
   chinese_font_library:
   window_manager:
-
+  fluent_ui: 
+  image_gallery_saver_plus:
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

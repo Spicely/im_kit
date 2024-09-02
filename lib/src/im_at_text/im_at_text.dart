@@ -40,8 +40,6 @@ class ImAtText extends ImBase {
   /// at点击事件
   final void Function(TapUpDetails details, String userID)? onAtTap;
 
-  final Widget Function(BuildContext, MessageExt, SelectableRegionState)? contextTextMenuBuilder;
-
   const ImAtText({
     super.key,
     required super.isMe,
@@ -53,7 +51,7 @@ class ImAtText extends ImBase {
     super.onTapEmail,
     super.onTapPhone,
     this.onAtTap,
-    this.contextTextMenuBuilder,
+    super.contextMenuBuilder,
   });
 
   double get width {
@@ -83,12 +81,12 @@ class ImAtText extends ImBase {
         textDirection: TextDirection.ltr,
         child: SelectionArea(
           contextMenuBuilder: (BuildContext context, SelectableRegionState state) {
-            if (contextTextMenuBuilder == null) {
+            if (contextMenuBuilder == null) {
               return AdaptiveTextSelectionToolbar.selectableRegion(
                 selectableRegionState: state,
               );
             } else {
-              return contextTextMenuBuilder!(context, message, state);
+              return contextMenuBuilder!(context, message, state: state) ?? const SizedBox.expand();
             }
           },
           child: ExtendedText(

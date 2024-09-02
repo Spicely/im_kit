@@ -147,24 +147,25 @@ class ImKitIsolateManager {
 
   /// 保存文件到相册
   static Future<bool> saveFileToAlbum(String path, {String? fileName}) async {
-    // try {
-    //   if (Utils.isMobile) {
-    //     await ImageGallerySaver.saveFile(path);
-    //   } else {
-    //     String? saveDir = await FilePicker.platform.getDirectoryPath(
-    //       dialogTitle: '保存文件',
-    //       lockParentWindow: true,
-    //     );
-    //     if (saveDir != null) {
-    //       ImKitIsolateManager.copyFile(path, saveDir, fileName: fileName);
-    //     } else {
-    //       return false;
-    //     }
-    //   }
-    //   return true;
-    // } catch (_) {
-    return false;
-    // }
+    try {
+      if (Utils.isMobile) {
+        await ImageGallerySaverPlus.saveFile(path);
+      } else {
+        String? saveDir = await FilePicker.platform.saveFile(
+          dialogTitle: '保存文件',
+          lockParentWindow: true,
+          fileName: fileName,
+        );
+        if (saveDir != null) {
+          await ImKitIsolateManager.copyFile(path, saveDir, fileName: basename(saveDir));
+        } else {
+          return false;
+        }
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 获取本地文件
@@ -441,6 +442,9 @@ class ImKitIsolateManager {
           var (width, height) = _computedSize(width: msg.pictureElem?.sourcePicture?.width?.toDouble(), height: msg.pictureElem?.sourcePicture?.height?.toDouble());
           ext.width = width;
           ext.height = height;
+          if (msg.pictureElem?.sourcePicture?.url == null) {
+            ext.file = File(msg.pictureElem!.sourcePath!);
+          }
 
           break;
         case 300:

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
+import 'package:fluent_ui/fluent_ui.dart' as u;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,7 @@ import 'package:lottie/lottie.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:path/path.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:record/record.dart';
@@ -50,10 +52,9 @@ part 'src/components/im_adaptive_text_selection/im_adaptive_text_selection.dart'
 part 'src/components/voice_record/voice_record.dart';
 part 'src/components/im_bottom_voice/im_bottom_voice.dart';
 part 'src/components/voice_record/voice_record_controller.dart';
+part 'src/components/chat_actions/chat_actions.dart';
 part 'src/im_at_text/im_at_text.dart';
 part 'src/im_base/im_base.dart';
-part 'src/im_base/base_chat_fun.dart';
-part 'src/im_base/chat_fun_mobile.dart';
 
 part 'src/im_base/isolate_manager.dart';
 part 'src/im_base/emoji.dart';
@@ -81,8 +82,7 @@ part 'src/im_base/extend_special_text_span_builder.dart';
 part 'src/im_base/extensions_int_to_time.dart';
 
 part 'src/pages/chat_page/chat_page.dart';
-part 'src/pages/chat_page/chat_input_view_mobile.dart';
-part 'src/pages/chat_page/chat_input_view_desktop.dart';
+part 'src/pages/chat_page/chat_input_view.dart';
 part 'src/pages/chat_page/chat_page_controller.dart';
 part 'src/pages/conversation/conversation.dart';
 part 'src/pages/conversation/conversation_controller.dart';

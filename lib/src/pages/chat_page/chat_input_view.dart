@@ -1,9 +1,9 @@
 part of '../../../im_kit.dart';
 
-class ChatInputViewDesktop extends StatelessWidget {
+class ChatInputView extends StatelessWidget {
   final ChatPageController controller;
 
-  const ChatInputViewDesktop({
+  const ChatInputView({
     super.key,
     required this.controller,
   });
@@ -138,40 +138,32 @@ class ChatInputViewDesktop extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                MenuAnchor(
-                  controller: controller.menuController,
-                  menuChildren: [
-                    const SizedBox(height: 5),
-                    MenuItemButton(
-                      leadingIcon: const Icon(Icons.upload_file_rounded),
-                      onPressed: controller.onSendFiles,
-                      child: const Text('上传文件'),
-                    ),
-                    MenuItemButton(
-                      leadingIcon: const Icon(Icons.apps),
-                      child: const Text('使用APP'),
-                      onPressed: () {},
-                    ),
-                    const SizedBox(height: 5),
-                  ],
-                  child: SizedBox(
-                    height: 45,
-                    child: Center(
-                      child: IconButton(
-                        icon: const Icon(Icons.add_circle),
-                        onPressed: controller.isCanSpeak
-                            ? () {
-                                if (controller.menuController.isOpen) {
-                                  controller.menuController.close();
-                                } else {
-                                  controller.menuController.open();
-                                }
-                              }
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
+                // MenuAnchor(
+                //   controller: controller.menuController,
+                //   menuChildren: [
+                //     const SizedBox(height: 5),
+                //     MenuItemButton(
+                //       leadingIcon: const Icon(Icons.upload_file_rounded),
+                //       onPressed: controller.onSendFiles,
+                //       child: const Text('上传文件'),
+                //     ),
+                //     MenuItemButton(
+                //       leadingIcon: const Icon(Icons.apps),
+                //       child: const Text('使用APP'),
+                //       onPressed: () {},
+                //     ),
+                //     const SizedBox(height: 5),
+                //   ],
+                //   child: SizedBox(
+                //     height: 60,
+                //     child: Center(
+                //       child: IconButton(
+                //         icon: const Icon(Icons.add_circle),
+                //         onPressed: controller.isCanSpeak ? controller.showFileSheet : null,
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Expanded(
                   child: RawKeyboardListener(
                     focusNode: controller.focusNode,
@@ -244,7 +236,16 @@ class ChatInputViewDesktop extends StatelessWidget {
                   child: Center(
                     child: IconButton(
                       icon: const Icon(Icons.folder),
-                      onPressed: controller.chatFun.getImage,
+                      onPressed: controller.onSendFiles,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 45,
+                  child: Center(
+                    child: IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: controller.onSendMessage,
                     ),
                   ),
                 ),

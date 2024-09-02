@@ -39,7 +39,7 @@ class ImVideo extends ImBase {
         children: [
           getSelectableView(
             context,
-            CachedImage(file: ext.previewFile, width: w, height: h, circular: 5),
+            CachedImage(file: ext.previewFile, width: w, height: h, circular: 5, imageUrl: msg.videoElem?.snapshotUrl),
           ),
           Positioned(
             left: 0,
