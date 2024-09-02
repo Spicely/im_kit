@@ -48,6 +48,8 @@ dependencies:
   window_manager:
   fluent_ui: 
   image_gallery_saver_plus:
+  super_clipboard:
+  super_drag_and_drop:
   
 dev_dependencies:
   flutter_test:

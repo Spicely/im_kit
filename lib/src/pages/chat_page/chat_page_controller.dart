@@ -1898,6 +1898,20 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     overlayEntry = null;
   }
 
+  /// 复制文件到剪切板
+  void copyFileToClipboard(MessageExt extMsg) async {
+    Utils.exceptionCapture(() async {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard == null) {
+        return;
+      }
+      final item = DataWriterItem();
+
+      item.add(Formats.fileUri.lazy(() => Uri.file(extMsg.ext.file?.path ?? '')));
+      clipboard.write([item]);
+    });
+  }
+
   /// 转发
   void onForward() async {
     if (conversationInfo.value == null) return;

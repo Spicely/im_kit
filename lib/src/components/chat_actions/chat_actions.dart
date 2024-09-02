@@ -32,6 +32,13 @@ class ChatActions extends StatelessWidget {
   Widget _buildDesktop(BuildContext context) {
     return u.MenuFlyout(
       items: [
+        if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType))
+          u.MenuFlyoutItem(
+            text: const Text('复制', style: TextStyle(fontSize: 12)),
+            onPressed: () {
+              controller.copyFileToClipboard(extMsg);
+            },
+          ),
         u.MenuFlyoutItem(
           text: const Text('转发', style: TextStyle(fontSize: 12)),
           onPressed: () {
@@ -146,6 +153,14 @@ class ChatActions extends StatelessWidget {
 
                     // /// 让文本失去焦点
                     // editableTextState.widget.controller.selection = const TextSelection.collapsed(offset: 0);
+                  },
+                ),
+              if ([MessageType.file, MessageType.picture, MessageType.video, MessageType.voice].contains(extMsg.m.contentType))
+                ListItem(
+                  height: 35,
+                  title: const Text('复制', style: TextStyle(fontSize: 12)),
+                  onTap: () {
+                    controller.copyFileToClipboard(extMsg);
                   },
                 ),
               ListItem(

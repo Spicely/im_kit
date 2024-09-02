@@ -81,44 +81,34 @@ class ImBase extends StatelessWidget {
       onSecondaryTapDown: (details) {
         contextMenuBuilder?.call(context, message, position: details.globalPosition);
       },
-      child: DropTarget(
-        onDragDone: (detail) {
-          print(detail);
+      child: DragItemWidget(
+        dragItemProvider: (request) async {
+          final item = DragItem();
+          item.add(Formats.fileUri(Uri.file(ext.file?.path ?? '')));
+          return item;
         },
-        onDragEntered: (detail) {
-          print(detail);
-        },
-        onDragExited: (detail) {
-          print(detail);
-        },
+        allowedOperations: () => [DropOperation.copy],
         child: Container(
           constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
-          child: ExtendedText.rich(
-            TextSpan(
-              children: [
-                WidgetSpan(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: showBackground
-                          ? ImCore.noBgMsgType.contains(msg.contentType)
-                              ? null
-                              : isMe
-                                  ? chatTheme.messageTheme.meBackgroundColor
-                                  : chatTheme.messageTheme.backgroundColor
-                          : Colors.grey.withOpacity(0.1),
-                      borderRadius: chatTheme.messageTheme.borderRadius,
-                    ),
-                    padding: showBackground
-                        ? ImCore.noPadMsgType.contains(msg.contentType)
-                            ? null
-                            : chatTheme.messageTheme.padding
-                        : null,
-                    child: child,
-                  ),
-                ),
-              ],
+          child: DraggableWidget(
+            child: Container(
+              decoration: BoxDecoration(
+                color: showBackground
+                    ? ImCore.noBgMsgType.contains(msg.contentType)
+                        ? null
+                        : isMe
+                            ? chatTheme.messageTheme.meBackgroundColor
+                            : chatTheme.messageTheme.backgroundColor
+                    : Colors.grey.withOpacity(0.1),
+                borderRadius: chatTheme.messageTheme.borderRadius,
+              ),
+              padding: showBackground
+                  ? ImCore.noPadMsgType.contains(msg.contentType)
+                      ? null
+                      : chatTheme.messageTheme.padding
+                  : null,
+              child: child,
             ),
-            style: chatTheme.textStyle,
           ),
         ),
       ),

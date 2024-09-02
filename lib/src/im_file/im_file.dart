@@ -16,16 +16,16 @@ class ImFile extends ImBase {
   Widget build(BuildContext context) {
     String? filename = msg.fileElem?.fileName;
     String? suffix = getSuffix();
-    return GestureDetector(
-      onDoubleTap: () {
-        onDoubleTap?.call(message);
-      },
-      child: Directionality(
-        textDirection: TextDirection.ltr,
-        child: Stack(
-          children: [
-            getSelectableView(
-              context,
+    return getSelectableView(
+      context,
+      GestureDetector(
+        onDoubleTap: () {
+          onDoubleTap?.call(message);
+        },
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Stack(
+            children: [
               Container(
                 width: showBackground ? 220 : 160,
                 height: showBackground ? 80 : 60,
@@ -96,19 +96,19 @@ class ImFile extends ImBase {
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: LinearProgressIndicator(
-                value: ext.isDownloading ? ext.progress : 0,
-                minHeight: 2,
-                backgroundColor: Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: LinearProgressIndicator(
+                  value: ext.isDownloading ? ext.progress : 0,
+                  minHeight: 2,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

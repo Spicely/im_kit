@@ -36,6 +36,8 @@ import 'package:path/path.dart';
 import 'package:popup_menu/popup_menu.dart';
 import 'package:record/record.dart';
 import 'package:sprintf/sprintf.dart';
+import 'package:super_clipboard/super_clipboard.dart';
+import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 import 'package:window_manager/window_manager.dart';
