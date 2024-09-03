@@ -222,7 +222,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     textEditingController.addListener(_checkHistoryAction);
 
     textEditingController.removeListener(_checkHistoryAction);
-    ImCore.onPlayerStateChanged(onPlayerStateChanged);
+    // ImCore.onPlayerStateChanged(onPlayerStateChanged);
     super.onInit();
 
     tabController = TabController(length: 1 + tabs.length, vsync: this);
@@ -270,13 +270,13 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         }
       });
     }
-
     if (Utils.isNotEmpty(conversationInfo.value?.draftText)) {
       textEditingController.text = conversationInfo.value?.draftText ?? '';
       if (textEditingController.text.contains('@-1#所有人')) {
         atUserMap.add(const AtUserInfo(atUserID: '-1', groupNickname: '所有人'));
       }
     }
+    markMessageAsRead(data);
   }
 
   @override
@@ -550,24 +550,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 标记已读消息
   Future<void> markMessageAsRead(List<MessageExt> messages) async {
     if (Utils.isDesktop && !isFocus) return;
-    if (messages.isEmpty) return;
-    List<MessageExt> msgs = [...messages];
-
-    /// 忽略通知类消息
-    List<int> types = [1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1514, 1515, 1201, 1202, 1203, 1204, 1205, 27, 77, 1701, 1512, 1513, 2023, 2024, 2025];
-    types.removeWhere((v) => v == 1701);
-    msgs.removeWhere((v) => types.contains(v.m.contentType) || v.m.sendID == uInfo.userID || v.m.isRead == true);
-    List<String> ids = msgs.map((e) => e.m.clientMsgID!).toList();
-    if (ids.isEmpty) return;
-
-    /// 群会话
-    if (conversationInfo.value != null) {
-      try {
-        OpenIM.iMManager.messageManager.markMessageAsReadByMsgID(conversationID: conversationInfo.value!.conversationID, messageIDList: ids);
-      } catch (e) {
-        debugPrint(e.toString());
-      }
-    }
+    try {
+      await OpenIM.iMManager.conversationManager.markConversationMessageAsRead(conversationID: conversationInfo.value!.conversationID);
+    } catch (e) {}
   }
 
   /// @触发事件
@@ -1672,7 +1657,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   void dismissGroup({Function? onSuccess}) {
     Utils.exceptionCapture(() async {
       await OpenIM.iMManager.groupManager.dismissGroup(groupID: gId!);
-      await OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: conversationInfo.value!.conversationID);
+      await OpenIM.iMManager.conversationManager.deleteConversationAndDeleteAllMsg(conversationID: conversationInfo.value!.conversationID);
       onSuccess?.call();
     });
   }

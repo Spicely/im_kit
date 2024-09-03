@@ -185,7 +185,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
         title: '通知',
         content: '你正在删除和${info.showName}的聊天记录，这将删除和${info.showName}的所有聊天记录。清空后不可找回，确定要清空当前对话的历史记录吗？',
         onConfirm: () {
-          OpenIM.iMManager.conversationManager.deleteConversationFromLocalAndSvr(conversationID: info.conversationID);
+          OpenIM.iMManager.conversationManager.deleteConversationAndDeleteAllMsg(conversationID: info.conversationID);
           data.remove(info);
           Get.back();
         },
