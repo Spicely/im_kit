@@ -76,7 +76,11 @@ class ImListItem extends StatelessWidget {
   /// at点击事件
   final void Function(TapUpDetails details, String userID)? onAtTap;
 
-  bool get isMe => message.m.sendID == OpenIM.iMManager.uid;
+  /// 当自己给自己发消息 则需要判断平台
+  bool get isMe => isFileHelper ? message.m.sendID == OpenIM.iMManager.uid && OpenIMManager.getIMPlatform() == message.m.senderPlatformID : message.m.sendID == OpenIM.iMManager.uid;
+
+  /// 是否为文件助手
+  bool get isFileHelper => message.m.sendID == message.m.recvID;
 
   /// 是否显示选择按钮
   final bool showSelect;
@@ -337,14 +341,23 @@ class ImListItem extends StatelessWidget {
                     child: GestureDetector(
                       onTapUp: _onAvatarTap,
                       onLongPress: _onAvatarLongPress,
-                      child: CachedImage(
-                        imageUrl: message.m.senderFaceUrl,
-                        width: avatarTheme.width,
-                        height: avatarTheme.height,
-                        circular: avatarTheme.circular,
-                        fit: avatarTheme.fit,
-                        filterQuality: FilterQuality.high,
-                      ),
+                      child: isFileHelper
+                          ? Container(
+                              width: avatarTheme.width,
+                              height: avatarTheme.height,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                borderRadius: BorderRadius.circular(avatarTheme.circular),
+                              ),
+                              child: Icon(_getPlatformIcon(), color: Colors.white),
+                            )
+                          : CachedImage(
+                              imageUrl: message.m.senderFaceUrl,
+                              width: avatarTheme.width,
+                              height: avatarTheme.height,
+                              circular: avatarTheme.circular,
+                              fit: avatarTheme.fit,
+                            ),
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -568,11 +581,32 @@ class ImListItem extends StatelessWidget {
 
   /// 头像点击
   void _onAvatarTap(TapUpDetails details) {
+    if (isFileHelper) return;
     onAvatarTap?.call(details, message.m.sendID!);
   }
 
   /// 头像长按
   void _onAvatarLongPress() {
+    if (isFileHelper) return;
     onAvatarLongPress?.call(message.m.sendID!);
+  }
+
+  IconData _getPlatformIcon() {
+    switch (message.m.senderPlatformID) {
+      case IMPlatform.android:
+        return Icons.phone_android;
+      case IMPlatform.ios:
+        return Icons.phone_iphone;
+      case IMPlatform.windows:
+        return Icons.window;
+      case IMPlatform.xos:
+        return Icons.laptop_mac;
+      case IMPlatform.linux:
+        return Icons.computer;
+      case IMPlatform.web:
+        return Icons.web;
+      default:
+        return Icons.computer;
+    }
   }
 }
