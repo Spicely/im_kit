@@ -87,6 +87,8 @@ extension ExtensionMessage on Message {
 
 extension ExtensionConversationInfo on ConversationInfo {
   String title({int? number}) {
+    bool isFileHelper = userID == OpenIM.iMManager.uid;
+    if (isFileHelper) return '文件助手';
     if (isGroupChat) {
       return number != null && number != 0 ? '$showName($number)' : showName ?? '';
     } else {

@@ -38,12 +38,13 @@ class ChatPage extends StatelessWidget {
             onPopInvokedWithResult: controller.onPopInvokedWithResult,
             child: Scaffold(
               backgroundColor: chatTheme.backgroundColor,
-              appBar: Utils.isDesktop
-                  ? null
-                  : AppBar(
-                      backgroundColor: chatTheme.appBarTheme.backgroundColor,
-                      toolbarOpacity: 0.8,
-                      leading: Obx(
+              appBar: AppBar(
+                backgroundColor: chatTheme.appBarTheme.backgroundColor,
+                toolbarOpacity: 0.8,
+                leadingWidth: Utils.isDesktop ? 0 : null,
+                leading: Utils.isDesktop
+                    ? const SizedBox()
+                    : Obx(
                         () => Visibility(
                           visible: controller.showSelect.value,
                           replacement: BackButton(onPressed: Get.back),
@@ -56,19 +57,19 @@ class ChatPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      title: Column(
-                        children: [
-                          Obx(
-                            () => Text(
-                              controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
-                            ),
-                          ),
-                          // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
-                        ],
+                title: Column(
+                  children: [
+                    Obx(
+                      () => Text(
+                        controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
                       ),
-                      centerTitle: chatTheme.appBarTheme.centerTitle,
-                      actions: appBarActions,
                     ),
+                    // controller.isTyping.value ? Text(S.current.typing, style: TextStyle(fontSize: 10.sp, color: gray)) : const SizedBox(),
+                  ],
+                ),
+                centerTitle: chatTheme.appBarTheme.centerTitle,
+                actions: appBarActions,
+              ),
               body: Stack(
                 children: [
                   Column(

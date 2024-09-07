@@ -33,6 +33,8 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   /// 当前选中的会话信息
   Rx<String> currentConversationID = ''.obs;
 
+  ///
+
   @override
   void onInit() {
     OpenIMManager.addListener(this);

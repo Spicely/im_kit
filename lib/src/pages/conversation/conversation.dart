@@ -35,6 +35,8 @@ class Conversation extends StatelessWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemBuilder: (BuildContext context, int index) {
+                      /// 是否为文件助手
+                      bool isFileHelper = c.data[index].userID == OpenIM.iMManager.uid;
                       return Listener(
                         onPointerDown: (PointerDownEvent event) {
                           controller.onPointerDown(controller.data[index], event);
@@ -53,14 +55,24 @@ class Conversation extends StatelessWidget {
                               leading: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  CachedImage(
-                                    imageUrl: c.data[index].faceURL,
-                                    width: 46,
-                                    height: 46,
-                                    circular: 46,
-                                    fit: BoxFit.cover,
-                                    filterQuality: FilterQuality.high,
-                                  ),
+                                  isFileHelper
+                                      ? Container(
+                                          width: 46,
+                                          height: 46,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            borderRadius: BorderRadius.circular(46),
+                                          ),
+                                          child: const Icon(Icons.folder, color: Colors.white),
+                                        )
+                                      : CachedImage(
+                                          imageUrl: c.data[index].faceURL,
+                                          width: 46,
+                                          height: 46,
+                                          circular: 46,
+                                          fit: BoxFit.cover,
+                                          filterQuality: FilterQuality.high,
+                                        ),
                                   if (c.data[index].recvMsgOpt == 2 && c.data[index].unreadCount > 0)
                                     Positioned(
                                       right: -6,
