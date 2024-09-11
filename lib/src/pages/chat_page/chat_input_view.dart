@@ -164,6 +164,16 @@ class ChatInputView extends StatelessWidget {
                 //     ),
                 //   ),
                 // ),
+                if (Utils.isMobile)
+                  SizedBox(
+                    height: 60,
+                    child: Center(
+                      child: IconButton(
+                        icon: const Icon(Icons.add_circle),
+                        onPressed: controller.isCanSpeak ? controller.showFileSheet : null,
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: RawKeyboardListener(
                     focusNode: controller.focusNode,
@@ -180,14 +190,14 @@ class ChatInputView extends StatelessWidget {
                               focusNode: controller.editFocusNode,
                               controller: controller.textEditingController,
                               readOnly: !controller.isCanSpeak,
-                              style: const TextStyle(fontSize: 16),
+                              style: const TextStyle(fontSize: 14),
                               decoration: const InputDecoration(
-                                labelStyle: TextStyle(fontSize: 16),
+                                labelStyle: TextStyle(fontSize: 14),
                                 contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 14),
                                 focusedBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
                                 enabledBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
                                 hintText: '消息',
-                                hintStyle: TextStyle(fontSize: 16),
+                                hintStyle: TextStyle(fontSize: 14),
                                 filled: true,
                                 isCollapsed: true,
                                 fillColor: Colors.transparent,

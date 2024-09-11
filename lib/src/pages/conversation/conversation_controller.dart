@@ -141,16 +141,16 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     getApplicationList();
   }
 
-  void getApplicationList() {
+  void getApplicationList() async {
     Utils.exceptionCapture(() async {
-      List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getFriendApplicationListAsRecipient();
-      List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
-      applicationList.assignAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
-      applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
+      // List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getFriendApplicationListAsRecipient();
+      // List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
+      // applicationList.assignAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
+      // applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
 
-      /// 依据reqTime排序
-      applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
-      applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
+      // /// 依据reqTime排序
+      // applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
+      // applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
 
       friendList.value = await OpenIM.iMManager.friendshipManager.getFriendList();
       groupList.value = await OpenIM.iMManager.groupManager.getJoinedGroupList();

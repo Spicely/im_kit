@@ -435,6 +435,7 @@ class ImListItem extends StatelessWidget {
   }
 
   Widget? getStatusWidget() {
+    if (isFileHelper) return null;
     if (message.m.status == MessageStatus.succeeded && message.ext.isPrivateChat && message.m.isRead!) {
       return SizedBox(
         child: Text(

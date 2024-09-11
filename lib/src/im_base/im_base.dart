@@ -88,6 +88,7 @@ class ImBase extends StatelessWidget {
           return item;
         },
         allowedOperations: () => [DropOperation.copy],
+        canAddItemToExistingSession: false,
         child: Container(
           constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
           child: DraggableWidget(

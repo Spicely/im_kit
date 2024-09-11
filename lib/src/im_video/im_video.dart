@@ -11,35 +11,15 @@ class ImVideo extends ImBase {
     super.contextMenuBuilder,
   });
 
-  (double w, double h) get size {
-    double width = msg.videoElem?.snapshotWidth?.toDouble() ?? 240.0;
-    double height = msg.videoElem?.snapshotHeight?.toDouble() ?? 240.0;
-
-    /// 获取宽高比
-    double ratio = width / height;
-
-    /// 如果宽高比大于1，说明是横图，需要限制宽度
-    if (ratio > 1) {
-      width = 240.0;
-      height = width / ratio;
-    } else {
-      height = 240.0;
-      width = height * ratio;
-    }
-
-    return (width, height);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final (w, h) = size;
     return getSelectableView(
       context,
       Directionality(
         textDirection: TextDirection.ltr,
         child: Stack(
           children: [
-            CachedImage(file: ext.previewFile, width: w, height: h, circular: 5, imageUrl: msg.videoElem?.snapshotUrl),
+            CachedImage(file: ext.previewFile, width: 180, height: 290, circular: 5, imageUrl: msg.videoElem?.snapshotUrl, fit: BoxFit.cover),
             Positioned(
               left: 0,
               right: 0,

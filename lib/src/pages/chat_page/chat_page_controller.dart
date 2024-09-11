@@ -647,6 +647,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   @override
   void onRecvNewMessage(Message msg) async {
+    logger.e(msg);
     String? id = Utils.getValue(msg.groupID, msg.sendID);
     MessageExt extMsg = await msg.toExt();
     if (id == userID || id == groupID || userID == extMsg.m.recvID) {
@@ -867,53 +868,71 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   /// 结束拖动文件
-  void onDragExited(DropEventDetails detail) {
+  void onDropEnter(DropEvent detail) {
     isDrop.value = false;
   }
 
   /// 开始拖动文件
-  void onDragEntered(DropEventDetails detail) {
+  void onDropLeave(DropEvent detail) {
     isDrop.value = true;
   }
 
-  /// 文件拖动完成
-  void onDragDone(DropDoneDetails detail) {
-    Utils.exceptionCapture(() async {
-      final files = detail.files;
-      for (var file in files) {
-        /// 获取后缀名
-        String suffix = file.path.split('.').last.toLowerCase();
-        String? dest;
+  Future<void> onPerformDrop(PerformDropEvent event) async {
+    await Utils.exceptionCapture(() async {
+      final items = event.session.items;
+      for (var item in items) {
+        final reader = item.dataReader!;
+        if (reader.canProvide(Formats.fileUri)) {
+          reader.getValue<Uri>(Formats.fileUri, (value) async {
+            if (value != null) {
+              String filePath = value.toFilePath();
 
-        Message msg;
+              /// 获取后缀名
+              String suffix = filePath.split('.').last.toLowerCase();
+              String? dest;
 
-        /// 判断是不是图片
-        if (['png', 'jpg', 'jpeg', 'gif'].contains(suffix)) {
-          msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: file.path);
+              Message msg;
+
+              /// 判断是不是图片
+              if (['png', 'jpg', 'jpeg', 'gif'].contains(suffix)) {
+                msg = await _createImageMessage(File(filePath));
+              }
+
+              /// 判断视频
+              else if (['mp4', 'avi', '3gp', 'mkv'].contains(suffix)) {
+                dest = join(ImCore.tempPath, '${const Uuid().v4()}.$suffix');
+                await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: filePath, destFile: dest, width: 540, height: 970, format: 'jpeg', quality: 90);
+                msg = await OpenIM.iMManager.messageManager.createVideoMessageFromFullPath(videoPath: filePath, videoType: suffix, duration: 0, snapshotPath: dest);
+              } else {
+                msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: filePath, fileName: basename(filePath));
+              }
+              // if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
+              //   MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
+              //   return;
+              // }
+
+              MessageExt extMsg = await msg.toExt();
+              extMsg.ext.file = File(filePath);
+              if (dest != null) {
+                extMsg.ext.previewFile = File(dest);
+              }
+              data.insert(0, extMsg);
+              sendMessage(extMsg);
+            }
+          }, onError: (error) {
+            print('Error reading value $error');
+          });
         }
-
-        /// 判断视频
-        else if (['mp4', 'avi', '3gp', 'mkv'].contains(suffix)) {
-          dest = join(ImCore.tempPath, '${const Uuid().v4()}.$suffix');
-          await fcNativeVideoThumbnail.getVideoThumbnail(srcFile: file.path, destFile: dest, width: 300, height: 600, format: 'jpeg', quality: 90);
-          msg = await OpenIM.iMManager.messageManager.createVideoMessageFromFullPath(videoPath: file.path, videoType: suffix, duration: 0, snapshotPath: dest);
-        } else {
-          msg = await OpenIM.iMManager.messageManager.createFileMessageFromFullPath(filePath: file.path, fileName: file.name);
-        }
-        // if (getIntValue(msg.fileElem?.fileSize, msg.videoElem?.videoSize, msg.pictureElem?.sourcePicture?.size, msg.soundElem?.dataSize) == 0) {
-        //   MukaConfig.config.exceptionCapture.error(OpenIMError(0, '不能发送空文件'));
-        //   return;
-        // }
-
-        MessageExt extMsg = await msg.toExt();
-        extMsg.ext.file = File(file.path);
-        if (dest != null) {
-          extMsg.ext.previewFile = File(dest);
-        }
-        data.insert(0, extMsg);
-        sendMessage(extMsg);
       }
     });
+  }
+
+  DropOperation onDropOver(DropOverEvent event) {
+    if (event.session.allowedOperations.contains(DropOperation.copy)) {
+      return DropOperation.copy;
+    } else {
+      return DropOperation.none;
+    }
   }
 
   @override
@@ -1034,6 +1053,14 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         data[index].ext.previewFile = previewFile;
       }
     }
+  }
+
+  /// 创建图片消息
+  Future<Message> _createImageMessage(File file) async {
+    // final String blurHash = await BlurhashFFI.encode(FileImage(file));
+    Message msg = await OpenIM.iMManager.messageManager.createImageMessageFromFullPath(imagePath: file.path);
+    msg.ex = jsonEncode({'blurhash': 'L5H2EC=PM+yV0g-mq.wG9c010J}I'});
+    return msg;
   }
 
   /// 发送图片
@@ -1795,7 +1822,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       );
       return null;
     }
-    return ChatActions(extMsg: extMsg, controller: this, selectableRegionState: state);
+    return Utils.isDesktop ? ChatActions(extMsg: extMsg, controller: this, selectableRegionState: state) : null;
   }
 
   /// 设置多选

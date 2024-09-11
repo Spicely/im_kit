@@ -214,6 +214,7 @@ class ImKitIsolateManager {
   /// 初始化
   static Future<void> init(String dirPath) async {
     if (_isInit) return;
+    await hotKeySystem.unregisterAll();
     MediaKit.ensureInitialized();
     ImCore.init(dirPath);
     _isInit = true;
