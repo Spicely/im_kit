@@ -118,7 +118,7 @@ class ImListItem extends StatelessWidget {
   /// 双击点击消息体
   final void Function(MessageExt message)? onDoubleTapFile;
 
-  final Widget? Function(BuildContext, MessageExt, {SelectableRegionState? state, Offset? position})? contextMenuBuilder;
+  final Widget Function(BuildContext, MessageExt, SelectableRegionState)? contextMenuBuilder;
 
   /// 是否显示通知类消息
   final bool showNotification;
@@ -501,38 +501,13 @@ class ImListItem extends StatelessWidget {
           contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.video:
-        return Stack(
-          children: [
-            ImVideo(
-              message: message,
-              showSelect: showSelect,
-              isMe: isMe,
-              onTapDownFile: onTapDownFile,
-              onTapPlayVideo: onTapPlayVideo,
-              contextMenuBuilder: contextMenuBuilder,
-            ),
-            Positioned(
-              bottom: 4,
-              right: 6,
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(message.ext.time, style: const TextStyle(fontSize: 10, color: Colors.white)),
-                      if (isMe) const SizedBox(width: 1),
-                      if (isMe && message.m.isRead!) const Icon(Icons.done_all, size: 12, color: Colors.blue),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
+        return ImVideo(
+          message: message,
+          showSelect: showSelect,
+          isMe: isMe,
+          onTapDownFile: onTapDownFile,
+          onTapPlayVideo: onTapPlayVideo,
+          contextMenuBuilder: contextMenuBuilder,
         );
       case MessageType.card:
         return ImCard(

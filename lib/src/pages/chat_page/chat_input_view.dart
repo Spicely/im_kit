@@ -175,9 +175,9 @@ class ChatInputView extends StatelessWidget {
                     ),
                   ),
                 Expanded(
-                  child: RawKeyboardListener(
-                    focusNode: controller.focusNode,
-                    onKey: controller.onKeyEvent,
+                  child: KeyboardListener(
+                    focusNode: controller.editFocusNode,
+                    onKeyEvent: controller.onKeyEvent,
                     child: Theme(
                       data: ThemeData(
                         brightness: Brightness.light,
@@ -187,7 +187,7 @@ class ChatInputView extends StatelessWidget {
                           Obx(
                             () => ExtendedTextField(
                               maxLines: null,
-                              focusNode: controller.editFocusNode,
+                              focusNode: controller.focusNode,
                               controller: controller.textEditingController,
                               readOnly: !controller.isCanSpeak,
                               style: const TextStyle(fontSize: 14),

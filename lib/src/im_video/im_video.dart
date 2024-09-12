@@ -15,12 +15,13 @@ class ImVideo extends ImBase {
   Widget build(BuildContext context) {
     return getSelectableView(
       context,
-      Directionality(
-        textDirection: TextDirection.ltr,
-        child: Stack(
-          children: [
-            CachedImage(file: ext.previewFile, width: 180, height: 290, circular: 5, imageUrl: msg.videoElem?.snapshotUrl, fit: BoxFit.cover),
-            Positioned(
+      Stack(
+        key: ValueKey(msg.clientMsgID),
+        children: [
+          CachedImage(file: ext.previewFile, width: 180, height: 290, circular: 5, imageUrl: msg.videoElem?.snapshotUrl, fit: BoxFit.cover),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Positioned(
               left: 0,
               right: 0,
               bottom: 0,
@@ -75,8 +76,23 @@ class ImVideo extends ImBase {
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            bottom: 4,
+            right: 6,
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(message.m.createTime?.formatDate() ?? '', style: const TextStyle(fontSize: 10, color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

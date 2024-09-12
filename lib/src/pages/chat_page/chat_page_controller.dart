@@ -42,8 +42,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   final MenuController emojiMenuController = MenuController();
 
-  final FocusNode editFocusNode = FocusNode();
-
   late Rx<ConversationInfo?> conversationInfo;
 
   late RxList<MessageExt> data;
@@ -173,7 +171,9 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
 
   RxBool noMore = false.obs;
 
-  final FocusNode focusNode = FocusNode();
+  late final FocusNode focusNode = FocusNode(onKeyEvent: _onFocusKeyEvent);
+
+  final FocusNode editFocusNode = FocusNode();
 
   /// 窗口是否焦距
   bool isFocus = true;
@@ -349,38 +349,40 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     }
   }
 
-  Future<void> onKeyEvent(RawKeyEvent event) async {
-    if (!isCanSpeak) return;
-
-    /// shift + enter 换行
-    if (event is RawKeyDownEvent && event.isShiftPressed && event.logicalKey == LogicalKeyboardKey.enter) {
-      return;
+  KeyEventResult _onFocusKeyEvent(FocusNode node, KeyEvent evt) {
+    if (!HardwareKeyboard.instance.isShiftPressed && evt.logicalKey == LogicalKeyboardKey.enter) {
+      onSendMessage();
+      return KeyEventResult.handled;
+    } else {
+      return KeyEventResult.ignored;
     }
-    if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.enter) {
-      await onSendMessage();
-      textEditingController.clear();
-    }
+  }
 
-    /// macos
-    if (event is RawKeyDownEvent) {
-      if (Platform.isMacOS) {
-        /// 小键盘回车监听
-        if (event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-          await onSendMessage();
-          textEditingController.clear();
-        }
+  Future<void> onKeyEvent(KeyEvent event) async {
+    // if (!isCanSpeak) return;
 
-        /// 监听粘贴按键组合
-        if (event.logicalKey == LogicalKeyboardKey.keyV && event.isMetaPressed) {
-          _copyClipboardToMemory();
-        }
-      } else {
-        /// 监听粘贴按键组合
-        if (event.logicalKey == LogicalKeyboardKey.keyV && event.isControlPressed) {
-          _copyClipboardToMemory();
-        }
-      }
-    }
+    // if (event is KeyDownEvent) {
+    //   // Shift + Enter 换行 (跳过)
+    //   if (HardwareKeyboard.instance.isShiftPressed && event.logicalKey == LogicalKeyboardKey.enter) {
+    //     return;
+    //   }
+
+    //   // Enter 键触发发送消息
+    //   if (event.logicalKey == LogicalKeyboardKey.enter || (Platform.isMacOS && event.logicalKey == LogicalKeyboardKey.numpadEnter)) {
+    //     await onSendMessage();
+    //     textEditingController.clear(); // 清空输入框
+    //     return;
+    //   }
+
+    //   //   // MacOS 上监听 Cmd + V 粘贴
+    //   //   if (Platform.isMacOS && event.isMetaPressed && event.logicalKey == LogicalKeyboardKey.keyV) {
+    //   //     _copyClipboardToMemory();
+    //   //   }
+    //   //   // 其他平台监听 Ctrl + V 粘贴
+    //   //   else if (event.isControlPressed && event.logicalKey == LogicalKeyboardKey.keyV) {
+    //   //     _copyClipboardToMemory();
+    //   //   }
+    // }
   }
 
   /// 自定义表情发送
@@ -1813,16 +1815,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
     });
   }
 
-  Widget? contextMenuBuilder(BuildContext context, MessageExt extMsg, {SelectableRegionState? state, Offset? position}) {
-    if (position != null) {
-      flyoutController.showFlyout(
-        position: position,
-        barrierColor: Colors.transparent,
-        builder: (context) => ChatActions(extMsg: extMsg, controller: this, position: position),
-      );
-      return null;
-    }
-    return Utils.isDesktop ? ChatActions(extMsg: extMsg, controller: this, selectableRegionState: state) : null;
+  Widget contextMenuBuilder(BuildContext context, MessageExt extMsg, SelectableRegionState state) {
+    return ChatActions(extMsg: extMsg, controller: this, selectableRegionState: state);
   }
 
   /// 设置多选

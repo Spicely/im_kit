@@ -98,6 +98,9 @@ class DownloadItem {
 class ImKitIsolateManager {
   static bool _isInit = false;
 
+  /// 复制文本
+  static String _copyText = '';
+
   static final ObserverList<ImKitListen> _listeners = ObserverList<ImKitListen>();
 
   static void addListener(ImKitListen listener) {

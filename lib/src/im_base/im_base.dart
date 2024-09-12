@@ -60,26 +60,23 @@ class ImBase extends StatelessWidget {
   /// 位置信息点击
   final void Function(MessageExt message)? onLocationTap;
 
-  final Widget? Function(BuildContext, MessageExt, {SelectableRegionState? state, Offset? position})? contextMenuBuilder;
+  final Widget Function(BuildContext, MessageExt, SelectableRegionState)? contextMenuBuilder;
 
   Widget getSelectableView(BuildContext context, Widget child) {
     ImChatTheme chatTheme = ImKitTheme.of(context).chatTheme;
-    // return Container(
-    //   constraints: BoxConstraints(maxWidth: showSelect ? 470 : 500),
-    //   decoration: BoxDecoration(
-    //     color: ImCore.noBgMsgType.contains(message.m.contentType)
-    //         ? null
-    //         : isMe
-    //             ? chatTheme.messageTheme.meBackgroundColor
-    //             : chatTheme.messageTheme.backgroundColor,
-    //     borderRadius: chatTheme.messageTheme.borderRadius,
-    //   ),
-    //   padding: ImCore.noPadMsgType.contains(message.m.contentType) ? null : chatTheme.messageTheme.padding,
-    //   child: child,
-    // );
-    return GestureDetector(
-      onSecondaryTapDown: (details) {
-        contextMenuBuilder?.call(context, message, position: details.globalPosition);
+
+    return SelectionArea(
+      contextMenuBuilder: (BuildContext context, SelectableRegionState state) {
+        if (contextMenuBuilder == null) {
+          return AdaptiveTextSelectionToolbar.selectableRegion(
+            selectableRegionState: state,
+          );
+        } else {
+          return contextMenuBuilder!(context, message, state);
+        }
+      },
+      onSelectionChanged: (select) {
+        ImKitIsolateManager._copyText = select?.plainText ?? '';
       },
       child: DragItemWidget(
         dragItemProvider: (request) async {

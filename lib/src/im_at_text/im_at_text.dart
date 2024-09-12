@@ -86,8 +86,11 @@ class ImAtText extends ImBase {
                 selectableRegionState: state,
               );
             } else {
-              return contextMenuBuilder!(context, message, state: state) ?? const SizedBox.expand();
+              return contextMenuBuilder!(context, message, state);
             }
+          },
+          onSelectionChanged: (select) {
+            ImKitIsolateManager._copyText = select?.plainText ?? '';
           },
           child: ExtendedText(
             message.ext.data,
