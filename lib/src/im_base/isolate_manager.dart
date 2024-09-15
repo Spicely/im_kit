@@ -101,6 +101,9 @@ class ImKitIsolateManager {
   /// 复制文本
   static String _copyText = '';
 
+  /// 系统控制器高度
+  static double winBarHeight = Utils.isMobile ? 0 : 20;
+
   static final ObserverList<ImKitListen> _listeners = ObserverList<ImKitListen>();
 
   static void addListener(ImKitListen listener) {
@@ -471,6 +474,7 @@ class ImKitIsolateManager {
           var (width, height) = _computedSize(width: msg.videoElem?.snapshotWidth?.toDouble(), height: msg.videoElem?.snapshotHeight?.toDouble());
           ext.width = width;
           ext.height = height;
+          ext.file = _getLocFile(msg.videoElem?.videoPath);
           break;
         default:
           var data = json.decode(msg.textElem?.content ?? '{}');
@@ -483,6 +487,18 @@ class ImKitIsolateManager {
       completer.complete(MessageExt(ext: ext, m: msg));
     }
     return completer.future;
+  }
+
+  static File? _getLocFile(String? path) {
+    if (path == null) {
+      return null;
+    }
+    final file = File(path);
+    if (file.existsSync()) {
+      return file;
+    } else {
+      return null;
+    }
   }
 
   static Future<void> _isolateEntry(IsolateTaskData task) async {

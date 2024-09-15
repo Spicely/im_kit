@@ -7,15 +7,6 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   final Rx<dynamic> currentChatPageController = Rx<dynamic>(null);
 
-  /// 待处理申请数
-  final RxInt applicationCount = 0.obs;
-
-  /// 申请列表
-  final RxList<ApplicationInfo> applicationList = <ApplicationInfo>[].obs;
-
-  /// 好友列表
-  final RxList<FullUserInfo> friendList = <FullUserInfo>[].obs;
-
   /// 黑名单列表
   final RxList<BlacklistInfo> blackList = <BlacklistInfo>[].obs;
 
@@ -40,9 +31,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     OpenIMManager.addListener(this);
     ImKitIsolateManager.addListener(this);
     super.onInit();
-    ever(applicationList, (v) {
-      applicationCount.value = v.where((e) => e.handleResult == 0).length;
-    });
+
     ever(data, (v) {
       // 统计未读数
       int count = 0;
@@ -143,16 +132,6 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   void getApplicationList() async {
     Utils.exceptionCapture(() async {
-      // List<FriendApplicationInfo> friendApplicationList = await OpenIM.iMManager.friendshipManager.getFriendApplicationListAsRecipient();
-      // List<GroupApplicationInfo> groupApplication = await OpenIM.iMManager.groupManager.getRecvGroupApplicationList();
-      // applicationList.assignAll(friendApplicationList.map((e) => e.toApplicationInfo()).toList());
-      // applicationList.addAll(groupApplication.map((e) => e.toApplicationInfo()).toList());
-
-      // /// 依据reqTime排序
-      // applicationList.sort((a, b) => (b.reqTime ?? 0).compareTo(a.reqTime ?? 0));
-      // applicationCount.value = applicationList.where((e) => e.handleResult == 0).length;
-
-      friendList.value = await OpenIM.iMManager.friendshipManager.getFriendList();
       groupList.value = await OpenIM.iMManager.groupManager.getJoinedGroupList();
 
       OpenIM.iMManager.conversationManager.simpleSort(data);
@@ -216,18 +195,6 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
   }
 
   @override
-  void onFriendInfoChanged(FriendInfo u) {
-    int index = friendList.indexWhere((v) => v.userID == u.userID);
-    if (index != -1) {
-      OpenIM.iMManager.userManager.getUsersInfo(uidList: [u.userID!]).then((value) {
-        if (value.isNotEmpty) {
-          friendList[index] = value.first;
-        }
-      });
-    }
-  }
-
-  @override
   void onSelfInfoUpdated(UserInfo info) {
     // userInfo.update((val) {
     //   val?.birthTime = info.birthTime;
@@ -243,43 +210,6 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
     //   val?.phoneNumber = info.phoneNumber;
     //   val?.ex = info.ex;
     // });
-  }
-
-  /// 同意好友申请
-  void agreeFriendApplication(ApplicationInfo applicationInfo) {
-    Utils.exceptionCapture(() async {
-      int index = -1;
-      if (applicationInfo.type == ApplicationInfoType.friend) {
-        await OpenIM.iMManager.friendshipManager.acceptFriendApplication(userID: applicationInfo.id!);
-        index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
-      } else {
-        await OpenIM.iMManager.groupManager.acceptGroupApplication(gid: applicationInfo.groupID!, uid: applicationInfo.id!);
-        index = applicationList.indexWhere((v) => v.groupID == applicationInfo.groupID);
-      }
-      if (index != -1) {
-        applicationList[index].handleResult = 1;
-        applicationList.refresh();
-      }
-    });
-  }
-
-  /// 拒绝好友申请
-  void rejectFriendApplication(ApplicationInfo applicationInfo) {
-    Utils.exceptionCapture(() async {
-      int index = -1;
-      if (applicationInfo.type == ApplicationInfoType.friend) {
-        await OpenIM.iMManager.friendshipManager.refuseFriendApplication(userID: applicationInfo.id!);
-        index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
-      } else {
-        await OpenIM.iMManager.groupManager.refuseGroupApplication(gid: applicationInfo.groupID!, uid: applicationInfo.id!);
-        index = applicationList.indexWhere((v) => v.groupID == applicationInfo.groupID);
-      }
-      index = applicationList.indexWhere((v) => v.id == applicationInfo.id);
-      if (index != -1) {
-        applicationList[index].handleResult = -1;
-        applicationList.refresh();
-      }
-    });
   }
 
   /// 移除黑名单好友

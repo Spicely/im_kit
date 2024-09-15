@@ -37,14 +37,8 @@ class ChatAttachment {
   ChatAttachment({required this.isHidden, required this.file, this.memory});
 }
 
-class ChatPageController extends GetxController with OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
-  final MenuController menuController = MenuController();
-
+class ChatPageController extends GetxController with ChatControllerMixin, OpenIMListener, GetTickerProviderStateMixin, WindowListener, ImKitListen {
   final MenuController emojiMenuController = MenuController();
-
-  late Rx<ConversationInfo?> conversationInfo;
-
-  late RxList<MessageExt> data;
 
   late TabController tabController;
 
@@ -55,62 +49,21 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// sheet类型
   Rx<SheetType> sheetType = SheetType.none.obs;
 
-  /// 群成员信息
-  RxList<GroupMembersInfo> groupMembers = RxList([]);
-
-  /// 群信息
-  Rx<GroupInfo?> groupInfo = Rx(null);
-
   final FcNativeVideoThumbnail fcNativeVideoThumbnail = FcNativeVideoThumbnail();
 
   final bool isInit;
 
   int loadNum = 40;
 
-  /// 自己的信息
-  UserInfo get uInfo => OpenIM.iMManager.uInfo!;
-
-  /// 私聊用户信息
-  Rx<FullUserInfo?> chatUserInfo = Rx(null);
-
   RxInt currentIndex = (-1).obs;
 
   final TextEditingController textEditingController = TextEditingController();
-
-  final u.FlyoutController flyoutController = u.FlyoutController();
-
-  /// 自己在群里的信息
-  GroupMembersInfo? get gInfo => (isGroupChat && groupMembers.isNotEmpty) ? groupMembers.firstWhere((v) => v.userID == uInfo.userID) : null;
-
-  /// 是否是管理员
-  bool get isAdmin => gInfo?.roleLevel == GroupRoleLevel.admin;
-
-  /// 是否是群成员
-  bool get isMember => gInfo?.roleLevel == GroupRoleLevel.member;
-
-  /// 是否是群主
-  bool get isOwner => gInfo?.roleLevel == GroupRoleLevel.owner;
 
   /// 附件信息
   RxList<ChatAttachment> attachments = RxList<ChatAttachment>([]);
 
   /// 多选
   RxBool showSelect = false.obs;
-
-  /// 是否能管理群
-  bool get isCanAdmin => gInfo?.roleLevel != GroupRoleLevel.member;
-
-  /// 是否能发言
-  bool get isCanSpeak => !isMuteUser.value || !isMute.value || isCanAdmin;
-
-  /// 不允许通过群获取成员资料
-  bool get lookMemberInfo => isSingleChat ? false : groupInfo.value?.lookMemberInfo == 1;
-
-  /// 群id
-  String? get gId => Utils.getValue<String?>(conversationInfo.value?.groupID, null);
-
-  /// 用户id
-  String? get uId => Utils.getValue<String?>(conversationInfo.value?.userID, null);
 
   /// 引用消息
   Rx<MessageExt?> quoteMessage = Rx(null);
@@ -153,17 +106,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
   ScrollController scrollController = ScrollController();
 
-  /// 聊天对象id
-  String? get userID => conversationInfo.value?.userID;
-
-  String? get groupID => conversationInfo.value?.groupID;
-
-  /// 是单聊
-  bool get isSingleChat => conversationInfo.value?.isSingleChat ?? false;
-
-  /// 是群聊
-  bool get isGroupChat => conversationInfo.value?.isGroupChat ?? false;
-
   /// 是否有输入内容
   RxBool hasInput = false.obs;
 
@@ -178,14 +120,8 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   /// 窗口是否焦距
   bool isFocus = true;
 
-  /// 是否全体禁言
-  RxBool isMute = false.obs;
-
   /// 记录输入框的历史记录
   String historyText = '';
-
-  /// 是否个人禁言
-  RxBool isMuteUser = false.obs;
 
   final List<int> _types = [1501, 1502, 1503, 1504, 1505, 1506, 1507, 1508, 1509, 1510, 1511, 1514, 1515, 1201, 1202, 1203, 1204, 1205, 27, 77, 1512, 1513, 2023, 2024, 2025, 1701];
 
@@ -675,6 +611,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
   }
 
   void downFile(MessageExt extMsg) async {
+    if (extMsg.ext.file != null) return;
     String saveDir = ImCore.userDir(conversationInfo.value!.conversationID);
     // if (MessageTypeExtend.customDiyEmoji == extMsg.m.contentType) {
     //   Map<String, dynamic> map = jsonDecode(extMsg.m.content ?? '{}');
@@ -1267,7 +1204,7 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
       }
       MessageExt extMsg = await newMsg.toExt();
       updateMessage(extMsg);
-      downFile(extMsg);
+      // downFile(extMsg);
       return extMsg;
     } catch (e) {
       msg.m.status = MessageStatus.failed;
@@ -1634,27 +1571,6 @@ class ChatPageController extends GetxController with OpenIMListener, GetTickerPr
         data.clear();
         onSuccess?.call();
       }
-    });
-  }
-
-  /// 退出群聊
-  void quitGroup({Function? onSuccess}) {
-    if (conversationInfo.value == null) return;
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.groupManager.quitGroup(gid: gId!);
-      await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversationInfo.value!.conversationID);
-      onSuccess?.call();
-    });
-  }
-
-  /// 删除好友
-  void deleteFriend({Function? onSuccess}) {
-    if (conversationInfo.value == null) return;
-    Utils.exceptionCapture(() async {
-      await OpenIM.iMManager.messageManager.clearC2CHistoryMessageFromLocalAndSvr(uid: uId!);
-      await OpenIM.iMManager.conversationManager.deleteConversation(conversationID: conversationInfo.value!.conversationID);
-      await OpenIM.iMManager.friendshipManager.deleteFriend(userID: uId!);
-      onSuccess?.call();
     });
   }
 

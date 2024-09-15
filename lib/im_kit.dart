@@ -6,15 +6,12 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
-import 'package:fluent_ui/fluent_ui.dart' as u;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:audioplayers/audioplayers.dart' as a;
-import 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
-import 'package:card_swiper/card_swiper.dart';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:extended_text/extended_text.dart';
 import 'package:extended_text_field/extended_text_field.dart';
@@ -48,6 +45,8 @@ export 'package:popup_menu/popup_menu.dart';
 export 'package:bubble_tab_indicator/bubble_tab_indicator.dart';
 
 part 'src/components/im_button/im_button.dart';
+part 'src/components/chat_more_actions/chat_more_actions.dart';
+part 'src/components/im_app_bar/im_app_bar.dart';
 part 'src/components/im_loading/im_loading.dart';
 part 'src/components/im_player/im_player.dart';
 part 'src/components/im_preview/im_preview.dart';
@@ -89,7 +88,12 @@ part 'src/im_base/extensions_int_to_time.dart';
 part 'src/pages/chat_page/chat_page.dart';
 part 'src/pages/chat_page/chat_input_view.dart';
 part 'src/pages/chat_page/chat_page_controller.dart';
+part 'src/pages/chat_page/chat_controller_base.dart';
 part 'src/pages/conversation/conversation.dart';
+part 'src/pages/friends/friends_view.dart';
+part 'src/pages/friends/friends_view_controller.dart';
+part 'src/pages/new_friends/new_friends.dart';
+part 'src/pages/new_friends/new_friends_controller.dart';
 part 'src/pages/conversation/conversation_controller.dart';
 part 'src/pages/system_notification/system_notification_view.dart';
 part 'src/pages/system_notification/system_notification_controller.dart';
