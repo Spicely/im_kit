@@ -10,7 +10,11 @@ class IMController extends GetxController with OpenIMListener {
   /// 待处理申请数
   final RxInt applicationCount = 0.obs;
 
-  final HotKey _hotFriend = HotKey(KeyCode.keyX, modifiers: [KeyModifier.alt], scope: HotKeyScope.system);
+  /// 未读消息
+  RxInt unReadMsg = 0.obs;
+
+  /// 会话列表
+  RxList<ConversationInfo> conversations = RxList([]);
 
   @override
   void onReady() {
@@ -19,19 +23,22 @@ class IMController extends GetxController with OpenIMListener {
     ever(applicationList, (v) {
       applicationCount.value = v.where((e) => e.handleResult == 0).length;
     });
+    ever(conversations, (v) {
+      // 统计未读数
+      int count = 0;
+      for (var info in v) {
+        if (info.recvMsgOpt == 0) {
+          count += info.unreadCount;
+        }
+      }
+      unReadMsg.value = count;
+    });
     getData();
-    if (Utils.isDesktop) {
-      _initDesktop();
-    }
-  }
-
-  void _initDesktop() {
-    hotKeySystem.register(_hotFriend, keyDownHandler: _screenshot);
   }
 
   void getData() {
     Utils.exceptionCapture(() async {
-      print(applicationList.length);
+      conversations.value = await OpenIM.iMManager.conversationManager.getAllConversationList();
       friends.value = await OpenIM.iMManager.friendshipManager.getFriendList();
       await getFriendApplication();
     });
@@ -52,19 +59,24 @@ class IMController extends GetxController with OpenIMListener {
   @override
   void onClose() {
     OpenIMManager.removeListener(this);
-    if (Utils.isDesktop) {
-      hotKeySystem.unregister(_hotFriend);
-    }
     super.onClose();
   }
 
-  /// 截屏
-  void _screenshot(HotKey event) {
-    screenCapturer.capture(
-      mode: CaptureMode.region, // screen, window
-      imagePath: join(ImCore.tempPath, '${const Uuid().v4()}.png'),
-      copyToClipboard: true,
-    );
+  @override
+  void onConversationChanged(List<ConversationInfo> list) {
+    for (var v in list) {
+      if (!v.isValid) return;
+      int index = conversations.indexWhere((element) => element.conversationID == v.conversationID);
+      if (index != -1) {
+        conversations[index] = v;
+      } else {
+        conversations.add(v);
+      }
+      if (!v.isValid && v.isSingleChat) {
+        conversations.removeWhere((c) => c.conversationID == v.conversationID);
+      }
+    }
+    OpenIM.iMManager.conversationManager.simpleSort(conversations);
   }
 
   @override

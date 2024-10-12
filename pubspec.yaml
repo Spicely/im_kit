@@ -48,7 +48,6 @@ dependencies:
   image_gallery_saver_plus:
   super_clipboard:
   super_drag_and_drop:
-  hotkey_system:
   
 dev_dependencies:
   flutter_test:

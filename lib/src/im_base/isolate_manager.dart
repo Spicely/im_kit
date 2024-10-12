@@ -104,6 +104,15 @@ class ImKitIsolateManager {
   /// 系统控制器高度
   static double winBarHeight = Utils.isMobile ? 0 : 20;
 
+  /// 音频播放
+  static final Player _player = Player();
+
+  /// 播放音频
+  static Future<void> playAudio(Playable playable) async {
+    await _player.open(playable);
+    await _player.play();
+  }
+
   static final ObserverList<ImKitListen> _listeners = ObserverList<ImKitListen>();
 
   static void addListener(ImKitListen listener) {
@@ -220,7 +229,6 @@ class ImKitIsolateManager {
   /// 初始化
   static Future<void> init(String dirPath) async {
     if (_isInit) return;
-    await hotKeySystem.unregisterAll();
     MediaKit.ensureInitialized();
     ImCore.init(dirPath);
     _isInit = true;
