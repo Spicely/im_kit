@@ -33,12 +33,7 @@ class ChatPage extends StatelessWidget {
             ),
           ),
           GestureDetector(
-            onTap: () {
-              FocusScopeNode currentFocus = FocusScope.of(context);
-              if (!currentFocus.hasPrimaryFocus) {
-                currentFocus.focusedChild?.unfocus();
-              }
-            },
+            onTap: controller.unfocus,
             child: GetBuilder(
               key: ValueKey(controller.isInit ? controller.conversationInfo.value?.conversationID : const Uuid().v4()),
               init: controller,
@@ -48,8 +43,10 @@ class ChatPage extends StatelessWidget {
                 onPopInvokedWithResult: controller.onPopInvokedWithResult,
                 child: Scaffold(
                   backgroundColor: chatTheme.backgroundColor,
-                  appBar: ImAppBar(
-                    label: Obx(
+                  appBar: AppBar(
+                    backgroundColor: Utils.isDesktop ? Colors.transparent : null,
+                    surfaceTintColor: Utils.isDesktop ? Colors.transparent : null,
+                    title: Obx(
                       () => Text(
                         controller.conversationInfo.value?.title(number: controller.groupMembers.length) ?? '',
                       ),
@@ -132,9 +129,7 @@ class ChatPage extends StatelessWidget {
                       Obx(
                         () => Visibility(
                           visible: controller.sheetType.value == SheetType.file,
-                          child: DraggableScrollableSheetManager(
-                            onTap: controller.onSelectPhotos,
-                          ),
+                          child: DraggableScrollableSheetManager(onTap: controller.onSelectPhotos),
                         ),
                       ),
                     ],

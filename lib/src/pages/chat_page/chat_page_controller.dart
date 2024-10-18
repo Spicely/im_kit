@@ -525,10 +525,7 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
 
   void saveFile(MessageExt extMsg) {
     Utils.exceptionCapture(() async {
-      FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-      if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      }
+      unfocus();
       bool status = await ImKitIsolateManager.saveFileToAlbum(extMsg.ext.file!.path, fileName: basenameWithoutExtension(extMsg.m.videoElem?.videoUrl ?? extMsg.m.fileElem?.fileName ?? extMsg.m.pictureElem?.sourcePicture?.url ?? ''));
     }, error: (e) {
       // onError?.call(e);
@@ -585,10 +582,9 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
 
   @override
   void onRecvNewMessage(Message msg) async {
-    logger.e(msg);
     String? id = Utils.getValue(msg.groupID, msg.sendID);
     MessageExt extMsg = await msg.toExt();
-    if (id == userID || id == groupID || userID == extMsg.m.recvID) {
+    if (id == userID || id == groupID /*|| userID == extMsg.m.recvID*/) {
       if (msg.contentType == MessageType.quote) {
         extMsg.ext.quoteMessage = await msg.quoteElem!.quoteMessage!.toExt();
       }
@@ -1323,6 +1319,11 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
           if (data.length > 5) {
             // itemScrollController.jumpTo(index: 0);
           }
+          message.m.sendID = uId;
+          message.m.senderPlatformID = OpenIMManager.getIMPlatform();
+          if (isSingleChat) {
+            message.m.recvID = userID;
+          }
           message = await sendMessage(message, text: value);
           updateMessage(message);
         }
@@ -1647,13 +1648,18 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
 
   void onAvatarLongPress(String userID) {}
 
+  /// 取消焦点
+  void unfocus() {
+    FocusScopeNode currentFocus = FocusScope.of(Get.context!);
+    if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+  }
+
   /// 消息撤回
   void revokeMessage(MessageExt message) {
     Utils.exceptionCapture(() async {
-      FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-      if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      }
+      unfocus();
       if (conversationInfo.value != null) {
         await OpenIM.iMManager.messageManager.revokeMessage(conversationID: conversationInfo.value!.conversationID, clientMsgID: message.m.clientMsgID ?? '');
       }
@@ -1721,10 +1727,7 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
   /// 删除消息
   void deleteMessage(MessageExt extMsg, {Function? onSuccess, Function(Object e)? onError}) {
     Utils.exceptionCapture(() async {
-      FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-      if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      }
+      unfocus();
       data.removeWhere((v) => v.m.clientMsgID == extMsg.m.clientMsgID);
       await OpenIM.iMManager.messageManager.deleteMessageFromLocalStorage(message: extMsg.m);
       onSuccess?.call();
@@ -1737,10 +1740,7 @@ class ChatPageController extends GetxController with ChatControllerMixin, OpenIM
 
   /// 设置多选
   void setMultiSelect() {
-    FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-    if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-      FocusManager.instance.primaryFocus?.unfocus();
-    }
+    unfocus();
     showSelect.value = !showSelect.value;
   }
 

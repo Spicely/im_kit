@@ -45,7 +45,6 @@ export 'package:media_kit/media_kit.dart';
 
 part 'src/components/im_button/im_button.dart';
 part 'src/components/chat_more_actions/chat_more_actions.dart';
-part 'src/components/im_app_bar/im_app_bar.dart';
 part 'src/components/im_loading/im_loading.dart';
 part 'src/components/im_player/im_player.dart';
 part 'src/components/im_preview/im_preview.dart';

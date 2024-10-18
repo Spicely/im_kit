@@ -101,9 +101,6 @@ class ImKitIsolateManager {
   /// 复制文本
   static String _copyText = '';
 
-  /// 系统控制器高度
-  static double winBarHeight = Utils.isMobile ? 0 : 20;
-
   /// 音频播放
   static final Player _player = Player();
 

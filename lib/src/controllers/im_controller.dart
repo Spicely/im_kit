@@ -10,6 +10,8 @@ class IMController extends GetxController with OpenIMListener {
   /// 待处理申请数
   final RxInt applicationCount = 0.obs;
 
+  final Rx<UserInfo> userInfo = Rx<UserInfo>(OpenIM.iMManager.uInfo!);
+
   /// 未读消息
   RxInt unReadMsg = 0.obs;
 

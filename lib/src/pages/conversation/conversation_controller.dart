@@ -5,7 +5,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
   RxList<ConversationInfo> data = RxList([]);
 
-  final Rx<dynamic> currentChatPageController = Rx<dynamic>(null);
+  final Rx<ChatPageController?> currentChatPageController = Rx<ChatPageController?>(null);
 
   /// 黑名单列表
   final RxList<BlacklistInfo> blackList = <BlacklistInfo>[].obs;
@@ -108,6 +108,7 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
       }
     }
     OpenIM.iMManager.conversationManager.simpleSort(data);
+    data.refresh();
   }
 
   @override
@@ -150,7 +151,9 @@ class ConversationController extends GetxController with OpenIMListener, ImKitLi
 
     List<MessageExt> messages = await advancedMessage.toExt();
     currentChatPageController.value = ChatPageController(messages: messages, conversation: info);
-    Get.to(() => ChatPage(controller: currentChatPageController.value));
+    if (Utils.isMobile) {
+      Get.to(() => ChatPage(controller: currentChatPageController.value!));
+    }
   }
 
   Future<void> loadConversation() async {

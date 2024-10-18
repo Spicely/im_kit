@@ -178,45 +178,40 @@ class ChatInputView extends StatelessWidget {
                   child: KeyboardListener(
                     focusNode: controller.editFocusNode,
                     onKeyEvent: controller.onKeyEvent,
-                    child: Theme(
-                      data: ThemeData(
-                        brightness: Brightness.light,
-                      ),
-                      child: Stack(
-                        children: [
-                          Obx(
-                            () => ExtendedTextField(
-                              maxLines: null,
-                              focusNode: controller.focusNode,
-                              controller: controller.textEditingController,
-                              readOnly: !controller.isCanSpeak,
-                              style: const TextStyle(fontSize: 14),
-                              decoration: const InputDecoration(
-                                labelStyle: TextStyle(fontSize: 14),
-                                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-                                focusedBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
-                                enabledBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
-                                hintText: '消息',
-                                hintStyle: TextStyle(fontSize: 14),
-                                filled: true,
-                                isCollapsed: true,
-                                fillColor: Colors.transparent,
-                              ),
-                              specialTextSpanBuilder: ImExtendTextBuilder(
-                                allAtMap: controller.atUserMap,
-                              ),
-                              // extendedContextMenuBuilder: (BuildContext context, ExtendedEditableTextState editableTextState) => EditActions(editableTextState: editableTextState),
+                    child: Stack(
+                      children: [
+                        Obx(
+                          () => ExtendedTextField(
+                            maxLines: null,
+                            focusNode: controller.focusNode,
+                            controller: controller.textEditingController,
+                            readOnly: !controller.isCanSpeak,
+                            style: const TextStyle(fontSize: 14),
+                            decoration: const InputDecoration(
+                              labelStyle: TextStyle(fontSize: 14),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+                              focusedBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
+                              enabledBorder: OutlineInputBorder(borderSide: BorderSide(style: BorderStyle.none)),
+                              hintText: '消息',
+                              hintStyle: TextStyle(fontSize: 14),
+                              filled: true,
+                              isCollapsed: true,
+                              fillColor: Colors.transparent,
                             ),
+                            specialTextSpanBuilder: ImExtendTextBuilder(
+                              allAtMap: controller.atUserMap,
+                            ),
+                            // extendedContextMenuBuilder: (BuildContext context, ExtendedEditableTextState editableTextState) => EditActions(editableTextState: editableTextState),
                           ),
-                          Obx(
-                            () => controller.isCanSpeak
-                                ? const SizedBox()
-                                : Center(
-                                    child: Text(controller.isMute.value ? '全体禁言中' : '你已被禁言', style: const TextStyle(fontSize: 12, color: Color.fromRGBO(193, 193, 193, 1))),
-                                  ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Obx(
+                          () => controller.isCanSpeak
+                              ? const SizedBox()
+                              : Center(
+                                  child: Text(controller.isMute.value ? '全体禁言中' : '你已被禁言', style: const TextStyle(fontSize: 12, color: Color.fromRGBO(193, 193, 193, 1))),
+                                ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

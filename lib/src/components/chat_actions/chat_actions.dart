@@ -44,10 +44,7 @@ class ChatActions extends StatelessWidget {
                     String text = ImKitIsolateManager._copyText.isEmpty ? extMsg.m.atTextElem?.text ?? extMsg.m.textElem?.content ?? '' : ImKitIsolateManager._copyText;
                     controller.copyText(text);
                   }
-                  FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-                  if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  }
+                  controller.unfocus();
                 },
               ),
               ListItem(
@@ -57,6 +54,7 @@ class ChatActions extends StatelessWidget {
                   controller.selectList.clear();
                   controller.selectList.add(extMsg);
                   controller.onForward();
+                  controller.unfocus();
                 },
               ),
               ListItem(
@@ -64,10 +62,7 @@ class ChatActions extends StatelessWidget {
                 title: const Text('回复', style: TextStyle(fontSize: 12)),
                 onTap: () {
                   controller.quoteMessage.value = extMsg;
-                  FocusScopeNode currentFocus = FocusScope.of(context);
-                  if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  }
+                  controller.unfocus();
                 },
               ),
               if ([MessageType.file, MessageType.video].contains(extMsg.m.contentType))
@@ -78,10 +73,7 @@ class ChatActions extends StatelessWidget {
                     if (extMsg.ext.file != null) {
                       controller.saveFile(extMsg);
                     } else {
-                      FocusScopeNode currentFocus = FocusScope.of(Get.context!);
-                      if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      }
+                      controller.unfocus();
                       // OpenIM.iMManager.messageManager.downloadFileReturnPaths(message: extMsg.m).then((value) {
                       //   if (value.length == 2) {
                       //     extMsg.ext.previewFile = File(value.first);
@@ -101,6 +93,7 @@ class ChatActions extends StatelessWidget {
                 title: const Text('多选', style: TextStyle(fontSize: 12)),
                 onTap: () {
                   controller.setMultiSelect();
+                  controller.unfocus();
                 },
               ),
               if (extMsg.m.sendID == OpenIM.iMManager.uid)
